@@ -58,7 +58,7 @@ func TestExpBinOp(t *testing.T) {
 func TestExpTC(t *testing.T) {
 	testExp(t, `{}`)
 	testExp2(t, `{...}`, `{[1]=...,}`)
-	testExp2(t, `{f()}`, `{[1]=f(),}`)
+	testExp2(t, `{f(),}`, `{[1]=f(),}`)
 	testExp2(t, `{f(), nil}`, `{[1]=f(),[2]=nil,}`)
 	testExp2(t, `{[f(1)] = g, 'x', 'y', x = 1, f(x), [30] = 23, 45}`,
 		`{[f(1)]=g,[1]='x',[2]='y',['x']=1,[3]=f(x),[30]=23,[4]=45,}`)

@@ -65,14 +65,43 @@ func (self *cg) exp(node Exp, a, n int) {
 }
 
 func (self *cg) tcExp(exp *TableConstructorExp, a int) {
-	narr := exp.NArr
-	nrec := len(exp.KeyExps) - narr
-	self.newTable(exp.Line, a, narr, nrec)
+	nArr := exp.NArr
+	nRec := len(exp.KeyExps) - nArr
+	self.newTable(exp.Line, a, nArr, nRec)
 
-	// for i, keyExp := range exp.KeyExps {
-	// 	valExp := exp.ValExps[i]
-	// 	// todo
-	// }
+	for i, keyExp := range exp.KeyExps {
+		valExp := exp.ValExps[i]
+
+		if nArr > 0 {
+			if _, ok := keyExp.(int); ok {
+				tmp := self.allocTmp()
+				self.exp(valExp, tmp, 1)
+				continue
+			}
+		}
+
+		nTmps := 0
+		iKey, tKey := self.toOperand(keyExp)
+		if tKey != ARG_CONST && tKey != ARG_REG {
+			iKey = self.allocTmp()
+			nTmps++
+			self.exp(keyExp, iKey, 1)
+		}
+
+		iVal, tVal := self.toOperand(valExp)
+		if tVal != ARG_CONST && tVal != ARG_REG {
+			iVal = self.allocTmp()
+			nTmps++
+			self.exp(valExp, iVal, 1)
+		}
+		self.freeTmps(nTmps)
+		self.setTable(lineOfExp(valExp), a, iKey, iVal)
+	}
+
+	if nArr > 0 {
+		self.freeTmps(nArr)
+		self.inst(exp.LastLine, OP_SETLIST, a, nArr, 1) // todo
+	}
 }
 
 func (self *cg) funcDefExp(exp *FuncDefExp, a int) {
@@ -151,9 +180,9 @@ func (self *cg) bracketsExp(exp *BracketsExp, a int) {
 	}
 
 	if tTab == ARG_UPVAL {
-		self.inst(exp.Line, OP_GETTABUP, a, iTab, iKey)
+		self.getTabUp(exp.Line, a, iTab, iKey)
 	} else {
-		self.inst(exp.Line, OP_GETTABLE, a, iTab, iKey)
+		self.getTable(exp.Line, a, iTab, iKey)
 	}
 }
 
@@ -281,8 +310,8 @@ func (self *cg) powExp(exp *BinopExp, a int) {
 	if nTmps > 0 {
 		self.freeTmps(nTmps)
 	}
-	
-	for i := len(operands)-1; i > 3 ; i -= 3 {
+
+	for i := len(operands) - 1; i > 3; i -= 3 {
 		//yy := operands[i]
 		iy := operands[i-1]
 		line := operands[i-2]

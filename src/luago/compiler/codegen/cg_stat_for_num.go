@@ -25,12 +25,12 @@ func (self *cg) forNumStat(node *ForNumStat) {
 	self.fixSbx(prepPc, loopPc-prepPc-1)
 	self.fixSbx(loopPc, prepPc-loopPc)
 
-	self.exitScope(self.pc()-1)
+	self.exitScope(self.pc() - 1)
 	self.fixEndPcOfIdxVar(node.VarName)
 }
 
 func (self *cg) fixEndPcOfIdxVar(name string) {
-	for i := len(self.scope.locVars)-1; i > 0; i-- {
+	for i := len(self.scope.locVars) - 1; i > 0; i-- {
 		locVar := self.scope.locVars[i]
 		if locVar.name == name {
 			locVar.endPc -= 1

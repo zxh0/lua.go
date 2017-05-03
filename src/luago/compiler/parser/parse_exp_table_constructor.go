@@ -24,16 +24,15 @@ func parseTableConstructorExp(lexer *Lexer) *TableConstructorExp {
 
 // fieldlist ::= field {fieldsep field} [fieldsep]
 func parseFieldList(lexer *Lexer, tc *TableConstructorExp) {
-	// field
 	parseField(lexer, tc)
-	// {fieldsep field}
+
 	for isFieldSep(lexer.LookAhead(1)) {
 		lexer.NextToken()
-		parseField(lexer, tc)
-	}
-	// [fieldsep]
-	if isFieldSep(lexer.LookAhead(1)) {
-		lexer.NextToken()
+		if lexer.LookAhead(1) == TOKEN_SEP_RCURLY {
+			break
+		} else {
+			parseField(lexer, tc)
+		}
 	}
 }
 
@@ -47,26 +46,26 @@ func parseField(lexer *Lexer, tc *TableConstructorExp) {
 	var k, v Exp
 
 	switch lexer.LookAhead(1) {
-	case TOKEN_SEP_LBRACK:
+	case TOKEN_SEP_LBRACK: // [exp]=exp
 		lexer.NextToken() // TOKEN_SEP_LBRACK
 		k = parseExp(lexer)
 		lexer.NextTokenOfKind(TOKEN_SEP_RBRACK)
 		lexer.NextTokenOfKind(TOKEN_ASSIGN)
 		v = parseExp(lexer)
 	case TOKEN_IDENTIFIER:
-		if lexer.LookAhead(2) == TOKEN_ASSIGN {
+		if lexer.LookAhead(2) == TOKEN_ASSIGN { // name=exp
 			line, name := lexer.NextIdentifier()
 			k = &StringExp{line, name}
 			lexer.NextToken() // TOKEN_ASSIGN
 			v = parseExp(lexer)
-		} else {
+		} else { // name
 			tc.NArr++
-			k = &IntegerExp{lexer.Line(), int64(tc.NArr)}
+			k = tc.NArr // todo
 			v = parseExp(lexer)
 		}
-	default:
+	default: // exp
 		tc.NArr++
-		k = &IntegerExp{lexer.Line(), int64(tc.NArr)}
+		k = tc.NArr // todo
 		v = parseExp(lexer)
 	}
 

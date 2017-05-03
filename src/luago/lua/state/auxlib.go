@@ -158,7 +158,7 @@ func (self *luaState) LoadFileX(filename, mode string) LuaThreadStatus {
 	if err != nil {
 		panic(err)
 	}
-	self.Load(data)
+	self.Load(data, filename, mode)
 	// panic("todo!")
 	return LUA_OK
 }

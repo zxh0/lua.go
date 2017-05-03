@@ -1,4 +1,4 @@
-local u1,u2,u3
+local u,v,w
 --[==[
 function stat_local_assign(...)
   local v1 = nil
@@ -10,7 +10,7 @@ function stat_local_assign(...)
   local v7 = ...
   local v8 = v7
   local v9 = v9
-  local va = u1
+  local va = u
   local vb = x
   local v1,v2,v3 = 1,2,3
   local v1,v1,v1 = a,b,c
@@ -51,32 +51,32 @@ function stat_local_assign(...)
   local a = b["foo"]
   local a = b.foo
   local a = b.c
-  local a = b[u1]
+  local a = b[u]
   local a = b[x]
-  local a = u1[1]
-  local a = u1.foo
-  local a = u1[u2]
-  local a = u1[x]
+  local a = u[1]
+  local a = u.foo
+  local a = u[v]
+  local a = u[x]
   local a = x[1]
   local a = x.foo
   local a = x.foo.bar
-  local a = x[u1]
-  local a = x[u1][u2]
+  local a = x[u]
+  local a = x[u][v]
   local a = x[y]
   local a = x[y][z]
   local a = b + c
   local a = v1 - v2 - v3
   local a = v1 * v2 * v3 * v4
   local a = b + 1
-  local a = u1 + u2
-  local a = u1 + u2 + u3
+  local a = u + v
+  local a = u + v + w
   local a = x + y
   local a = x + y + z
-  local a = b / u1 / x / 1
-  local a = b ^ u1 ^ x ^ 1
+  local a = b / u / x / 1
+  local a = b ^ u ^ x ^ 1
   local a = b ^ b ^ b ^ b
-  --local a = 1 ^ x ^ u1 ^ b ^ c
-  local a = b .. c .. u1 .. u2 .. x .. 1
+  --local a = 1 ^ x ^ u ^ b ^ c
+  local a = b .. c .. u .. v .. x .. 1
   local a = 1 < 2
   local a = b == c
   local a = b ~= c
@@ -85,22 +85,22 @@ function stat_local_assign(...)
   local a = b >= c
   local a = b <= c
   local a = v1 < v2 < v3
-  local a = u1 ~= u2
-  local a = u1 > u2 > u3
+  local a = u ~= v
+  local a = u > v > w
   local a = x == y
   local a = x > y > z
-  local a = b == c ~= u1 > x >= y < 1 <= false
+  local a = b == c ~= u > x >= y < 1 <= false
   local a = 1 or 2
   local a = b or c
-  local a = u1 or u2
+  local a = u or v
   local a = x or y
   local a = x or y or z or y or x
-  local a = b or u1 or x or true
+  local a = b or u or x or true
   local a = b and c
   local a = v1 and v2 and v3
-  local a = u1 and u2 and u3
+  local a = u and v and w
   local a = x and y and z
-  local a = b and u1 and x and true
+  local a = b and u and x and true
   -- local a = x and y or x and y
   -- local a = 1
   a=1
@@ -116,20 +116,20 @@ function stat_assign_1(...)
   c = {}
   a = ...
   a = b
-  a = u1
+  a = u
   a = x
   a = f()
   a = a%360
-  u1 = nil
-  u2 = true
-  u3 = 100
-  u1 = "foo"
-  u2 = {}
-  u3 = ...
-  u1 = a
-  u1 = u2
-  u1 = _ENV.x
-  u1 = x
+  u = nil
+  v = true
+  w = 100
+  u = "foo"
+  v = {}
+  w = ...
+  u = a
+  u = v
+  u = _ENV.x
+  u = x
   x = nil
   x = false
   x = 100
@@ -137,7 +137,7 @@ function stat_assign_1(...)
   x = {}
   x = ...
   x = a
-  x = u1
+  x = u
   x = y
   a[nil] = nil
   a[true] = false
@@ -145,23 +145,23 @@ function stat_assign_1(...)
   a[1] = b[2]
   a[b] = c
   a[b] = b[a]
-  a[u1] = u2
-  a[u1] = u2[b]
+  a[u] = v
+  a[u] = v[b]
   b[x] = y[a]
-  u1[nil] = nil
-  u1[false] = true
-  u1[1] = u2[2]
-  u1[a] = b[u2]
-  u1[u2] = u2[u1]
-  u2[x] = x[u2]
+  u[nil] = nil
+  u[false] = true
+  u[1] = v[2]
+  u[a] = b[v]
+  u[v] = v[u]
+  v[x] = x[v]
   x[nil] = nil
   x[true] = false
   x[1] = y[2]
   x[b] = c[y]
-  y[u2] = u1[x]
+  y[v] = u[x]
   y[x] = x[y]
-  c[b][a] = u3[u2][u1]
-  c[b[a]] = u3[u2[u1]]
+  c[b][a] = w[v][u]
+  c[b[a]] = w[v[u]]
   b[1][2] = y[true][false]
   a,b,c = nil
   a,b,c = 1,2,3
@@ -174,10 +174,10 @@ function stat_assign_n(...)
   a,b,c = 1,2
   a,b,c = 1,2,3
   a,b,c = 1,2,3,4
-  a,u1,x = y,b,u2
-  -- u1,u2,u3 = a,b,c
+  a,u,x = y,b,v
+  -- u,v,w = a,b,c
   -- a,a,a = 1,2,3
-  -- u1,u2,x = 1,2,3
+  -- u,v,x = 1,2,3
   -- x,y,z[1] = 1,2,3
 end --]==]
 --[==[
@@ -247,5 +247,24 @@ function stat_repeat(...)
 end --]==]
 --[==[
 function tc(...)
-  -- body
+  local a,b,c
+  t = {[a]=1, [u]=2, [x]=3, [5]=4,}
+  t = {x=a, y=u, z=x,}
+  days = {"Sunday", "Monday", "Tuesday", "Wednesday",
+        "Thursday", "Friday", "Saturday"}
+  w = {x=0, y=0, label="console"}
+  opnames = {["+"] = "add", ["-"] = "sub",
+           ["*"] = "mul", ["/"] = "div"}
+  a = {[i+0] = s, [i+1] = s..s, [i+2] = s..s..s}
+  a = {[1]="red", [2]="green", [3]="blue",}
+  a = {x=10, y=45; "one", "two", "three"}
+  -- polyline = {
+  --   color="blue",
+  --   thickness=2,
+  --   npoints=4,
+  --   {x=0, y=0},   -- polyline[1]
+  --   {x=-10, y=0}, -- polyline[2]
+  --   {x=-10, y=1}, -- polyline[3]
+  --   {x=0, y=1}    -- polyline[4]
+  -- }
 end --]==]

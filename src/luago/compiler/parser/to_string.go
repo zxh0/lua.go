@@ -133,7 +133,7 @@ func expToString(exp Exp) string {
 	case *BinopExp:
 		return "(" + expToString(x.Exp1) + binopToString(x.Op) + expToString(x.Exp2) + ")"
 	case *TableConstructorExp:
-		return tableConstructorExpToString(x)
+		return tcExpToString(x)
 	case *FuncDefExp:
 		return funcDefExpToString(x)
 	case *NameExp:
@@ -144,6 +144,8 @@ func expToString(exp Exp) string {
 		return expToString(x.PrefixExp) + "[" + expToString(x.KeyExp) + "]"
 	case *FuncCallExp:
 		return funcCallToString(x)
+	case int: // table/list index
+		return fmt.Sprintf("%d", x)
 	default:
 		panic("unreachable!")
 	}
@@ -165,7 +167,7 @@ func funcCallToString(fc *FuncCallExp) string {
 	return str
 }
 
-func tableConstructorExpToString(tc *TableConstructorExp) string {
+func tcExpToString(tc *TableConstructorExp) string {
 	str := "{"
 	for i, k := range tc.KeyExps {
 		v := tc.ValExps[i]

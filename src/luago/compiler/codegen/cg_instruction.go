@@ -58,6 +58,11 @@ func (self *cg) setTabUp(line, a, b, c int) {
 	self.inst(line, OP_SETTABUP, a, b, c)
 }
 
+// r[a] := r[b][rk(c)]
+func (self *cg) getTable(line, a, b, c int) {
+	self.inst(line, OP_GETTABLE, a, b, c)
+}
+
 // r[a][rk(b)] = rk(c)
 func (self *cg) setTable(line, a, b, c int) {
 	self.inst(line, OP_SETTABLE, a, b, c)

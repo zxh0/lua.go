@@ -3,6 +3,7 @@ package state
 import "runtime"
 import . "luago/lua"
 import "luago/binchunk"
+import "luago/compiler"
 
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_atpanic
@@ -77,8 +78,14 @@ func (self *luaState) GC(what, data int) int {
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_load
-func (self *luaState) Load(chunk []byte) LuaThreadStatus {
-	proto := binchunk.Undump(chunk)
+func (self *luaState) Load(chunk []byte, chunkName, mode string) LuaThreadStatus {
+	var proto *binchunk.FuncProto
+	if binchunk.IsBinaryChunk(chunk) {
+		proto = binchunk.Undump(chunk)
+	} else {
+		proto = compiler.Compile(chunkName, string(chunk))
+	}
+
 	cl := newLuaClosure(proto)
 	if len(proto.Upvalues) > 0 { // todo
 		env := self.registry.get(LUA_RIDX_GLOBALS)

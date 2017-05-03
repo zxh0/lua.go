@@ -33,7 +33,7 @@ func (self *cg) ifStat(node *IfStat) {
 	}
 
 	// fix jmps
-	pc := self.pc()-1 // todo
+	pc := self.pc() - 1 // todo
 	for i := 0; i < len(jmps)/2; i++ {
 		if jmps[i*2] > 0 {
 			if i < len(jmps)/2-1 {

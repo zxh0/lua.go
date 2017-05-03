@@ -1,7 +1,6 @@
 package codegen
 
 import . "luago/compiler/ast"
-// import . "luago/lua/vm"
 
 func (self *cg) localAssignStat(node *LocalAssignStat) {
 	exps := removeTailNils(node.ExpList)
@@ -212,18 +211,18 @@ func (self *cg) assignStatN(node *AssignStat) {
 		self.assignStat1(node.LastLine,
 			node.VarList[nVars-1], exps[nExps-1])
 	} else if nVars > nExps {
-		nNils := nVars-nExps
+		nNils := nVars - nExps
 		tmp := self.allocTmps(nNils)
 		nTmps += nNils
 		self.loadNil(node.LastLine, tmp, nNils)
 		for i := nExps; i < nVars; i++ {
-			operands[i*6+4] = tmp+i-nExps
+			operands[i*6+4] = tmp + i - nExps
 			operands[i*6+5] = ARG_REG
 		}
 	}
 
 	self.freeTmps(nTmps)
-	for i := len(operands)-1; i > 0; i -= 6 {
+	for i := len(operands) - 1; i > 0; i -= 6 {
 		iTab := operands[i-5]
 		tTab := operands[i-4]
 		iKey := operands[i-3]
