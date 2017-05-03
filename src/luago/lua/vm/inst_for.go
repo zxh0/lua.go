@@ -1,0 +1,54 @@
+package vm
+
+import . "luago/lua"
+
+// R(A)-=R(A+2); pc+=sBx
+func forPrep(i Instruction, vm VM) {
+	a, sBx := i.AsBx()
+	a += 1
+
+	vm.CheckStack(2)
+	vm.PushValue(a)     // ~/r[a]
+	vm.PushValue(a + 2) // ~/r[a]/r[a+2]
+	vm.Arith(LUA_OPSUB) // ~/r[a]-r[a+2]
+	vm.Replace(a)       // ~
+	vm.AddPC(sBx)
+}
+
+// R(A)+=R(A+2);
+// if R(A) <?= R(A+1) then {
+//   pc+=sBx; R(A+3)=R(A)
+// }
+func forLoop(i Instruction, vm VM) {
+	a, sBx := i.AsBx()
+	a += 1
+
+	// R(A)+=R(A+2);
+	vm.CheckStack(2)
+	vm.PushValue(a + 2) // ~/r[a+2]
+	vm.PushValue(a)     // ~/r[a+2]/r[a]
+	vm.Arith(LUA_OPADD) // ~/r[a]+r[a+2]
+	vm.Replace(a)       // ~
+
+	isPositiveStep := vm.ToNumber(a+2) >= 0
+	if isPositiveStep && vm.Compare(a, a+1, LUA_OPLE) ||
+		!isPositiveStep && vm.Compare(a+1, a, LUA_OPLE) {
+
+		// pc+=sBx; R(A+3)=R(A)
+		vm.AddPC(sBx)
+		vm.Copy(a, a+3)
+	}
+}
+
+// if R(A+1) ~= nil then {
+//   R(A)=R(A+1); pc += sBx
+// }
+func tForLoop(i Instruction, vm VM) {
+	a, sBx := i.AsBx()
+	a += 1
+
+	if !vm.IsNil(a + 1) {
+		vm.Copy(a+1, a)
+		vm.AddPC(sBx)
+	}
+}

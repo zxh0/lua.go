@@ -1,0 +1,13 @@
+package vm
+
+import . "luago/lua"
+
+// R(A) := closure(KPROTO[Bx])
+func closure(i Instruction, vm VM) {
+	a, bx := i.ABx()
+	a += 1
+
+	vm.CheckStack(1)
+	vm.LoadProto(bx) // ~/closure
+	vm.Replace(a)    // ~
+}
