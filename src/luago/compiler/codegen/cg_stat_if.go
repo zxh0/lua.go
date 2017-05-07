@@ -7,7 +7,7 @@ import . "luago/compiler/lexer"
          if
         (exp) ---.
         then     |jmp0
-    .--[block]   |
+     ,-[block]   |
 jmp1|   elseif <-'
     |   (exp) ---.
     |   then     |jmp2
@@ -23,59 +23,72 @@ jmp5|   elseif <-'
     '-> end
 */
 func (self *cg) ifStat(node *IfStat) {
-	jmps := make([]int, len(node.Exps)*2)
-	for i, exp := range node.Exps {
-		block := node.Blocks[i]
-		line := node.Lines[i]
-		isLastExp := (i == len(node.Exps)-1)
-		jmps[i*2], jmps[i*2+1] =
-			_cgIf(self, exp, block, line, isLastExp)
+	jmp2elseIfs := map[int]bool{}
+	jmp2ends := map[int]bool{}
+
+	for i := 0; i < len(node.Exps); i++ {
+		if i > 0 {
+			for pc, _ := range jmp2elseIfs {
+				self.fixSbx(pc, self.pc0()-pc)
+			}
+			jmp2elseIfs = map[int]bool{} // clear map
+		}
+
+		self._cgIf(node, i, jmp2elseIfs, jmp2ends)
 	}
 
-	// fix jmps
-	pc := self.pc() - 1 // todo
-	for i := 0; i < len(jmps)/2; i++ {
-		if jmps[i*2] > 0 {
-			if i < len(jmps)/2-1 {
-				self.fixSbx(jmps[i*2], jmps[i*2+1]-jmps[i*2])
-			} else {
-				self.fixSbx(jmps[i*2], pc-jmps[i*2]-1)
-			}
-		}
-		if jmps[i*2+1] > 0 {
-			self.fixSbx(jmps[i*2+1], pc-jmps[i*2+1]-1)
-		}
+	for pc, _ := range jmp2elseIfs {
+		self.fixSbx(pc, self.pc0()-pc)
+	}
+	for pc, _ := range jmp2ends {
+		self.fixSbx(pc, self.pc0()-pc)
 	}
 }
 
-// todo
-func _cgIf(cg *cg, exp Exp, block *Block,
-	lineOfThen int, isLastExp bool) (jmp1, jmp2 int) {
+// todo: rename
+func (self *cg) _cgIf(node *IfStat, i int,
+	jmp2elseIfs, jmp2ends map[int]bool) {
+
+	exp := node.Exps[i]
+	block := node.Blocks[i]
+	lineOfThen := node.Lines[i]
 
 	if isExpTrue(exp) {
 		switch x := exp.(type) {
 		case *StringExp:
-			cg.indexOf(x.Str)
+			self.indexOf(x.Str)
 		}
 	} else {
-		tmp := cg.allocTmp()
-		if isRelationalBinopExp(exp) {
-			cg.exp(exp, tmp, 0)
+		if slot, ok := self.isLocVar(exp); ok {
+			self.test(lineOfThen, slot, 0)
+			pc := self.jmp(lineOfThen, 0)
+			jmp2elseIfs[pc] = true
+		} else if bexp, ok := exp.(*BinopExp); ok && bexp.Op == TOKEN_OP_AND {
+			jmps := self.testLogicalAndExp(bexp, lineOfThen)
+			for _, pc := range jmps {
+				jmp2elseIfs[pc] = true
+			}
+		} else if bexp, ok := exp.(*BinopExp); ok && bexp.Op == TOKEN_OP_OR {
+			jmp := self.testLogicalOrExp(bexp, lineOfThen)
+			jmp2elseIfs[jmp] = true
 		} else {
-			cg.exp(exp, tmp, 1)
-			cg.test(lineOfThen, tmp, 0)
+			tmp := self.allocTmp()
+			self.testExp(exp, tmp) // todo
+			if !isRelationalBinopExp(exp) {
+				self.test(lineOfThen, tmp, 0)
+			}
+			self.freeTmp()
+			pc := self.jmp(lineOfThen, 0)
+			jmp2elseIfs[pc] = true
 		}
-		cg.freeTmp()
 
-		jmp1 = cg.jmp(lineOfThen, 0)
 	}
 
-	cg.block(block)
-	if !isLastExp {
-		jmp2 = cg.jmp(block.LastLine, 0)
+	self.block(block)
+	if i < len(node.Exps)-1 {
+		pc := self.jmp(block.LastLine, 0)
+		jmp2ends[pc] = true
 	}
-
-	return
 }
 
 func isRelationalBinopExp(exp Exp) bool {

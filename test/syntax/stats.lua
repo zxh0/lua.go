@@ -222,6 +222,24 @@ function stat_if(...)
   if n == 0 then return 1 else return fact(n-1) end
   if x then print(a) elseif y then print(b) end
   if x then print(a) elseif y then print(b) elseif z then print(c) end
+
+  -- local a,b,c=...
+  -- if nil     then print(1) end
+  -- if true    then print(1) end
+  -- if false   then print(1) end
+  -- if false   then print(1) end
+  -- if 1       then print(1) end
+  -- if {}      then print(1) end
+  -- if ...     then print(1) end
+  -- if f()     then print(1) end
+  -- if a[b]    then print(1) end
+  -- if a       then print(1) end
+  -- if u       then print(1) end
+  -- if x       then print(1) end
+  -- if a + b   then print(1) end
+  -- if a > b   then print(1) end
+  -- if a and b then print(1) end
+  -- if a or  b then print(1) end
 end --]==]
 --[==[
 function stat_for_num(...)

@@ -75,13 +75,21 @@ func (self *cg) assignToName(line int, name string, rhs Exp) {
 			envIdx := self.lookupUpval("_ENV")
 			self.getTabUp(line, slot, envIdx, iY)
 		default:
-			tmp := self.allocTmp()
-			self.exp(rhs, tmp, 1)
-			self.freeTmp()
+			// tmp := self.allocTmp()
+			// self.exp(rhs, tmp, 1)
+			// self.freeTmp()
 			switch rhs.(type) {
+			case *UnopExp:
+				self.exp(rhs, slot, 1)
 			case *BinopExp:
-				self.fixA(len(self.insts)-1, slot)
+				//tmp := self.allocTmp()
+				self.exp(rhs, slot, 1)
+				//self.freeTmp()
+				//self.fixA(len(self.insts)-1, slot)
 			default:
+				tmp := self.allocTmp()
+				self.exp(rhs, tmp, 1)
+				self.freeTmp()
 				self.move(line, slot, tmp)
 			}
 		}

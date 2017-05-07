@@ -190,8 +190,8 @@ func (self *scope) indexOf(k interface{}) int {
 func (self *scope) getMaxStack() int {
 	maxLocals := 0
 	for _, locVar := range self.locVars {
-		if locVar.slot > maxLocals {
-			maxLocals = locVar.slot
+		if locVar.slot+1 > maxLocals {
+			maxLocals = locVar.slot + 1
 		}
 	}
 	if self.stackMax > maxLocals {

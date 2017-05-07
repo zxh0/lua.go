@@ -14,21 +14,43 @@ func (self *cg) block(node *Block) {
 
 func (self *cg) retStat(node *RetStat) {
 	nExps := len(node.ExpList)
+	if nExps == 0 {
+		self._return(node.LastLine, 0, 0)
+		return
+	}
+
 	if nExps == 1 {
-		if fcExp, ok := node.ExpList[0].(*FuncCallExp); ok {
+		switch exp := node.ExpList[0].(type) {
+		case *NameExp:
+			if slot := self.slotOf(exp.Name); slot >= 0 {
+				self._return(node.LastLine, slot, 1)
+				return
+			}
+		case *FuncCallExp:
 			tmp := self.allocTmp()
-			self.tailCallExp(fcExp, tmp)
+			self.tailCallExp(exp, tmp)
 			self.freeTmp()
 			self._return(node.LastLine, tmp, -1)
 			return
 		}
 	}
 
-	for _, exp := range node.ExpList {
+	lastExpIsVarargOrFuncCall := false
+	for i, exp := range node.ExpList {
 		tmp := self.allocTmp()
-		self.exp(exp, tmp, 1)
+		if i == nExps-1 && isVarargOrFuncCallExp(exp) {
+			lastExpIsVarargOrFuncCall = true
+			self.exp(exp, tmp, -1)
+		} else {
+			self.exp(exp, tmp, 1)
+		}
 	}
 	self.freeTmps(nExps)
+
 	a := self.scope.nLocals // correct?
-	self._return(node.LastLine, a, nExps)
+	if lastExpIsVarargOrFuncCall {
+		self._return(node.LastLine, a, -1)
+	} else {
+		self._return(node.LastLine, a, nExps)
+	}
 }

@@ -18,6 +18,10 @@ func (self *cg) stat(stat Stat) {
 		self.localAssignStat(node)
 	case *AssignStat:
 		self.assignStat(node)
+	case *BreakStat:
+		// todo
+	case DoStat:
+		self.block(node)
 	default:
 		panic("todo: stat!")
 	}

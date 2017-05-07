@@ -17,9 +17,13 @@ func newCG(parentScope *scope) *cg {
 	}
 }
 
-// todo
+// todo: use pc0()
 func (self *cg) pc() int {
 	return len(self.insts) + 1 // ???
+}
+
+func (self *cg) pc0() int {
+	return len(self.insts) - 1
 }
 
 func (self *cg) inst(line, opcode, a, b, c int) int {

@@ -1,6 +1,7 @@
 package codegen
 
 import . "luago/lua/vm"
+import . "luago/number" // todo
 
 // r[a], r[a+1], ..., r[a+b] = nil
 func (self *cg) loadNil(line, a, n int) {
@@ -25,7 +26,12 @@ func (self *cg) loadK(line, a int, k interface{}) {
 
 // r[a] = {}
 func (self *cg) newTable(line, a, nArr, nRec int) {
-	self.inst(line, OP_NEWTABLE, a, nArr, nRec)
+	self.inst(line, OP_NEWTABLE, a, INT2FB(nArr), INT2FB(nRec))
+}
+
+// r[a][(c-1)*FPF+i] := r[a+i], 1 <= i <= b
+func (self *cg) setList(line, a, b, c int) {
+	self.inst(line, OP_SETLIST, a, b, c)
 }
 
 // r[a] = closure(proto[bx])
@@ -88,12 +94,27 @@ func (self *cg) _return(line, a, n int) {
 	self.inst(line, OP_RETURN, a, n+1, 0)
 }
 
-// pc+=sBx; if (A) close all upvalues >= R(A - 1)
+// r[a+1] := r[b]; r[a] := r[b][rk(c)]
+func (self *cg) _self(line, a, b, c int) {
+	self.inst(line, OP_SELF, a, b, c)
+}
+
+// pc+=sBx; if (a) close all upvalues >= r[a - 1]
 func (self *cg) jmp(line, sBx int) int {
 	return self.inst(line, OP_JMP, 0, sBx, 0) // todo
 }
 
-// if not (R(A) <=> C) then pc++
+// if not (r[a] <=> c) then pc++
 func (self *cg) test(line, a, c int) {
 	self.inst(line, OP_TEST, a, 0, c)
+}
+
+// if (r[b] <=> c) then r[a] := r[b] else pc++
+func (self *cg) testSet(line, a, b, c int) {
+	self.inst(line, OP_TESTSET, a, b, c)
+}
+
+// r[a] = op r[b]
+func (self *cg) unaryOp(line, op, a, b int) {
+	self.inst(line, op, a, b, 0)
 }

@@ -1,6 +1,7 @@
 package vm
 
 import . "luago/lua"
+import . "luago/number" // todo
 
 // R(A) := {} (size = B,C)
 func newTable(i Instruction, vm VM) {
@@ -8,7 +9,7 @@ func newTable(i Instruction, vm VM) {
 	a += 1
 
 	vm.CheckStack(1)
-	vm.CreateTable(b, c) // ~/{}
+	vm.CreateTable(FB2INT(b), FB2INT(c)) // ~/{}
 	vm.Replace(a)        // ~
 }
 

@@ -1,13 +1,15 @@
 package codegen
 
 import . "luago/compiler/ast"
+import . "luago/compiler/lexer"
 
 // todo: rename
 func isExpTrue(exp Exp) bool {
 	switch exp.(type) {
 	case *TrueExp,
 		*IntegerExp, *FloatExp, *StringExp,
-		*TableConstructorExp, FuncDefExp:
+		//*TableConstructorExp,
+		FuncDefExp:
 		return true
 	default:
 		return false
@@ -21,6 +23,24 @@ func isVarargOrFuncCallExp(exp Exp) bool {
 	default:
 		return false
 	}
+}
+
+func castToLogicalAndExp(exp Exp) (*BinopExp, bool) {
+	if bexp, ok := exp.(*BinopExp); ok {
+		if bexp.Op == TOKEN_OP_AND {
+			return bexp, true
+		}
+	}
+	return nil, false
+}
+
+func castToLogicalOrExp(exp Exp) (*BinopExp, bool) {
+	if bexp, ok := exp.(*BinopExp); ok {
+		if bexp.Op == TOKEN_OP_OR {
+			return bexp, true
+		}
+	}
+	return nil, false
 }
 
 // todo
