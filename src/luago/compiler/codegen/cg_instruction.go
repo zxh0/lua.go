@@ -115,6 +115,6 @@ func (self *cg) testSet(line, a, b, c int) {
 }
 
 // r[a] = op r[b]
-func (self *cg) unaryOp(line, op, a, b int) {
-	self.inst(line, op, a, b, 0)
-}
+// func (self *cg) unaryOp(line, op, a, b int) {
+// 	self.inst(line, op, a, b, 0)
+// }

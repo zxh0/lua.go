@@ -57,9 +57,13 @@ func optimizeArithBinaryOp(exp *BinopExp) Exp {
 			case TOKEN_OP_MUL:
 				return &IntegerExp{exp.Line, x.Val * y.Val}
 			case TOKEN_OP_IDIV:
-				return &IntegerExp{exp.Line, x.Val / y.Val}
+				if y.Val != 0 {
+					return &IntegerExp{exp.Line, x.Val / y.Val}
+				}
 			case TOKEN_OP_MOD:
-				return &IntegerExp{exp.Line, x.Val % y.Val}
+				if y.Val != 0 {
+					return &IntegerExp{exp.Line, x.Val % y.Val}
+				}
 			}
 		}
 	}
@@ -73,9 +77,13 @@ func optimizeArithBinaryOp(exp *BinopExp) Exp {
 			case TOKEN_OP_MUL:
 				return &FloatExp{exp.Line, f * g}
 			case TOKEN_OP_IDIV, TOKEN_OP_DIV: // ?
-				return &FloatExp{exp.Line, f / g}
+				if g != 0 {
+					return &FloatExp{exp.Line, f / g}
+				}
 			case TOKEN_OP_MOD:
-				return &FloatExp{exp.Line, math.Mod(f, g)}
+				if g != 0 {
+					return &FloatExp{exp.Line, math.Mod(f, g)}
+				}
 			case TOKEN_OP_POW:
 				return &FloatExp{exp.Line, math.Pow(f, g)}
 			}

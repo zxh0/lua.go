@@ -29,14 +29,14 @@ func parseExp12(lexer *Lexer) Exp {
 	for {
 		if lexer.LookAhead(1) == TOKEN_OP_OR {
 			line, op, _ := lexer.NextToken()
-			lor := &BinopExp{line, op, exp, parseExp11(lexer)}
+			lor := &BinopExp{line, op, 12, exp, parseExp11(lexer)}
 			exp = optimizeLogicalOr(lor)
 		} else {
 			break
 		}
 	}
 	// for the convenience of codegen
-	return changeAssociative(exp, TOKEN_OP_OR)
+	return changeAssociative(exp, 12)
 }
 
 // x and y
@@ -45,7 +45,7 @@ func parseExp11(lexer *Lexer) Exp {
 	for {
 		if lexer.LookAhead(1) == TOKEN_OP_AND {
 			line, op, _ := lexer.NextToken()
-			land := &BinopExp{line, op, exp, parseExp10(lexer)}
+			land := &BinopExp{line, op, 11, exp, parseExp10(lexer)}
 			last := lexer.LookAhead(1) != TOKEN_OP_AND // todo
 			exp = optimizeLogicalAnd(land, last)
 		} else {
@@ -53,7 +53,7 @@ func parseExp11(lexer *Lexer) Exp {
 		}
 	}
 	// for the convenience of codegen
-	return changeAssociative(exp, TOKEN_OP_AND)
+	return changeAssociative(exp, 11)
 }
 
 // compare
@@ -64,7 +64,7 @@ func parseExp10(lexer *Lexer) Exp {
 		case TOKEN_OP_LT, TOKEN_OP_GT, TOKEN_OP_NE,
 			TOKEN_OP_LE, TOKEN_OP_GE, TOKEN_OP_EQ:
 			line, op, _ := lexer.NextToken()
-			exp = &BinopExp{line, op, exp, parseExp9(lexer)}
+			exp = &BinopExp{line, op, 10, exp, parseExp9(lexer)}
 		default:
 			return exp
 		}
@@ -78,13 +78,13 @@ func parseExp9(lexer *Lexer) Exp {
 	for {
 		if lexer.LookAhead(1) == TOKEN_OP_BOR {
 			line, op, _ := lexer.NextToken()
-			bor := &BinopExp{line, op, exp, parseExp8(lexer)}
+			bor := &BinopExp{line, op, 9, exp, parseExp8(lexer)}
 			exp = optimizeBitwiseBinaryOp(bor)
 		} else {
 			break
 		}
 	}
-	return exp
+	return changeAssociative(exp, 9)
 }
 
 // x ~ y
@@ -93,13 +93,13 @@ func parseExp8(lexer *Lexer) Exp {
 	for {
 		if lexer.LookAhead(1) == TOKEN_OP_BXOR {
 			line, op, _ := lexer.NextToken()
-			bxor := &BinopExp{line, op, exp, parseExp7(lexer)}
+			bxor := &BinopExp{line, op, 8, exp, parseExp7(lexer)}
 			exp = optimizeBitwiseBinaryOp(bxor)
 		} else {
 			break
 		}
 	}
-	return exp
+	return changeAssociative(exp, 8)
 }
 
 // x & y
@@ -108,29 +108,29 @@ func parseExp7(lexer *Lexer) Exp {
 	for {
 		if lexer.LookAhead(1) == TOKEN_OP_BAND {
 			line, op, _ := lexer.NextToken()
-			band := &BinopExp{line, op, exp, parseExp6(lexer)}
+			band := &BinopExp{line, op, 7, exp, parseExp6(lexer)}
 			exp = optimizeBitwiseBinaryOp(band)
 		} else {
 			break
 		}
 	}
-	return exp
+	return changeAssociative(exp, 7)
 }
 
 // shift
 func parseExp6(lexer *Lexer) Exp {
 	exp := parseExp5(lexer)
-	for {
-		tk := lexer.LookAhead(1)
-		if tk == TOKEN_OP_SHL || tk == TOKEN_OP_SHR {
+	loop: for {
+		switch lexer.LookAhead(1) {
+		case TOKEN_OP_SHL, TOKEN_OP_SHR:
 			line, op, _ := lexer.NextToken()
-			shx := &BinopExp{line, op, exp, parseExp5(lexer)}
+			shx := &BinopExp{line, op, 6, exp, parseExp5(lexer)}
 			exp = optimizeBitwiseBinaryOp(shx)
-		} else {
-			break
+		default:
+			break loop
 		}
 	}
-	return exp
+	return changeAssociative(exp, 6)
 }
 
 // a .. b
@@ -139,45 +139,46 @@ func parseExp5(lexer *Lexer) Exp {
 	for {
 		if lexer.LookAhead(1) == TOKEN_OP_CONCAT {
 			line, op, _ := lexer.NextToken()
-			exp = &BinopExp{line, op, exp, parseExp4(lexer)}
+			exp = &BinopExp{line, op, 5, exp, parseExp4(lexer)}
 		} else {
 			break
 		}
 	}
 	// concat is right associative
-	return changeAssociative(exp, TOKEN_OP_CONCAT)
+	return changeAssociative(exp, 5)
 }
 
 // x +/- y
 func parseExp4(lexer *Lexer) Exp {
 	exp := parseExp3(lexer)
-	for {
+	loop: for {
 		switch lexer.LookAhead(1) {
 		case TOKEN_OP_ADD, TOKEN_OP_SUB:
 			line, op, _ := lexer.NextToken()
-			arith := &BinopExp{line, op, exp, parseExp3(lexer)}
+			arith := &BinopExp{line, op, 4, exp, parseExp3(lexer)}
 			exp = optimizeArithBinaryOp(arith)
 		default:
-			return exp
+			break loop
 		}
 	}
-	return exp
+
+	return changeAssociative(exp, 4)
 }
 
 // *, %, /, //
 func parseExp3(lexer *Lexer) Exp {
 	exp := parseExp2(lexer)
-	for {
+	loop: for {
 		switch lexer.LookAhead(1) {
 		case TOKEN_OP_MUL, TOKEN_OP_MOD, TOKEN_OP_DIV, TOKEN_OP_IDIV:
 			line, op, _ := lexer.NextToken()
-			arith := &BinopExp{line, op, exp, parseExp2(lexer)}
+			arith := &BinopExp{line, op, 3, exp, parseExp2(lexer)}
 			exp = optimizeArithBinaryOp(arith)
 		default:
-			return exp
+			break loop
 		}
 	}
-	return exp
+	return changeAssociative(exp, 3)
 }
 
 // unary
@@ -198,13 +199,13 @@ func parseExp1(lexer *Lexer) Exp {
 	for {
 		if lexer.LookAhead(1) == TOKEN_OP_POW {
 			line, op, _ := lexer.NextToken()
-			exp = &BinopExp{line, op, exp, parseExp0(lexer)}
+			exp = &BinopExp{line, op, 1, exp, parseExp0(lexer)}
 		} else {
 			break
 		}
 	}
 	// pow is right associative
-	exp = changeAssociative(exp, TOKEN_OP_POW)
+	exp = changeAssociative(exp, 1)
 	return optimizePow(exp)
 }
 
@@ -256,18 +257,26 @@ func parseNumberExp(lexer *Lexer, sign int) Exp {
 	}
 }
 
-func changeAssociative(_exp Exp, op int) Exp {
-	if exp, ok := _exp.(*BinopExp); ok && exp.Op == op {
+/*
+        op1          op2
+       /   \        /   \
+     op2    c  =>  a    op1
+    /   \              /   \
+   a     b            b     c
+*/
+func changeAssociative(exp Exp, prec int) Exp {
+	if bexp, ok := exp.(*BinopExp); ok && bexp.Prec == prec {
 		for {
-			if exp1, ok := exp.Exp1.(*BinopExp); ok && exp1.Op == op {
-				exp.Exp1 = exp1.Exp1
+			if exp1, ok := bexp.Exp1.(*BinopExp); ok && exp1.Prec == prec {
+				bexp.Exp1 = exp1.Exp1
 				exp1.Exp1 = exp1.Exp2
-				exp1.Exp2 = exp.Exp2
-				exp.Exp2 = exp1
+				exp1.Exp2 = bexp.Exp2
+				bexp.Exp2 = exp1
+				bexp.Op, exp1.Op = exp1.Op, bexp.Op
 			} else {
 				break
 			}
 		}
 	}
-	return _exp
+	return exp
 }

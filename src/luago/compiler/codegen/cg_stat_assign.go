@@ -116,9 +116,9 @@ func (self *cg) assignToName(line int, name string, rhs Exp) {
 			self.setTabUp(line, envIdx, strIdx, iY)
 		default:
 			tmp := self.allocTmp()
+			self.freeTmp() // todo
 			self.exp(rhs, tmp, 1)
 			self.setTabUp(line, envIdx, strIdx, tmp) // todo
-			self.freeTmp()
 		}
 	}
 }

@@ -139,6 +139,12 @@ function stat_assign_1(...)
   x = a
   x = u
   x = y
+  x = a * b / c // d % a
+  x = a + b - c + d
+  x = a << b >> c << d
+  x = a & b & c & d
+  x = a ~ b ~ c ~ d
+  x = a | b | c | d
   a[nil] = nil
   a[true] = false
   a[1] = 2

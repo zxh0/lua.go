@@ -218,6 +218,16 @@ func (self *cg) _funcCallExp(exp *FuncCallExp, a, n int, tailCall bool) {
 	}
 }
 
+func (self *cg) loadFunc(pexp Exp, tmp int) {
+	if nameExp, ok := pexp.(*NameExp); ok {
+		if slot := self.slotOf(nameExp.Name); slot >= 0 {
+			self.move(nameExp.Line, tmp, slot)
+			return
+		}
+	}
+	self.exp(pexp, tmp, 1)
+}
+
 func (self *cg) nameExp(exp *NameExp, a int) {
 	if slot := self.slotOf(exp.Name); slot >= 0 {
 		self.move(exp.Line, a, slot)
@@ -260,6 +270,26 @@ func (self *cg) bracketsExp(exp *BracketsExp, a int) {
 	}
 }
 
+func (self *cg) unopExp(exp *UnopExp, a int) {
+	b := self.toREG(exp.Exp)
+	if b < 0 {
+		b = self.allocTmp()
+		self.exp(exp.Exp, b, 1)
+		self.freeTmp()
+	}
+
+	switch exp.Op {
+	case TOKEN_OP_NOT:
+		self.inst(exp.Line, OP_NOT, a, b, 0)
+	case TOKEN_OP_BNOT:
+		self.inst(exp.Line, OP_BNOT, a, b, 0)
+	case TOKEN_OP_LEN:
+		self.inst(exp.Line, OP_LEN, a, b, 0)
+	case TOKEN_OP_UNM:
+		self.inst(exp.Line, OP_UNM, a, b, 0)
+	}
+}
+
 func (self *cg) binopExp(exp *BinopExp, a, n int) {
 	switch exp.Op {
 	case TOKEN_OP_POW:
@@ -271,34 +301,69 @@ func (self *cg) binopExp(exp *BinopExp, a, n int) {
 	case TOKEN_OP_AND:
 		self.logicalAndExp(exp, a)
 	default:
-		if opcode, ok := arithAndBitwiseBinops[exp.Op]; ok {
-			self.arithAndBitwiseBinopExp(exp, a, opcode)
+		if _, ok := arithAndBitwiseBinops[exp.Op]; ok {
+			self.arithAndBitwiseBinopExp(exp, a)
 		} else {
 			self.relationalBinopExp(exp, a, n)
 		}
 	}
 }
 
-func (self *cg) arithAndBitwiseBinopExp(exp *BinopExp, a, opcode int) {
-	iX, tX := self.toOperand(exp.Exp1)
-	if tX != ARG_REG && tX != ARG_CONST {
-		iX = a
-		self.exp(exp.Exp1, iX, 1)
+func (self *cg) arithAndBitwiseBinopExp(exp *BinopExp, a int) {
+	tmp1 := -1
+	tmp2 := -1
+
+	lhs := exp.Exp1
+	rkb := self.toRK(lhs)
+	if rkb < 0 {
+		rkb = self.allocTmp()
+		tmp1 = rkb
+		self.exp(lhs, rkb, 1)
 	}
 
-	iY, tY := self.toOperand(exp.Exp2)
-	if tY != ARG_REG && tY != ARG_CONST {
-		if tX != ARG_REG && tX != ARG_CONST {
-			iY = self.allocTmp()
-			self.exp(exp.Exp2, iY, 1)
-			self.freeTmp()
+	for {
+		if exp2, ok := exp.Exp2.(*BinopExp); ok && exp2.Prec == exp.Prec {
+			rhs := exp2.Exp1
+			rkc := self.toRK(rhs)
+			if rkc < 0 {
+				rkc = self.allocTmp()
+				if tmp1 < 0 {
+					tmp1 = rkc
+				} else {
+					tmp2 = rkc
+				}
+				self.exp(rhs, rkc, 1)
+			}
+
+			if tmp1 < 0 && tmp2 < 0 {
+				tmp1 = self.allocTmp()
+			}
+			if tmp2 >= 0 {
+				self.freeTmp()
+			}
+			opcode := arithAndBitwiseBinops[exp.Op]
+			self.inst(exp.Line, opcode, tmp1, rkb, rkc)
+			rkb = tmp1
+
+			exp = exp2
 		} else {
-			iY = a
-			self.exp(exp.Exp2, iY, 1)
+			break
 		}
 	}
 
-	self.inst(exp.Line, opcode, a, iX, iY)
+	rhs := exp.Exp2
+	rkc := self.toRK(rhs)
+	if rkc < 0 {
+		rkc = self.allocTmp()
+		self.freeTmp()
+		self.exp(rhs, rkc, 1)
+	}
+	if tmp1 >= 0 {
+		self.freeTmp()
+	}
+
+	opcode := arithAndBitwiseBinops[exp.Op]
+	self.inst(exp.Line, opcode, a, rkb, rkc)
 }
 
 // todo: name
@@ -571,37 +636,6 @@ func (self *cg) testLogicalOrExp(exp *BinopExp, lastJmpLine int) int {
 	return lastJmp
 }
 
-func (self *cg) unopExp(exp *UnopExp, a int) {
-	b, t := self.toOperand(exp.Exp)
-	if t != ARG_REG {
-		b = self.allocTmp()
-		self.exp(exp.Exp, b, 1)
-		self.freeTmp()
-	}
-
-	// todo
-	switch exp.Op {
-	case TOKEN_OP_NOT:
-		self.inst(exp.Line, OP_NOT, a, b, 0)
-	case TOKEN_OP_BNOT:
-		self.inst(exp.Line, OP_BNOT, a, b, 0)
-	case TOKEN_OP_LEN:
-		self.inst(exp.Line, OP_LEN, a, b, 0)
-	case TOKEN_OP_UNM:
-		self.inst(exp.Line, OP_UNM, a, b, 0)
-	}
-}
-
-func (self *cg) loadFunc(pexp Exp, tmp int) {
-	if nameExp, ok := pexp.(*NameExp); ok {
-		if slot := self.slotOf(nameExp.Name); slot >= 0 {
-			self.inst(nameExp.Line, OP_MOVE, tmp, slot, 0)
-			return
-		}
-	}
-	self.exp(pexp, tmp, 1)
-}
-
 func (self *cg) isLocVar(exp Exp) (int, bool) {
 	if nameExp, ok := exp.(*NameExp); ok {
 		if slot := self.slotOf(nameExp.Name); slot >= 0 {
@@ -611,14 +645,14 @@ func (self *cg) isLocVar(exp Exp) (int, bool) {
 	return -1, false
 }
 
-func (self *cg) isUpval(exp Exp) (int, bool) {
-	if nameExp, ok := exp.(*NameExp); ok {
-		if idx := self.lookupUpval(nameExp.Name); idx >= 0 {
-			return idx, true
-		}
-	}
-	return -1, false
-}
+// func (self *cg) isUpval(exp Exp) (int, bool) {
+// 	if nameExp, ok := exp.(*NameExp); ok {
+// 		if idx := self.lookupUpval(nameExp.Name); idx >= 0 {
+// 			return idx, true
+// 		}
+// 	}
+// 	return -1, false
+// }
 
 // todo: rename
 func (self *cg) toOperand0(exp Exp) (int, int) {
@@ -664,4 +698,32 @@ func (self *cg) toOperand(exp Exp) (int, int) {
 		}
 	}
 	return -1, -1
+}
+
+func (self *cg) toREG(exp Exp) int {
+	if nameExp, ok := exp.(*NameExp); ok {
+		return self.slotOf(nameExp.Name)
+	}
+	return -1
+}
+
+func (self *cg) toRK(exp Exp) int {
+	switch x := exp.(type) {
+	case *NilExp:
+		return self.indexOf(nil)
+	case *FalseExp:
+		return self.indexOf(false)
+	case *TrueExp:
+		return self.indexOf(true)
+	case *IntegerExp:
+		return self.indexOf(x.Val)
+	case *FloatExp:
+		return self.indexOf(x.Val)
+	case *StringExp:
+		return self.indexOf(x.Str)
+	case *NameExp:
+		return self.slotOf(x.Name)
+	default:
+		return -1
+	}
 }
