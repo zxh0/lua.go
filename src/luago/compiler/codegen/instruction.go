@@ -2,6 +2,11 @@ package codegen
 
 import . "luago/lua/vm"
 
+// type opArg struct {
+// 	val  int
+// 	kind int
+// }
+
 type instruction struct {
 	line   int
 	opcode int

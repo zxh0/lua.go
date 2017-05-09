@@ -1,5 +1,5 @@
 local u,v,w
---[==[
+-- [==[
 function stat_local_assign(...)
   local v1 = nil
   local v2 = true
@@ -75,32 +75,32 @@ function stat_local_assign(...)
   local a = b / u / x / 1
   local a = b ^ u ^ x ^ 1
   local a = b ^ b ^ b ^ b
-  --local a = 1 ^ x ^ u ^ b ^ c
-  local a = b .. c .. u .. v .. x .. 1
-  local a = 1 < 2
-  local a = b == c
-  local a = b ~= c
-  local a = b > c
-  local a = b < c
-  local a = b >= c
-  local a = b <= c
-  local a = v1 < v2 < v3
-  local a = u ~= v
-  local a = u > v > w
-  local a = x == y
-  local a = x > y > z
-  local a = b == c ~= u > x >= y < 1 <= false
-  local a = 1 or 2
-  local a = b or c
-  local a = u or v
-  local a = x or y
-  local a = x or y or z or y or x
-  local a = b or u or x or true
-  local a = b and c
-  local a = v1 and v2 and v3
-  local a = u and v and w
-  local a = x and y and z
-  local a = b and u and x and true
+  local a = 1 ^ x ^ u ^ b ^ c
+  -- local a = b .. c .. u .. v .. x .. 1
+  -- local a = 1 < 2
+  -- local a = b == c
+  -- local a = b ~= c
+  -- local a = b > c
+  -- local a = b < c
+  -- local a = b >= c
+  -- local a = b <= c
+  -- local a = v1 < v2 < v3
+  -- local a = u ~= v
+  -- local a = u > v > w
+  -- local a = x == y
+  -- local a = x > y > z
+  -- local a = b == c ~= u > x >= y < 1 <= false
+  -- local a = 1 or 2
+  -- local a = b or c
+  -- local a = u or v
+  -- local a = x or y
+  -- local a = x or y or z or y or x
+  -- local a = b or u or x or true
+  -- local a = b and c
+  -- local a = v1 and v2 and v3
+  -- local a = u and v and w
+  -- local a = x and y and z
+  -- local a = b and u and x and true
   -- local a = x and y or x and y
   -- local a = 1
   a=1

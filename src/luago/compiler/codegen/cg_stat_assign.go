@@ -108,7 +108,7 @@ func (self *cg) assignToName(line int, name string, rhs Exp) {
 		envIdx := self.lookupUpval("_ENV")
 		strIdx := self.indexOf(name)
 
-		iY, tY := self.toOperand(rhs)
+		iY, tY := self.toOpArg(rhs)
 		switch tY {
 		case ARG_CONST:
 			self.setTabUp(line, envIdx, strIdx, iY)
@@ -127,7 +127,7 @@ func (self *cg) assignToField(line int, lhs *BracketsExp, rhs Exp) {
 	var a, b, c int
 	nTmps := 0
 
-	iTab, tTab := self.toOperand(lhs.PrefixExp)
+	iTab, tTab := self.toOpArg(lhs.PrefixExp)
 	if tTab == ARG_REG || tTab == ARG_UPVAL {
 		a = iTab
 	} else {
@@ -136,7 +136,7 @@ func (self *cg) assignToField(line int, lhs *BracketsExp, rhs Exp) {
 		self.exp(lhs.PrefixExp, a, 1)
 	}
 
-	iKey, tKey := self.toOperand(lhs.KeyExp)
+	iKey, tKey := self.toOpArg(lhs.KeyExp)
 	if tKey == ARG_CONST || tKey == ARG_REG {
 		b = iKey
 	} else {
@@ -145,7 +145,7 @@ func (self *cg) assignToField(line int, lhs *BracketsExp, rhs Exp) {
 		self.exp(lhs.KeyExp, b, 1)
 	}
 
-	iVal, tVal := self.toOperand(rhs)
+	iVal, tVal := self.toOpArg(rhs)
 	if tVal == ARG_CONST || tVal == ARG_REG {
 		c = iVal
 	} else {
@@ -204,7 +204,7 @@ func (self *cg) assignStatN(node *AssignStat) {
 	}
 	for i, rhs := range exps {
 		if i < nExps-1 || !flag {
-			//iVal, tVal := self.toOperand(rhs)
+			//iVal, tVal := self.toOpArg(rhs)
 			tVal := ARG_REG
 			iVal := self.allocTmp()
 			nTmps++

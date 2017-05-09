@@ -62,6 +62,11 @@ func (self *cg) lookupUpval(name string) int {
 func (self *cg) allocTmps(n int) int {
 	return self.scope.allocTmps(n)
 }
+// func (self *cg) nextTmp() int {
+// 	tmp := self.allocTmp()
+// 	self.freeTmp()
+// 	return tmp
+// }
 func (self *cg) allocTmp() int {
 	return self.scope.allocTmp()
 }
@@ -70,6 +75,9 @@ func (self *cg) freeTmp() {
 }
 func (self *cg) freeTmps(n int) {
 	self.scope.freeTmps(n)
+}
+func (self *cg) isTmpVar(slot int) bool {
+	return self.scope.isTmpVar(slot)
 }
 func (self *cg) indexOf(k interface{}) int {
 	return self.scope.indexOf(k)

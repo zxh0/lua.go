@@ -142,14 +142,14 @@ func (self *cg) tcExp(exp *TableConstructorExp, a int) {
 		}
 
 		nTmps := 0
-		iKey, tKey := self.toOperand(keyExp)
+		iKey, tKey := self.toOpArg(keyExp)
 		if tKey != ARG_CONST && tKey != ARG_REG {
 			iKey = self.allocTmp()
 			nTmps++
 			self.exp(keyExp, iKey, 1)
 		}
 
-		iVal, tVal := self.toOperand(valExp)
+		iVal, tVal := self.toOpArg(valExp)
 		if tVal != ARG_CONST && tVal != ARG_REG {
 			iVal = self.allocTmp()
 			nTmps++
@@ -245,8 +245,8 @@ func (self *cg) nameExp(exp *NameExp, a int) {
 
 // prefix[key]
 func (self *cg) bracketsExp(exp *BracketsExp, a int) {
-	iTab, tTab := self.toOperand(exp.PrefixExp)
-	iKey, tKey := self.toOperand(exp.KeyExp)
+	iTab, tTab := self.toOpArg(exp.PrefixExp)
+	iKey, tKey := self.toOpArg(exp.KeyExp)
 
 	if tTab != ARG_REG && tTab != ARG_UPVAL {
 		iTab = a
@@ -309,72 +309,166 @@ func (self *cg) binopExp(exp *BinopExp, a, n int) {
 	}
 }
 
-func (self *cg) arithAndBitwiseBinopExp(exp *BinopExp, a int) {
-	tmp1 := -1
-	tmp2 := -1
+func (self *cg) powExp(exp *BinopExp, a int) {
+	aIsFree := self.isTmpVar(a)
+	operands := make([]int, 0, 4) // todo: rename
 
-	lhs := exp.Exp1
-	rkb := self.toRK(lhs)
-	if rkb < 0 {
-		rkb = self.allocTmp()
-		tmp1 = rkb
-		self.exp(lhs, rkb, 1)
-	}
-
+	nTmps := 0
 	for {
-		if exp2, ok := exp.Exp2.(*BinopExp); ok && exp2.Prec == exp.Prec {
-			rhs := exp2.Exp1
-			rkc := self.toRK(rhs)
-			if rkc < 0 {
-				rkc = self.allocTmp()
-				if tmp1 < 0 {
-					tmp1 = rkc
-				} else {
-					tmp2 = rkc
-				}
-				self.exp(rhs, rkc, 1)
+		if rk := self.toRK(exp.Exp1); rk >= 0 {
+			operands = append(operands, rk, 0, exp.Line)
+		} else {
+			var tmp int
+			if aIsFree {
+				tmp = a
+				aIsFree = false
+			} else {
+				tmp = self.allocTmp()
+				nTmps++
 			}
+			self.exp(exp.Exp1, tmp, 1)
+			operands = append(operands, tmp, 1, exp.Line)
+		}
 
-			if tmp1 < 0 && tmp2 < 0 {
-				tmp1 = self.allocTmp()
-			}
-			if tmp2 >= 0 {
-				self.freeTmp()
-			}
-			opcode := arithAndBitwiseBinops[exp.Op]
-			self.inst(exp.Line, opcode, tmp1, rkb, rkc)
-			rkb = tmp1
-
+		if exp.Exp2 == nil {
+			break
+		} else if exp2, ok := castToPowExp(exp.Exp2); ok {
 			exp = exp2
 		} else {
+			exp = &BinopExp{Exp1: exp.Exp2, Exp2: nil}
+		}
+	}
+
+	for i := len(operands) - 2; i > 3; i -= 3 {
+		yIsTmp := operands[i] == 1
+		iy := operands[i-1]
+		line := operands[i-2]
+		xIsTmp := operands[i-3] == 1
+		ix := operands[i-4]
+		if xIsTmp {
+			self.inst(line, OP_POW, ix, ix, iy)
+		} else if yIsTmp {
+			self.inst(line, OP_POW, iy, ix, iy)
+			operands[i-3] = 1
+			operands[i-4] = iy
+		} else {
+			var tmp int
+			if aIsFree {
+				tmp = a
+				aIsFree = false
+			} else {
+				tmp = self.allocTmp()
+				nTmps++
+			}
+			self.inst(line, OP_POW, tmp, ix, iy)
+			operands[i-3] = 1
+			operands[i-4] = tmp
+		}
+	}
+	self.fixA(self.pc0(), a)
+	self.freeTmps(nTmps)
+}
+
+func (self *cg) concatExp(exp *BinopExp, a int) {
+	nTmps := -1
+	for {
+		if nTmps < 0 {
+			nTmps = 0
+			self.exp(exp.Exp1, a, 1)
+		} else {
+			tmp := self.allocTmp()
+			nTmps++
+			self.exp(exp.Exp1, tmp, 1)
+		}
+
+		exp2, ok := exp.Exp2.(*BinopExp)
+		if ok && exp2.Op == TOKEN_OP_CONCAT {
+			exp = exp2
+		} else {
+			tmp := self.allocTmp()
+			nTmps++
+			self.exp(exp.Exp2, tmp, 1)
 			break
 		}
 	}
 
-	rhs := exp.Exp2
-	rkc := self.toRK(rhs)
-	if rkc < 0 {
-		rkc = self.allocTmp()
-		self.freeTmp()
-		self.exp(rhs, rkc, 1)
-	}
-	if tmp1 >= 0 {
-		self.freeTmp()
+	self.freeTmps(nTmps)
+	self.inst(exp.Line, OP_CONCAT, a, a, a+nTmps)
+}
+
+func (self *cg) arithAndBitwiseBinopExp(exp *BinopExp, a int) {
+	var rkb, rkc int
+	nTmps := 0
+
+	// calc rkb
+	if rkb = self.toRK(exp.Exp1); rkb < 0 {
+		if self.isTmpVar(a) {
+			rkb = a
+		} else {
+			rkb = self.allocTmp()
+			nTmps++
+		}
+		self.exp(exp.Exp1, rkb, 1)
 	}
 
-	opcode := arithAndBitwiseBinops[exp.Op]
-	self.inst(exp.Line, opcode, a, rkb, rkc)
+	prec := exp.Prec
+	for {
+		rhs := exp.Exp2
+		line := exp.Line
+		opcode := arithAndBitwiseBinops[exp.Op]
+
+		if exp2, ok := castToBinopExp(exp.Exp2, prec); ok {
+			rhs = exp2.Exp1
+			exp = exp2
+		}
+
+		// calc rkc
+		if rkc = self.toRK(rhs); rkc < 0 {
+			if !self.isTmpVar(rkb) && self.isTmpVar(a) {
+				rkc = a
+				self.exp(rhs, rkc, 1)
+			} else {
+				rkc = self.allocTmp()
+				self.exp(rhs, rkc, 1)
+			}
+		}
+		
+		if !self.isTmpVar(rkb) && !self.isTmpVar(rkc) {
+			if self.isTmpVar(a) {
+				self.inst(line, opcode, a, rkb, rkc)
+				rkb = a
+			} else {
+				tmp := self.allocTmp()
+				nTmps++
+				self.inst(line, opcode, tmp, rkb, rkc)
+				rkb = tmp
+			}
+		} else if !self.isTmpVar(rkb) {
+			self.inst(line, opcode, rkc, rkb, rkc)
+			rkb = rkc
+		} else {
+			self.inst(line, opcode, rkb, rkb, rkc)
+			self.freeTmp()
+		}
+
+		if rhs == exp.Exp2 {
+			break
+		}
+	}
+
+	self.freeTmps(nTmps)
+	self.fixA(self.pc0(), a)
 }
 
 // todo: name
 func (self *cg) relationalBinopExp(exp *BinopExp, a, n int) {
-	iX, tX := self.toOperand(exp.Exp1)
+	iX, tX := self.toOpArg(exp.Exp1)
 	if tX != ARG_REG && tX != ARG_CONST {
 		iX = a
 		self.exp(exp.Exp1, iX, 1)
 	}
 
-	iY, tY := self.toOperand(exp.Exp2)
+	iY, tY := self.toOpArg(exp.Exp2)
 	if tY != ARG_REG && tY != ARG_CONST {
 		if tX != ARG_REG && tX != ARG_CONST {
 			iY = self.allocTmp()
@@ -420,95 +514,6 @@ func (self *cg) relationalBinopExp(exp *BinopExp, a, n int) {
 		self.inst(exp.Line, OP_LOADBOOL, a, 0, 1)
 		self.inst(exp.Line, OP_LOADBOOL, a, 1, 0)
 	}
-}
-
-func (self *cg) powExp(exp *BinopExp, a int) {
-	operands := make([]int, 0, 4) // todo: rename
-
-	nTmps := -1
-	for {
-		xx := 0 // todo: rename
-		iX, tX := self.toOperand(exp.Exp1)
-		if tX != ARG_CONST && tX != ARG_REG {
-			if nTmps < 0 {
-				iX = a
-				nTmps = 0
-			} else {
-				iX = self.allocTmp()
-				nTmps++
-				xx = 1
-			}
-			self.exp(exp.Exp1, iX, 1)
-		}
-		operands = append(operands, iX, xx, exp.Line)
-
-		exp2, ok := exp.Exp2.(*BinopExp)
-		if ok && exp2.Op == TOKEN_OP_POW {
-			exp = exp2
-		} else {
-			yy := 0
-			iY, tY := self.toOperand(exp.Exp2)
-			if tY != ARG_CONST && tY != ARG_REG {
-				if nTmps < 0 {
-					iY = a
-					nTmps = 0
-				} else {
-					iY = self.allocTmp()
-					nTmps++
-					yy = 1
-				}
-				self.exp(exp.Exp2, iY, 1)
-			}
-			operands = append(operands, iY, yy)
-
-			break
-		}
-	}
-
-	if nTmps > 0 {
-		self.freeTmps(nTmps)
-	}
-
-	for i := len(operands) - 1; i > 3; i -= 3 {
-		//yy := operands[i]
-		iy := operands[i-1]
-		line := operands[i-2]
-		xx := operands[i-3]
-		ix := operands[i-4]
-		if xx == 1 {
-			self.inst(line, OP_POW, ix, ix, iy)
-		} else {
-			self.inst(line, OP_POW, a, ix, iy)
-			operands[i-4] = a
-		}
-	}
-}
-
-func (self *cg) concatExp(exp *BinopExp, a int) {
-	nTmps := -1
-	for {
-		if nTmps < 0 {
-			nTmps = 0
-			self.exp(exp.Exp1, a, 1)
-		} else {
-			tmp := self.allocTmp()
-			nTmps++
-			self.exp(exp.Exp1, tmp, 1)
-		}
-
-		exp2, ok := exp.Exp2.(*BinopExp)
-		if ok && exp2.Op == TOKEN_OP_CONCAT {
-			exp = exp2
-		} else {
-			tmp := self.allocTmp()
-			nTmps++
-			self.exp(exp.Exp2, tmp, 1)
-			break
-		}
-	}
-
-	self.freeTmps(nTmps)
-	self.inst(exp.Line, OP_CONCAT, a, a, a+nTmps)
 }
 
 func (self *cg) logicalOrExp(exp *BinopExp, a int) {
@@ -673,7 +678,7 @@ func (self *cg) toOperand0(exp Exp) (int, int) {
 	return -1, -1
 }
 
-func (self *cg) toOperand(exp Exp) (int, int) {
+func (self *cg) toOpArg(exp Exp) (int, int) {
 	switch x := exp.(type) {
 	case *NilExp:
 		return self.indexOf(nil), ARG_CONST
