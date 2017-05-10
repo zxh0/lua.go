@@ -8,9 +8,9 @@ func (self *cg) loadNil(line, a, n int) {
 	self.inst(line, OP_LOADNIL, a, n-1, 0)
 }
 
-// r[a] = (bool)b
-func (self *cg) loadBool(line, a, b int) {
-	self.inst(line, OP_LOADBOOL, a, b, 0)
+// r[a] = (bool)b; if (c) pc++
+func (self *cg) loadBool(line, a, b, c int) {
+	self.inst(line, OP_LOADBOOL, a, b, c)
 }
 
 // r[a] = kst[bx]
@@ -101,7 +101,7 @@ func (self *cg) _self(line, a, b, c int) {
 
 // pc+=sBx; if (a) close all upvalues >= r[a - 1]
 func (self *cg) jmp(line, sBx int) int {
-	return self.inst(line, OP_JMP, 0, sBx, 0) // todo
+	return self.inst(line, OP_JMP, 0, sBx, 0) // todo: a?
 }
 
 // if not (r[a] <=> c) then pc++

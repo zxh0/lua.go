@@ -55,7 +55,7 @@ type UnopExp struct {
 // field ::= ‘[’ exp ‘]’ ‘=’ exp | Name ‘=’ exp | exp
 // fieldsep ::= ‘,’ | ‘;’
 type TableConstructorExp struct {
-	Line     int // line of `{`
+	Line     int // line of `{` ?
 	LastLine int // line of `}`
 	NArr     int
 	KeyExps  []Exp

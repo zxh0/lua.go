@@ -35,6 +35,7 @@ function stat_local_assign(...)
   local a,b,c = c,c,c,4,5
   local a,b,c = a,a,a,a,a,a
   local a = f()
+  local a = u()
   local a,b,c = f()
   local a,b,c = f(),f()
   local a,b,c = f(),f(),f()
@@ -64,6 +65,9 @@ function stat_local_assign(...)
   local a = x[u][v]
   local a = x[y]
   local a = x[y][z]
+  local a = #x
+  local a = ##x
+  local a = ~##x
   local a = b + c
   local a = v1 - v2 - v3
   local a = v1 * v2 * v3 * v4
@@ -76,20 +80,20 @@ function stat_local_assign(...)
   local a = b ^ u ^ x ^ 1
   local a = b ^ b ^ b ^ b
   local a = 1 ^ x ^ u ^ b ^ c
-  -- local a = b .. c .. u .. v .. x .. 1
-  -- local a = 1 < 2
-  -- local a = b == c
-  -- local a = b ~= c
-  -- local a = b > c
-  -- local a = b < c
-  -- local a = b >= c
-  -- local a = b <= c
-  -- local a = v1 < v2 < v3
-  -- local a = u ~= v
-  -- local a = u > v > w
-  -- local a = x == y
-  -- local a = x > y > z
-  -- local a = b == c ~= u > x >= y < 1 <= false
+  local a = b .. c .. u .. v .. x .. 1
+  local a = 1 < 2
+  local a = b == c
+  local a = b ~= c
+  local a = b > c
+  local a = b < c
+  local a = b >= c
+  local a = b <= c
+  local a = v1 < v2 < v3
+  local a = u ~= v
+  local a = u > v > w
+  local a = x == y
+  local a = x > y > z
+  local a = b == c ~= u > x >= y < 1 <= false
   -- local a = 1 or 2
   -- local a = b or c
   -- local a = u or v
@@ -171,6 +175,7 @@ function stat_assign_1(...)
   b[1][2] = y[true][false]
   a,b,c = nil
   a,b,c = 1,2,3
+  local a; a=x[y]
 end --]==]
 --[==[
 function stat_assign_n(...)

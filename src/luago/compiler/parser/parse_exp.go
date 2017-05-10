@@ -36,7 +36,7 @@ func parseExp12(lexer *Lexer) Exp {
 		}
 	}
 	// for the convenience of codegen
-	return changeAssociative(exp, 12)
+	return changeAssociative(exp, TOKEN_OP_OR)
 }
 
 // x and y
@@ -53,7 +53,7 @@ func parseExp11(lexer *Lexer) Exp {
 		}
 	}
 	// for the convenience of codegen
-	return changeAssociative(exp, 11)
+	return changeAssociative(exp, TOKEN_OP_AND)
 }
 
 // compare
@@ -84,7 +84,7 @@ func parseExp9(lexer *Lexer) Exp {
 			break
 		}
 	}
-	return changeAssociative(exp, 9)
+	return exp
 }
 
 // x ~ y
@@ -99,7 +99,7 @@ func parseExp8(lexer *Lexer) Exp {
 			break
 		}
 	}
-	return changeAssociative(exp, 8)
+	return exp
 }
 
 // x & y
@@ -114,7 +114,7 @@ func parseExp7(lexer *Lexer) Exp {
 			break
 		}
 	}
-	return changeAssociative(exp, 7)
+	return exp
 }
 
 // shift
@@ -130,7 +130,7 @@ func parseExp6(lexer *Lexer) Exp {
 			break loop
 		}
 	}
-	return changeAssociative(exp, 6)
+	return exp
 }
 
 // a .. b
@@ -145,7 +145,7 @@ func parseExp5(lexer *Lexer) Exp {
 		}
 	}
 	// concat is right associative
-	return changeAssociative(exp, 5)
+	return changeAssociative(exp, TOKEN_OP_CONCAT)
 }
 
 // x +/- y
@@ -162,7 +162,7 @@ func parseExp4(lexer *Lexer) Exp {
 		}
 	}
 
-	return changeAssociative(exp, 4)
+	return exp
 }
 
 // *, %, /, //
@@ -178,7 +178,7 @@ func parseExp3(lexer *Lexer) Exp {
 			break loop
 		}
 	}
-	return changeAssociative(exp, 3)
+	return exp
 }
 
 // unary
@@ -205,7 +205,7 @@ func parseExp1(lexer *Lexer) Exp {
 		}
 	}
 	// pow is right associative
-	exp = changeAssociative(exp, 1)
+	exp = changeAssociative(exp, TOKEN_OP_POW)
 	return optimizePow(exp)
 }
 
@@ -264,15 +264,14 @@ func parseNumberExp(lexer *Lexer, sign int) Exp {
     /   \              /   \
    a     b            b     c
 */
-func changeAssociative(exp Exp, prec int) Exp {
-	if bexp, ok := exp.(*BinopExp); ok && bexp.Prec == prec {
+func changeAssociative(exp Exp, op int) Exp {
+	if bexp, ok := exp.(*BinopExp); ok && bexp.Op == op {
 		for {
-			if exp1, ok := bexp.Exp1.(*BinopExp); ok && exp1.Prec == prec {
+			if exp1, ok := bexp.Exp1.(*BinopExp); ok && exp1.Op == op {
 				bexp.Exp1 = exp1.Exp1
 				exp1.Exp1 = exp1.Exp2
 				exp1.Exp2 = bexp.Exp2
 				bexp.Exp2 = exp1
-				bexp.Op, exp1.Op = exp1.Op, bexp.Op
 			} else {
 				break
 			}

@@ -59,22 +59,30 @@ func (self *cg) slotOf(name string) int {
 func (self *cg) lookupUpval(name string) int {
 	return self.scope.lookupUpval(name)
 }
-func (self *cg) allocTmps(n int) int {
-	return self.scope.allocTmps(n)
-}
+
 // func (self *cg) nextTmp() int {
 // 	tmp := self.allocTmp()
 // 	self.freeTmp()
 // 	return tmp
 // }
+func (self *cg) newTmpAllocator(a int) *tmpAllocator {
+	if self.isTmpVar(a) {
+		return &tmpAllocator{self.scope, a, 0}
+	} else {
+		return &tmpAllocator{self.scope, -1, 0}
+	}
+}
+func (self *cg) allocTmps(n int) int {
+	return self.scope.allocTmps(n)
+}
 func (self *cg) allocTmp() int {
 	return self.scope.allocTmp()
 }
-func (self *cg) freeTmp() {
-	self.scope.freeTmp()
-}
 func (self *cg) freeTmps(n int) {
 	self.scope.freeTmps(n)
+}
+func (self *cg) freeTmp() {
+	self.scope.freeTmp()
 }
 func (self *cg) isTmpVar(slot int) bool {
 	return self.scope.isTmpVar(slot)

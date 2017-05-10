@@ -31,14 +31,14 @@ func TestExpUnOp(t *testing.T) {
 	testExp2(t, `a^3^2`, `(a ^ 9.000000)`)
 	testExp2(t, `4^3^a`, `(4 ^ (3 ^ a))`)
 	testExp2(t, `1+2+a`, `(3 + a)`)
-	testExp2(t, `a+1+2`, `(a + (1 + 2))`)
+	testExp2(t, `a+1+2`, `((a + 1) + 2)`)
 }
 
 func TestExpBinOp(t *testing.T) {
 	//testExp(t, `a + b - c * d / e // f ^ g % h & i ~ j | k`)
 	//testExp(t, `k >> l << m .. n < o <= p > q >= r == s ~= t and u or v`)
 	testExp2(t, `a * b + c / d`, `((a * b) + (c / d))`)
-	testExp2(t, `a + b - c + d`, `(a + (b - (c + d)))`)
+	testExp2(t, `a + b - c + d`, `(((a + b) - c) + d)`)
 	testExp2(t, `a ^ b ^ c ^ d`, `(a ^ (b ^ (c ^ d)))`)
 	testExp2(t, `a .. b .. c .. d`, `(a .. (b .. (c .. d)))`)
 	testExp2(t, `(a + b) // (c - d)`, `(((a + b)) // ((c - d)))`)

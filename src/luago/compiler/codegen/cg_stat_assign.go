@@ -86,6 +86,8 @@ func (self *cg) assignToName(line int, name string, rhs Exp) {
 				self.exp(rhs, slot, 1)
 				//self.freeTmp()
 				//self.fixA(len(self.insts)-1, slot)
+			case *BracketsExp:
+				self.exp(rhs, slot, 1)
 			default:
 				tmp := self.allocTmp()
 				self.exp(rhs, tmp, 1)
@@ -116,8 +118,8 @@ func (self *cg) assignToName(line int, name string, rhs Exp) {
 			self.setTabUp(line, envIdx, strIdx, iY)
 		default:
 			tmp := self.allocTmp()
-			self.freeTmp() // todo
 			self.exp(rhs, tmp, 1)
+			self.freeTmp()
 			self.setTabUp(line, envIdx, strIdx, tmp) // todo
 		}
 	}

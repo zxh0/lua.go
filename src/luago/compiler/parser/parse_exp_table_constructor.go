@@ -11,8 +11,8 @@ func parseTableConstructorExp(lexer *Lexer) *TableConstructorExp {
 		ValExps: make([]Exp, 0, 8),
 	}
 
-	lexer.NextTokenOfKind(TOKEN_SEP_LCURLY)
 	tc.Line = lexer.Line()
+	lexer.NextTokenOfKind(TOKEN_SEP_LCURLY)
 	if lexer.LookAhead(1) != TOKEN_SEP_RCURLY {
 		parseFieldList(lexer, tc)
 	}

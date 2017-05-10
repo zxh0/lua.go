@@ -1,5 +1,6 @@
 #!/bin/sh
 
+echo "compile luago ..."
 export GOPATH=`cd ..; pwd`
 go install luago/standalone/luac
 
@@ -14,7 +15,7 @@ else
 fi
 
 test_file() { # $1:dir $2:file
-  printf "$1/$2"
+  printf "[test] $1/$2"
 
   luacll=$2"c.ll.txt"
   luacgoll=$2"goc.ll.txt"
@@ -48,7 +49,7 @@ test_dir() { # $1:dir
   for f in *.lua; do
     if [[ "$f" == *"$filename"* ]]; then
       if [[ "$f" == _* ]]; then
-        echo "$1/$f ?"
+        echo "[skip] $1/$f"
       else
         test_file $1 $f
       fi
