@@ -45,14 +45,14 @@ func TestExpBinOp(t *testing.T) {
 	testExp2(t, `((a ^ b) ^ c) ^ d`, `(((((a ^ b)) ^ c)) ^ d)`)
 	testExp2(t, `n - 1`, `(n - 1)`)
 	testExp2(t, `n-1`, `(n - 1)`)
-	testExp2(t, `a or b or c`, `(a or (b or c))`)
+	testExp2(t, `a or b or c`, `((a or b) or c)`)
 	testExp2(t, `true or false or 2 or nil or "foo"`,
-		`(true or (2 or 'foo'))`)
+		`((true or 2) or 'foo')`)
 	testExp2(t, `true and 1 and "foo" and a`, `a`)
 	testExp2(t, `false and true and nil and 0 and a`,
-		`(false and (nil and a))`)
+		`((false and nil) and a)`)
 	testExp2(t, `true and x and true and x and true`,
-		`(x and (x and true))`)
+		`((x and x) and true)`)
 	testExp2(t, `((((a + b))))`, `((a + b))`)
 	testExp2(t, `((((a))))`, `a`)
 }
