@@ -16,7 +16,7 @@ luac -o hello_world.luac test/Pil3/ch01/hello_world.lua
 bin/lua hello_world.luac
 ```
 
-# References
+# Links
 * [Lua 5.3 Reference Manual](http://www.lua.org/manual/5.3/manual.html)
 * [Lua 5.3 Source Code](http://www.lua.org/ftp/lua-5.3.4.tar.gz)
 * [Lua 5.3 Test suites](http://www.lua.org/tests/lua-5.3.4-tests.tar.gz)
