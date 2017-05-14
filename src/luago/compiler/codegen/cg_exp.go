@@ -264,7 +264,7 @@ func (self *cg) logicalBinopExp(exp *BinopExp, a int) {
 			if node.op == TOKEN_OP_AND {
 				c = 0
 			}
-			if b == a  {
+			if b == a {
 				self.test(node.line, a, c)
 			} else if node.jmpTo != nil {
 				self.test(node.line, b, c)

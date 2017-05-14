@@ -118,7 +118,8 @@ func parseExp7(lexer *Lexer) Exp {
 // shift
 func parseExp6(lexer *Lexer) Exp {
 	exp := parseExp5(lexer)
-	loop: for {
+loop:
+	for {
 		switch lexer.LookAhead(1) {
 		case TOKEN_OP_SHL, TOKEN_OP_SHR:
 			line, op, _ := lexer.NextToken()
@@ -149,7 +150,8 @@ func parseExp5(lexer *Lexer) Exp {
 // x +/- y
 func parseExp4(lexer *Lexer) Exp {
 	exp := parseExp3(lexer)
-	loop: for {
+loop:
+	for {
 		switch lexer.LookAhead(1) {
 		case TOKEN_OP_ADD, TOKEN_OP_SUB:
 			line, op, _ := lexer.NextToken()
@@ -166,7 +168,8 @@ func parseExp4(lexer *Lexer) Exp {
 // *, %, /, //
 func parseExp3(lexer *Lexer) Exp {
 	exp := parseExp2(lexer)
-	loop: for {
+loop:
+	for {
 		switch lexer.LookAhead(1) {
 		case TOKEN_OP_MUL, TOKEN_OP_MOD, TOKEN_OP_DIV, TOKEN_OP_IDIV:
 			line, op, _ := lexer.NextToken()
