@@ -25,14 +25,14 @@ func isVarargOrFuncCallExp(exp Exp) bool {
 	}
 }
 
-// func castToBinopExp(exp Exp, prec int) (*BinopExp, bool) {
-// 	if bexp, ok := exp.(*BinopExp); ok {
-// 		if bexp.Prec == prec {
-// 			return bexp, true
-// 		}
-// 	}
-// 	return nil, false
-// }
+func castToBinopExp(exp Exp, op int) (*BinopExp, bool) {
+	if bexp, ok := exp.(*BinopExp); ok {
+		if bexp.Op == op {
+			return bexp, true
+		}
+	}
+	return nil, false
+}
 
 func castToConcatExp(exp Exp) (*BinopExp, bool) {
 	if bexp, ok := exp.(*BinopExp); ok {
@@ -42,24 +42,6 @@ func castToConcatExp(exp Exp) (*BinopExp, bool) {
 	}
 	return nil, false
 }
-
-// func castToLogicalAndExp(exp Exp) (*BinopExp, bool) {
-// 	if bexp, ok := exp.(*BinopExp); ok {
-// 		if bexp.Op == TOKEN_OP_AND {
-// 			return bexp, true
-// 		}
-// 	}
-// 	return nil, false
-// }
-
-// func castToLogicalOrExp(exp Exp) (*BinopExp, bool) {
-// 	if bexp, ok := exp.(*BinopExp); ok {
-// 		if bexp.Op == TOKEN_OP_OR {
-// 			return bexp, true
-// 		}
-// 	}
-// 	return nil, false
-// }
 
 // todo
 func lineOfExp(exp Exp) int {

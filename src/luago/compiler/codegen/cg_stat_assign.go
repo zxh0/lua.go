@@ -37,7 +37,7 @@ func (self *cg) localAssignStat(node *LocalAssignStat) {
 		self.freeTmps(nExps - nNames)
 	}
 
-	startPc := self.pc() - 1
+	startPc := self.pc() + 1
 	for _, name := range node.NameList {
 		self.addLocVar(name, startPc)
 	}

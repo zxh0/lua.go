@@ -16,7 +16,7 @@ func (self *cg) whileStat(node *WhileStat) {
 	}
 
 	jmp1Pc := 0
-	startPc := self.pc() + 1
+	startPc := self.pc()
 	endless := isExpTrue(node.Exp)
 
 	if !endless {
@@ -29,7 +29,7 @@ func (self *cg) whileStat(node *WhileStat) {
 
 	self.block(node.Block)
 
-	endPc := self.pc() + 1
+	endPc := self.pc()
 	self.inst(node.Line, OP_JMP, 0, startPc-endPc-1, 0) // todo
 
 	if !endless {

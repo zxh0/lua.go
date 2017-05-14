@@ -94,19 +94,36 @@ function stat_local_assign(...)
   local a = x == y
   local a = x > y > z
   local a = b == c ~= u > x >= y < 1 <= false
-  -- local a = 1 or 2
-  -- local a = b or c
-  -- local a = u or v
-  -- local a = x or y
-  -- local a = x or y or z or y or x
-  -- local a = b or u or x or true
-  -- local a = b and c
-  -- local a = v1 and v2 and v3
-  -- local a = u and v and w
-  -- local a = x and y and z
-  -- local a = b and u and x and true
-  -- local a = x and y or x and y
-  -- local a = 1
+  local a = 1 or 2
+  local a = a or 1
+  local a = a or b or c
+  local a = b or c
+  local a = u or v
+  local a = x or y
+  local a = x or y or z or y or x
+  local a = x and y
+  local a = x and y and z and y and x
+  local a = x and y or z and x
+  local a = (x or y) and (z or x)
+  local a = x or y and z or x
+  local a = x and (y or z) and x
+  local a = b or u or x or true
+  local a = a and b
+  local a = b and c
+  local a = v1 and v2 and v3
+  local a = u and v and w
+  local a = x and y and z
+  local a = b and u and x and true
+  local a = a and b and c or d
+  local a = (a and b and c) or (a and b and c)
+  local a = (a or b or c) and (a or b or c)
+  local a = (x and y and z) or (x1 and y1 and z1)
+  local a = (x or y or z) and (x1 or y1 or y2)
+  local a = x and y or x and y
+  local a = x and y and z or 1
+  local a = (x or y) and (z or z1)
+  local a = x and y or z
+  local a = 1
   a=1
 end --]==]
 --[==[

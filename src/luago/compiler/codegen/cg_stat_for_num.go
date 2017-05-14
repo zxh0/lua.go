@@ -15,7 +15,7 @@ func (self *cg) forNumStat(node *ForNumStat) {
 		NameList: []string{forIdxVar, forLmtVar, forStpVar},
 		ExpList:  []Exp{node.InitExp, node.LimitExp, node.StepExp},
 	})
-	self.addLocVar(node.VarName, self.pc())
+	self.addLocVar(node.VarName, self.pc()+2)
 
 	a := self.scope.stackSize - 3
 	prepPc := self.inst(node.LineOfDo, OP_FORPREP, a, 0, 0)
@@ -25,7 +25,7 @@ func (self *cg) forNumStat(node *ForNumStat) {
 	self.fixSbx(prepPc, loopPc-prepPc-1)
 	self.fixSbx(loopPc, prepPc-loopPc)
 
-	self.exitScope(self.pc() - 1)
+	self.exitScope(self.pc() + 1)
 	self.fixEndPcOfIdxVar(node.VarName)
 }
 

@@ -53,6 +53,8 @@ func TestExpBinOp(t *testing.T) {
 		`(false and (nil and a))`)
 	testExp2(t, `true and x and true and x and true`,
 		`(x and (x and true))`)
+	testExp2(t, `((((a + b))))`, `((a + b))`)
+	testExp2(t, `((((a))))`, `a`)
 }
 
 func TestExpTC(t *testing.T) {

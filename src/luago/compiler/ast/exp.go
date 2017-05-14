@@ -38,7 +38,6 @@ type StringExp struct {
 type BinopExp struct {
 	Line int // line of operator
 	Op   int // operator
-	Prec int // operator precedence
 	Exp1 Exp
 	Exp2 Exp
 }

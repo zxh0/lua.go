@@ -6,26 +6,15 @@ import . "luago/lua/vm"
 
 // kind of operands
 const (
-	ARG_CONST = iota
-	ARG_REG
-	ARG_UPVAL
-	ARG_GLOBAL
+	ARG_CONST  = 1 // const index
+	ARG_REG    = 2 // register index
+	ARG_UPVAL  = 4 // upvalue index
+	ARG_GLOBAL = 8 // ?
+	ARG_RK     = ARG_REG | ARG_CONST
+	ARG_RU     = ARG_REG | ARG_UPVAL
+	// ARG_LOCAL ?
+	// ARG_TMP ?
 )
-
-var arithAndBitwiseBinops = map[int]int{
-	TOKEN_OP_ADD:  OP_ADD,
-	TOKEN_OP_SUB:  OP_SUB,
-	TOKEN_OP_MUL:  OP_MUL,
-	TOKEN_OP_MOD:  OP_MOD,
-	TOKEN_OP_POW:  OP_POW,
-	TOKEN_OP_DIV:  OP_DIV,
-	TOKEN_OP_IDIV: OP_IDIV,
-	TOKEN_OP_BAND: OP_BAND,
-	TOKEN_OP_BOR:  OP_BOR,
-	TOKEN_OP_BXOR: OP_BXOR,
-	TOKEN_OP_SHL:  OP_SHL,
-	TOKEN_OP_SHR:  OP_SHR,
-}
 
 // todo: rename to evalExp()?
 func (self *cg) exp(node Exp, a, n int) {
@@ -198,21 +187,11 @@ func (self *cg) nameExp(exp *NameExp, a int) {
 
 // r[a] := prefix[key]
 func (self *cg) bracketsExp(exp *BracketsExp, a int) {
-	tmpAlloc := self.newTmpAllocator(a)
+	allocator := self.newTmpAllocator(a)
+	b, kindB := self.exp2OpArg(exp.PrefixExp, ARG_RU, allocator)
+	c, _ := self.exp2OpArg(exp.KeyExp, ARG_RK, allocator)
+	allocator.freeAll()
 
-	b, kindB := self.toOpArg(exp.PrefixExp)
-	if kindB != ARG_REG && kindB != ARG_UPVAL {
-		b = tmpAlloc.allocTmp()
-		self.exp(exp.PrefixExp, b, 1)
-	}
-
-	c, kindC := self.toOpArg(exp.KeyExp)
-	if kindC != ARG_REG && kindC != ARG_CONST {
-		c = tmpAlloc.allocTmp()
-		self.exp(exp.KeyExp, c, 1)
-	}
-
-	tmpAlloc.freeAll()
 	if kindB == ARG_UPVAL {
 		self.getTabUp(exp.Line, a, b, c)
 	} else {
@@ -222,25 +201,10 @@ func (self *cg) bracketsExp(exp *BracketsExp, a int) {
 
 // r[a] := op exp
 func (self *cg) unopExp(exp *UnopExp, a int) {
-	tmpAlloc := self.newTmpAllocator(a)
-
-	b := self.toREG(exp.Exp)
-	if b < 0 {
-		b = tmpAlloc.allocTmp()
-		self.exp(exp.Exp, b, 1)
-		tmpAlloc.freeTmp()
-	}
-
-	switch exp.Op {
-	case TOKEN_OP_NOT:
-		self.inst(exp.Line, OP_NOT, a, b, 0)
-	case TOKEN_OP_BNOT:
-		self.inst(exp.Line, OP_BNOT, a, b, 0)
-	case TOKEN_OP_LEN:
-		self.inst(exp.Line, OP_LEN, a, b, 0)
-	case TOKEN_OP_UNM:
-		self.inst(exp.Line, OP_UNM, a, b, 0)
-	}
+	allocator := self.newTmpAllocator(a)
+	b, _ := self.exp2OpArg(exp.Exp, ARG_REG, allocator)
+	self.unaryOp(exp.Line, exp.Op, a, b)
+	allocator.freeAll()
 }
 
 // r[a] := exp1 op exp2
@@ -248,16 +212,14 @@ func (self *cg) binopExp(exp *BinopExp, a int) {
 	switch exp.Op {
 	case TOKEN_OP_CONCAT:
 		self.concatExp(exp, a)
-	case TOKEN_OP_OR:
-		self.logicalOrExp(exp, a)
-	case TOKEN_OP_AND:
-		self.logicalAndExp(exp, a)
+	case TOKEN_OP_OR, TOKEN_OP_AND:
+		self.logicalBinopExp(exp, a)
 	default:
-		if _, ok := arithAndBitwiseBinops[exp.Op]; ok {
-			self.arithAndBitwiseBinopExp(exp, a)
-		} else {
-			self.relationalBinopExp(exp, a)
-		}
+		allocator := self.newTmpAllocator(a)
+		rkb, _ := self.exp2OpArg(exp.Exp1, ARG_RK, allocator)
+		rkc, _ := self.exp2OpArg(exp.Exp2, ARG_RK, allocator)
+		self.binaryOp(exp.Line, exp.Op, a, rkb, rkc)
+		allocator.freeAll()
 	}
 }
 
@@ -290,114 +252,41 @@ func (self *cg) concatExp(exp *BinopExp, a int) {
 	self.inst(line, OP_CONCAT, a, b, c)
 }
 
-// r[a] := exp1 op exp2
-func (self *cg) arithAndBitwiseBinopExp(exp *BinopExp, a int) {
-	allocator := self.newTmpAllocator(a)
-
-	rkb := self.toRK(exp.Exp1)
-	if rkb < 0 {
-		rkb = allocator.allocTmp()
-		self.exp(exp.Exp1, rkb, 1)
-	}
-
-	rkc := self.toRK(exp.Exp2)
-	if rkc < 0 {
-		rkc = allocator.allocTmp()
-		self.exp(exp.Exp2, rkc, 1)
-	}
-
-	allocator.freeAll()
-	opcode := arithAndBitwiseBinops[exp.Op]
-	self.inst(exp.Line, opcode, a, rkb, rkc)
-}
-
-// r[a] := exp1 op exp2
-func (self *cg) relationalBinopExp(exp *BinopExp, a int) {
-	allocator := self.newTmpAllocator(a)
-
-	rkb := self.toRK(exp.Exp1)
-	if rkb < 0 {
-		rkb = allocator.allocTmp()
-		self.exp(exp.Exp1, rkb, 1)
-	}
-
-	rkc := self.toRK(exp.Exp2)
-	if rkc < 0 {
-		rkc = allocator.allocTmp()
-		self.exp(exp.Exp2, rkc, 1)
-	}
-
-	allocator.freeAll()
-	switch exp.Op {
-	case TOKEN_OP_EQ:
-		self.inst(exp.Line, OP_EQ, 1, rkb, rkc)
-	case TOKEN_OP_NE:
-		self.inst(exp.Line, OP_EQ, 0, rkb, rkc)
-	case TOKEN_OP_LT:
-		self.inst(exp.Line, OP_LT, 1, rkb, rkc)
-	case TOKEN_OP_GT:
-		self.inst(exp.Line, OP_LT, 1, rkc, rkb)
-	case TOKEN_OP_LE:
-		self.inst(exp.Line, OP_LE, 1, rkb, rkc)
-	case TOKEN_OP_GE:
-		self.inst(exp.Line, OP_LE, 1, rkc, rkb)
-	}
-	self.jmp(exp.Line, 1)
-	self.loadBool(exp.Line, a, 0, 1)
-	self.loadBool(exp.Line, a, 1, 0)
-}
-
-func (self *cg) logicalOrExp(exp *BinopExp, a int) {
-	self.logicalExp(exp, a, 1)
-}
-
-func (self *cg) logicalAndExp(exp *BinopExp, a int) {
-	self.logicalExp(exp, a, 0)
-}
-
-func (self *cg) logicalExp(exp *BinopExp, a, c int) {
-	jmps := make([]int, 0, 4)
-
-	for {
-		if slot, ok := self.isLocVar(exp.Exp1); ok {
-			if slot == a {
-				self.test(exp.Line, a, c)
-			} else {
-				self.testSet(exp.Line, a, slot, c)
+func (self *cg) logicalBinopExp(exp *BinopExp, a int) {
+	list := logicalBinopExpToList(exp)
+	for node := list; node != nil; node = node.next {
+		node.startPc = self.pc()
+		allocator := self.newTmpAllocator(a)
+		b, _ := self.exp2OpArg(node.exp, ARG_REG, allocator)
+		allocator.freeAll()
+		if node.next != nil {
+			c := 1
+			if node.op == TOKEN_OP_AND {
+				c = 0
 			}
-			// } else if andExp, ok := castToLogicalAndExp(exp.Exp1); ok {
-			// 	self.logicalAndExp(andExp, a)
-			// } else if orExp, ok := castToLogicalOrExp(exp.Exp1); ok {
-			// 	self.logicalOrExp(orExp, a)
-		} else {
-			tmp := self.allocTmp()
-			self.exp(exp.Exp1, tmp, 1)
-			self.freeTmp()
-			self.testSet(exp.Line, a, tmp, c)
-		}
-		jmps = append(jmps, self.jmp(exp.Line, 0))
-
-		if exp2, ok := exp.Exp2.(*BinopExp); ok && exp2.Op == exp.Op {
-			exp = exp2
-		} else {
-			self.exp(exp.Exp2, a, 1)
-			break
+			if b == a  {
+				self.test(node.line, a, c)
+			} else if node.jmpTo != nil {
+				self.test(node.line, b, c)
+			} else {
+				self.testSet(node.line, a, b, c)
+			}
+			node.jmpPc = self.jmp(node.line, 0)
+		} else if b != a {
+			self.move(lineOfExp(node.exp), a, b)
 		}
 	}
-
-	jmpTo := self.pc() - 1 // todo
-	for _, jmpFrom := range jmps {
-		self.fixSbx(jmpFrom, jmpTo-jmpFrom-1)
-	}
-}
-
-func (self *cg) isLocVar(exp Exp) (int, bool) {
-	if nameExp, ok := exp.(*NameExp); ok {
-		if slot := self.slotOf(nameExp.Name); slot >= 0 {
-			return slot, true
+	for node := list; node != nil; node = node.next {
+		if node.next != nil {
+			sbx := 0
+			if node.jmpTo != nil {
+				sbx = node.jmpTo.startPc - node.jmpPc
+			} else {
+				sbx = self.pc() - node.jmpPc
+			}
+			self.fixSbx(node.jmpPc, sbx)
 		}
 	}
-	return -1, false
 }
 
 // todo: rename
@@ -420,56 +309,52 @@ func (self *cg) toOperand0(exp Exp) (int, int) {
 }
 
 func (self *cg) toOpArg(exp Exp) (int, int) {
-	switch x := exp.(type) {
-	case *NilExp:
-		return self.indexOf(nil), ARG_CONST
-	case *FalseExp:
-		return self.indexOf(false), ARG_CONST
-	case *TrueExp:
-		return self.indexOf(true), ARG_CONST
-	case *IntegerExp:
-		return self.indexOf(x.Val), ARG_CONST
-	case *FloatExp:
-		return self.indexOf(x.Val), ARG_CONST
-	case *StringExp:
-		return self.indexOf(x.Str), ARG_CONST
-	case *NameExp:
-		if slot := self.slotOf(x.Name); slot >= 0 {
-			return slot, ARG_REG
-		} else if idx := self.lookupUpval(x.Name); idx >= 0 {
-			return idx, ARG_UPVAL
-		} else {
-			self.indexOf(x.Name)
-			return -1, ARG_GLOBAL
+	return self._toOpArg(exp, ARG_CONST|ARG_REG|ARG_UPVAL)
+}
+
+func (self *cg) exp2OpArg(exp Exp, argKinds int,
+	allocator *tmpAllocator) (arg, argKind int) {
+
+	arg, argKind = self._toOpArg(exp, argKinds)
+	if arg < 0 {
+		argKind = ARG_REG
+		arg = allocator.allocTmp()
+		self.exp(exp, arg, 1)
+	}
+	return
+}
+
+// todo: rename
+func (self *cg) _toOpArg(exp Exp, argKinds int) (arg, argKind int) {
+	if argKinds&ARG_CONST > 0 {
+		switch x := exp.(type) {
+		case *NilExp:
+			return self.indexOf(nil), ARG_CONST
+		case *FalseExp:
+			return self.indexOf(false), ARG_CONST
+		case *TrueExp:
+			return self.indexOf(true), ARG_CONST
+		case *IntegerExp:
+			return self.indexOf(x.Val), ARG_CONST
+		case *FloatExp:
+			return self.indexOf(x.Val), ARG_CONST
+		case *StringExp:
+			return self.indexOf(x.Str), ARG_CONST
 		}
 	}
-	return -1, -1
-}
-
-func (self *cg) toREG(exp Exp) int {
-	if nameExp, ok := exp.(*NameExp); ok {
-		return self.slotOf(nameExp.Name)
+	if argKinds&ARG_REG > 0 {
+		if nameExp, ok := exp.(*NameExp); ok {
+			if slot := self.slotOf(nameExp.Name); slot >= 0 {
+				return slot, ARG_REG
+			}
+		}
 	}
-	return -1
-}
-
-func (self *cg) toRK(exp Exp) int {
-	switch x := exp.(type) {
-	case *NilExp:
-		return self.indexOf(nil)
-	case *FalseExp:
-		return self.indexOf(false)
-	case *TrueExp:
-		return self.indexOf(true)
-	case *IntegerExp:
-		return self.indexOf(x.Val)
-	case *FloatExp:
-		return self.indexOf(x.Val)
-	case *StringExp:
-		return self.indexOf(x.Str)
-	case *NameExp:
-		return self.slotOf(x.Name)
-	default:
-		return -1
+	if argKinds&ARG_UPVAL > 0 {
+		if nameExp, ok := exp.(*NameExp); ok {
+			if idx := self.lookupUpval(nameExp.Name); idx >= 0 {
+				return idx, ARG_UPVAL
+			}
+		}
 	}
+	return -1, 0 // todo
 }

@@ -128,8 +128,17 @@ func (self *cg) testLogicalOrExp(exp *BinopExp, lastJmpLine int) int {
 	lastJmp := self.jmp(lastJmpLine, 0)
 
 	for _, pc := range jmps {
-		self.fixSbx(pc, self.pc0()-pc)
+		self.fixSbx(pc, self.pc()-pc)
 	}
 
 	return lastJmp
+}
+
+func (self *cg) isLocVar(exp Exp) (int, bool) {
+	if nameExp, ok := exp.(*NameExp); ok {
+		if slot := self.slotOf(nameExp.Name); slot >= 0 {
+			return slot, true
+		}
+	}
+	return -1, false
 }

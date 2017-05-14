@@ -17,12 +17,7 @@ func newCG(parentScope *scope) *cg {
 	}
 }
 
-// todo: use pc0()
 func (self *cg) pc() int {
-	return len(self.insts) + 1 // ???
-}
-
-func (self *cg) pc0() int {
 	return len(self.insts) - 1
 }
 
@@ -108,7 +103,7 @@ func (self *cg) genProto(fd *FuncDefExp) *FuncProto {
 
 	self.block(fd.Block)
 
-	endPc := self.pc()
+	endPc := self.pc() + 2
 	self.exitScope(endPc)
 
 	return self.toProto(fd)

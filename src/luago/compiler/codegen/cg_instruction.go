@@ -1,7 +1,23 @@
 package codegen
 
+import . "luago/compiler/lexer"
 import . "luago/lua/vm"
 import . "luago/number" // todo
+
+var arithAndBitwiseBinops = map[int]int{
+	TOKEN_OP_ADD:  OP_ADD,
+	TOKEN_OP_SUB:  OP_SUB,
+	TOKEN_OP_MUL:  OP_MUL,
+	TOKEN_OP_MOD:  OP_MOD,
+	TOKEN_OP_POW:  OP_POW,
+	TOKEN_OP_DIV:  OP_DIV,
+	TOKEN_OP_IDIV: OP_IDIV,
+	TOKEN_OP_BAND: OP_BAND,
+	TOKEN_OP_BOR:  OP_BOR,
+	TOKEN_OP_BXOR: OP_BXOR,
+	TOKEN_OP_SHL:  OP_SHL,
+	TOKEN_OP_SHR:  OP_SHR,
+}
 
 // r[a], r[a+1], ..., r[a+b] = nil
 func (self *cg) loadNil(line, a, n int) {
@@ -115,6 +131,40 @@ func (self *cg) testSet(line, a, b, c int) {
 }
 
 // r[a] = op r[b]
-// func (self *cg) unaryOp(line, op, a, b int) {
-// 	self.inst(line, op, a, b, 0)
-// }
+func (self *cg) unaryOp(line, op, a, b int) {
+	switch op {
+	case TOKEN_OP_NOT:
+		self.inst(line, OP_NOT, a, b, 0)
+	case TOKEN_OP_BNOT:
+		self.inst(line, OP_BNOT, a, b, 0)
+	case TOKEN_OP_LEN:
+		self.inst(line, OP_LEN, a, b, 0)
+	case TOKEN_OP_UNM:
+		self.inst(line, OP_UNM, a, b, 0)
+	}
+}
+
+// arith & bitwise & relational
+func (self *cg) binaryOp(line, op, a, b, c int) {
+	if opcode, found := arithAndBitwiseBinops[op]; found {
+		self.inst(line, opcode, a, b, c)
+	} else { // relational
+		switch op {
+		case TOKEN_OP_EQ:
+			self.inst(line, OP_EQ, 1, b, c)
+		case TOKEN_OP_NE:
+			self.inst(line, OP_EQ, 0, b, c)
+		case TOKEN_OP_LT:
+			self.inst(line, OP_LT, 1, b, c)
+		case TOKEN_OP_GT:
+			self.inst(line, OP_LT, 1, c, b)
+		case TOKEN_OP_LE:
+			self.inst(line, OP_LE, 1, b, c)
+		case TOKEN_OP_GE:
+			self.inst(line, OP_LE, 1, c, b)
+		}
+		self.jmp(line, 1)
+		self.loadBool(line, a, 0, 1)
+		self.loadBool(line, a, 1, 0)
+	}
+}

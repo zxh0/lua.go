@@ -29,7 +29,7 @@ func (self *cg) ifStat(node *IfStat) {
 	for i := 0; i < len(node.Exps); i++ {
 		if i > 0 {
 			for pc, _ := range jmp2elseIfs {
-				self.fixSbx(pc, self.pc0()-pc)
+				self.fixSbx(pc, self.pc()-pc)
 			}
 			jmp2elseIfs = map[int]bool{} // clear map
 		}
@@ -38,10 +38,10 @@ func (self *cg) ifStat(node *IfStat) {
 	}
 
 	for pc, _ := range jmp2elseIfs {
-		self.fixSbx(pc, self.pc0()-pc)
+		self.fixSbx(pc, self.pc()-pc)
 	}
 	for pc, _ := range jmp2ends {
-		self.fixSbx(pc, self.pc0()-pc)
+		self.fixSbx(pc, self.pc()-pc)
 	}
 }
 
