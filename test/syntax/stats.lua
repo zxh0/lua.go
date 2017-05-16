@@ -126,7 +126,7 @@ function stat_local_assign(...)
   local a = 1
   a=1
 end --]==]
---[==[
+-- [==[
 function stat_assign_1(...)
   local a,b,c,d=1,2,3,4
   a = nil
@@ -194,7 +194,7 @@ function stat_assign_1(...)
   a,b,c = 1,2,3
   local a; a=x[y]
 end --]==]
---[==[
+-- [==[
 function stat_assign_n(...)
   local a,b,c = 1,2,3
   a,b,c = nil
@@ -208,7 +208,7 @@ function stat_assign_n(...)
   -- u,v,x = 1,2,3
   -- x,y,z[1] = 1,2,3
 end --]==]
---[==[
+-- [==[
 function stat_fc(...)
   f()
   f(a)
@@ -224,12 +224,12 @@ function stat_fc(...)
   f(1, g())
   return f(g())
 end --]==]
---[==[
+-- [==[
 function stat_return(...)
   local a,b,c = 1,2,3
   return a,b,c
 end --]==]
---[==[
+-- [==[
 function stat_if(...)
   local a = 1,(x == 0)
   if true   then print(1) end
@@ -251,23 +251,33 @@ function stat_if(...)
   if x then print(a) elseif y then print(b) end
   if x then print(a) elseif y then print(b) elseif z then print(c) end
 
-  -- local a,b,c=...
-  -- if nil     then print(1) end
-  -- if true    then print(1) end
-  -- if false   then print(1) end
-  -- if false   then print(1) end
-  -- if 1       then print(1) end
-  -- if {}      then print(1) end
-  -- if ...     then print(1) end
-  -- if f()     then print(1) end
-  -- if a[b]    then print(1) end
-  -- if a       then print(1) end
-  -- if u       then print(1) end
-  -- if x       then print(1) end
-  -- if a + b   then print(1) end
-  -- if a > b   then print(1) end
-  -- if a and b then print(1) end
-  -- if a or  b then print(1) end
+  local a,b,c=...
+  if nil     then print(1) end
+  if true    then print(1) end
+  if false   then print(1) end
+  if false   then print(1) end
+  if 1       then print(1) end
+  if {}      then print(1) end
+  if ...     then print(1) end
+  if f()     then print(1) end
+  if a[b]    then print(1) end
+  if a       then print(1) end
+  if u       then print(1) end
+  if x       then print(1) end
+  if a + b   then print(1) end
+  if a > b   then print(1) end
+  if a and b then print(1) end
+  if a or  b then print(1) end
+  if a > b > c     then f() end
+  if b + c + c     then f() end
+  if a or b or c   then f() end
+  if a and b and c then f() end
+  if a or b and c  then f() end
+  if a and b or c  then f() end
+  if a > b and a > c then f() end
+  if a < b and a < c then f() end
+  if a > b or a > c  then f() end
+  if a < b or a < c  then f() end
 end --]==]
 --[==[
 function stat_for_num(...)

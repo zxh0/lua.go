@@ -1,7 +1,7 @@
 package codegen
 
 import . "luago/compiler/ast"
-import . "luago/compiler/lexer"
+// import . "luago/compiler/lexer"
 
 /*
          if
@@ -59,29 +59,10 @@ func (self *cg) _cgIf(node *IfStat, i int,
 			self.indexOf(x.Str)
 		}
 	} else {
-		if slot, ok := self.isLocVar(exp); ok {
-			self.test(lineOfThen, slot, 0)
-			pc := self.jmp(lineOfThen, 0)
-			jmp2elseIfs[pc] = true
-		} else if bexp, ok := exp.(*BinopExp); ok && bexp.Op == TOKEN_OP_AND {
-			jmps := self.testLogicalAndExp(bexp, lineOfThen)
-			for _, pc := range jmps {
-				jmp2elseIfs[pc] = true
-			}
-		} else if bexp, ok := exp.(*BinopExp); ok && bexp.Op == TOKEN_OP_OR {
-			jmp := self.testLogicalOrExp(bexp, lineOfThen)
-			jmp2elseIfs[jmp] = true
-		} else {
-			tmp := self.allocTmp()
-			self.testExp(exp, tmp) // todo
-			if !isRelationalBinopExp(exp) {
-				self.test(lineOfThen, tmp, 0)
-			}
-			self.freeTmp()
-			pc := self.jmp(lineOfThen, 0)
+		pendingJmps := self.testExp(exp, lineOfThen)
+		for _, pc := range pendingJmps {
 			jmp2elseIfs[pc] = true
 		}
-
 	}
 
 	self.block(block)
@@ -89,16 +70,4 @@ func (self *cg) _cgIf(node *IfStat, i int,
 		pc := self.jmp(block.LastLine, 0)
 		jmp2ends[pc] = true
 	}
-}
-
-func isRelationalBinopExp(exp Exp) bool {
-	if binopExp, ok := exp.(*BinopExp); ok {
-		switch binopExp.Op {
-		case TOKEN_OP_EQ, TOKEN_OP_NE,
-			TOKEN_OP_LT, TOKEN_OP_LE,
-			TOKEN_OP_GT, TOKEN_OP_GE:
-			return true
-		}
-	}
-	return false
 }
