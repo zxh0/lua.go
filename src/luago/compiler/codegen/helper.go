@@ -34,6 +34,18 @@ func isVarargOrFuncCallExp(exp Exp) bool {
 	}
 }
 
+func isRelationalBinopExp(exp Exp) bool {
+	if binopExp, ok := exp.(*BinopExp); ok {
+		switch binopExp.Op {
+		case TOKEN_OP_EQ, TOKEN_OP_NE,
+			TOKEN_OP_LT, TOKEN_OP_LE,
+			TOKEN_OP_GT, TOKEN_OP_GE:
+			return true
+		}
+	}
+	return false
+}
+
 func castToBinopExp(exp Exp, op int) (*BinopExp, bool) {
 	if bexp, ok := exp.(*BinopExp); ok {
 		if bexp.Op == op {

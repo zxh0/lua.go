@@ -16,6 +16,30 @@ const (
 	// ARG_TMP ?
 )
 
+func (self *cg) testExp(node Exp, lineOfLastJmp int) (pendingJmps []int) {
+	if bexp, ok := node.(*BinopExp); ok {
+		switch bexp.Op {
+		case TOKEN_OP_EQ, TOKEN_OP_NE,
+			TOKEN_OP_LT, TOKEN_OP_GT,
+			TOKEN_OP_LE, TOKEN_OP_GE:
+			self.testRelationalBinopExp(bexp, 0)
+			pc := self.jmp(lineOfLastJmp, 0)
+			return []int{pc}
+		case TOKEN_OP_AND, TOKEN_OP_OR:
+			pendingJmps := self.testLogicalBinopExp(bexp, lineOfLastJmp)
+			return pendingJmps
+		}
+	}
+
+	allocator := self.newTmpAllocator(-1)
+	a, _ := self.exp2OpArg(node, ARG_REG, allocator)
+	allocator.freeAll()
+
+	self.test(lineOfLastJmp, a, 0)
+	pc := self.jmp(lineOfLastJmp, 0)
+	return []int{pc}
+}
+
 // todo: rename to evalExp()?
 func (self *cg) exp(node Exp, a, n int) {
 	switch exp := node.(type) {
@@ -250,43 +274,6 @@ func (self *cg) concatExp(exp *BinopExp, a int) {
 
 	allocator.freeAll()
 	self.inst(line, OP_CONCAT, a, b, c)
-}
-
-func (self *cg) logicalBinopExp(exp *BinopExp, a int) {
-	list := logicalBinopExpToList(exp)
-	for node := list; node != nil; node = node.next {
-		node.startPc = self.pc()
-		allocator := self.newTmpAllocator(a)
-		b, _ := self.exp2OpArg(node.exp, ARG_REG, allocator)
-		allocator.freeAll()
-		if node.next != nil {
-			c := 1
-			if node.op == TOKEN_OP_AND {
-				c = 0
-			}
-			if b == a {
-				self.test(node.line, a, c)
-			} else if node.jmpTo != nil {
-				self.test(node.line, b, c)
-			} else {
-				self.testSet(node.line, a, b, c)
-			}
-			node.jmpPc = self.jmp(node.line, 0)
-		} else if b != a {
-			self.move(lineOfExp(node.exp), a, b)
-		}
-	}
-	for node := list; node != nil; node = node.next {
-		if node.next != nil {
-			sbx := 0
-			if node.jmpTo != nil {
-				sbx = node.jmpTo.startPc - node.jmpPc
-			} else {
-				sbx = self.pc() - node.jmpPc
-			}
-			self.fixSbx(node.jmpPc, sbx)
-		}
-	}
 }
 
 // todo: rename
