@@ -1,7 +1,6 @@
 package codegen
 
 import . "luago/compiler/ast"
-// import . "luago/compiler/lexer"
 
 /*
          if
@@ -65,7 +64,7 @@ func (self *cg) _cgIf(node *IfStat, i int,
 		}
 	}
 
-	self.block(block)
+	self.blockWithNewScope(block)
 	if i < len(node.Exps)-1 {
 		pc := self.jmp(block.LastLine, 0)
 		jmp2ends[pc] = true

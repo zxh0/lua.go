@@ -292,6 +292,13 @@ function stat_while(...)
   while x     do print(3) end
   while false do print(4) end
   while nil   do print(5) end
+  while true do f() end
+  while false do f() end
+  while i do f() end
+  while x do f() end
+  while i <= x do f() end
+  while x and y or z do f() end
+  while x or y and z do f() end
 end --]==]
 --[==[
 function stat_repeat(...)

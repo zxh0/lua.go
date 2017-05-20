@@ -1,7 +1,6 @@
 package codegen
 
 import . "luago/compiler/ast"
-import . "luago/lua/vm"
 
 /*
         while
@@ -15,24 +14,22 @@ func (self *cg) whileStat(node *WhileStat) {
 		node.Exp = &FalseExp{nilExp.Line}
 	}
 
-	jmp1Pc := 0
+	var jmpToEndPcs []int
 	startPc := self.pc()
 	endless := isExpTrue(node.Exp)
 
 	if !endless {
-		//self.exp(node.Exp, STAT_WHILE, 0)
-
-		self.inst(node.Line, OP_TEST, 0, 0, 0)         // todo
-		jmp1Pc = self.inst(node.Line, OP_JMP, 0, 0, 0) // todo
-		self.freeTmp()
+		jmpToEndPcs = self.testExp(node.Exp, node.Line)
 	}
 
-	self.block(node.Block)
+	self.blockWithNewScope(node.Block)
 
 	endPc := self.pc()
-	self.inst(node.Line, OP_JMP, 0, startPc-endPc-1, 0) // todo
+	self.jmp(node.Block.LastLine, startPc-endPc-1)
 
-	if !endless {
-		self.fixSbx(jmp1Pc, endPc-jmp1Pc-1)
+	if !endless && jmpToEndPcs != nil {
+		for _, pc := range jmpToEndPcs {
+			self.fixSbx(pc, endPc-pc+1)
+		}
 	}
 }

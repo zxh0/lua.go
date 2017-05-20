@@ -130,6 +130,22 @@ func (self *cg) testSet(line, a, b, c int) {
 	self.inst(line, OP_TESTSET, a, b, c)
 }
 
+func (self *cg) forPrep(line, a, sBx int) int {
+	return self.inst(line, OP_FORPREP, a, sBx, 0)
+}
+
+func (self *cg) forLoop(line, a, sBx int) int {
+	return self.inst(line, OP_FORLOOP, a, sBx, 0)
+}
+
+func (self *cg) tForCall(line, a, c int) {
+	self.inst(line, OP_TFORCALL, a, 0, c)
+}
+
+func (self *cg) tForLoop(line, a, sBx int) {
+	self.inst(line, OP_TFORLOOP, a, sBx, 0)
+}
+
 // r[a] = op r[b]
 func (self *cg) unaryOp(line, op, a, b int) {
 	switch op {

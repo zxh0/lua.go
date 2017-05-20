@@ -12,6 +12,8 @@ func (self *cg) stat(stat Stat) {
 		self.repeatStat(node)
 	case *ForNumStat:
 		self.forNumStat(node)
+	case *ForInStat:
+		self.forInStat(node)
 	case FuncCallStat:
 		self.funcCallStat(node)
 	case *LocalAssignStat:

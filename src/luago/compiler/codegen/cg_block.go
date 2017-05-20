@@ -2,6 +2,13 @@ package codegen
 
 import . "luago/compiler/ast"
 
+// todo: rename
+func (self *cg) blockWithNewScope(node *Block) {
+	self.enterScope()
+	self.block(node)
+	self.exitScope(self.pc() + 1)
+}
+
 func (self *cg) block(node *Block) {
 	for _, stat := range node.Stats {
 		self.stat(stat)

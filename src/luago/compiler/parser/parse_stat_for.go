@@ -55,12 +55,12 @@ func parseForInStat(lexer *Lexer, line int) *ForInStat {
 	lexer.NextTokenOfKind(TOKEN_KW_IN)
 	expList := parseExpList(lexer)
 
-	lexer.NextTokenOfKind(TOKEN_KW_DO)
+	lineOfDo, _ := lexer.NextTokenOfKind(TOKEN_KW_DO)
 	block := parseBlock(lexer)
 	lexer.NextTokenOfKind(TOKEN_KW_END)
 
 	return &ForInStat{
-		Line:     line,
+		LineOfDo: lineOfDo,
 		NameList: nameList,
 		ExpList:  expList,
 		Block:    block,

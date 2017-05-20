@@ -62,7 +62,7 @@ type ForNumStat struct {
 // namelist ::= Name {‘,’ Name}
 // explist ::= exp {‘,’ exp}
 type ForInStat struct {
-	Line     int // line of `for`
+	LineOfDo int
 	NameList []string
 	ExpList  []Exp
 	Block    *Block

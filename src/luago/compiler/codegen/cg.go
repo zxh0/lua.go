@@ -55,11 +55,17 @@ func (self *cg) lookupUpval(name string) int {
 	return self.scope.lookupUpval(name)
 }
 
-// func (self *cg) nextTmp() int {
-// 	tmp := self.allocTmp()
-// 	self.freeTmp()
-// 	return tmp
-// }
+// todo: rename?
+func (self *cg) fixEndPcOfLocVar(name string, delta int) {
+	for i := len(self.scope.locVars) - 1; i > 0; i-- {
+		locVar := self.scope.locVars[i]
+		if locVar.name == name {
+			locVar.endPc += delta
+			return
+		}
+	}
+}
+
 func (self *cg) newTmpAllocator(a int) *tmpAllocator {
 	if self.isTmpVar(a) {
 		return &tmpAllocator{self.scope, a, 0}
