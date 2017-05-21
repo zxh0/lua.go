@@ -132,7 +132,7 @@ func (self *cg) tcExp(exp *TableConstructorExp, a int) {
 			self.exp(valExp, iVal, 1)
 		}
 		self.freeTmps(nTmps)
-		self.setTable(lineOfExp(valExp), a, iKey, iVal)
+		self.setTable(lastLineOfExp(valExp), a, iKey, iVal)
 	}
 
 	if nArr > 0 {

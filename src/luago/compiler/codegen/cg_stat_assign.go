@@ -3,6 +3,18 @@ package codegen
 import . "luago/compiler/ast"
 
 func (self *cg) localAssignStat(node *LocalAssignStat) {
+	if len(node.ExpList) == 1 {
+		exp0 := node.ExpList[0]
+		if fd, ok := exp0.(*FuncDefExp); ok {
+			if !fd.IsAno {
+				name := node.NameList[0]
+				slot := self.addLocVar(name, self.pc()+2)
+				self.exp(exp0, slot, 1)
+				return
+			}
+		}
+	}
+
 	exps := removeTailNils(node.ExpList)
 	nExps := len(exps)
 	nNames := len(node.NameList)
@@ -213,23 +225,23 @@ func (self *cg) assignStatN(node *AssignStat) {
 				argVal := allocator.allocTmp()
 				self.exp(rhs, argVal, 1)
 				operands[i*6+4] = argVal
-				operands[i*6+5] = kindVal				
+				operands[i*6+5] = kindVal
 			} else { // i > nVars-1
 				argVal := allocator.allocTmp()
 				self.exp(rhs, argVal, 0)
 			}
 		} else { // last exp & (vararg | funccall)
-			n := nVars-nExps+1
+			n := nVars - nExps + 1
 			a := allocator.allocTmp()
 			self.exp(rhs, a, n)
-			for j := nExps-1; j < nVars; j++ {
+			for j := nExps - 1; j < nVars; j++ {
 				operands[j*6+4] = a + j - nExps + 1
 				operands[j*6+5] = ARG_REG
 			}
 		}
 	}
 	if nExps < nVars && !lastExpIsVarargOrFuncCall {
-		n := nVars-nExps
+		n := nVars - nExps
 		a := allocator.allocTmps(n)
 		self.loadNil(node.LastLine, a, n)
 		for j := nExps; j < nVars; j++ {
