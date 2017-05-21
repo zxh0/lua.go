@@ -192,6 +192,7 @@ function stat_assign_1(...)
   b[1][2] = y[true][false]
   a,b,c = nil
   a,b,c = 1,2,3
+  a[x],b[y],c[z] = c[u],b[v],a[w]
   local a; a=x[y]
 end --]==]
 -- [==[

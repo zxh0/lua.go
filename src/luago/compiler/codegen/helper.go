@@ -3,6 +3,7 @@ package codegen
 import . "luago/compiler/ast"
 import . "luago/compiler/lexer"
 
+// todo: rename
 func (self *cg) isLocVar(exp Exp) (int, bool) {
 	if nameExp, ok := exp.(*NameExp); ok {
 		if slot := self.slotOf(nameExp.Name); slot >= 0 {
@@ -10,6 +11,11 @@ func (self *cg) isLocVar(exp Exp) (int, bool) {
 		}
 	}
 	return -1, false
+}
+
+func isNameExp(exp Exp) bool {
+	_, ok := exp.(*NameExp)
+	return ok
 }
 
 // todo: rename

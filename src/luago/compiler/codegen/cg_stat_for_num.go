@@ -24,6 +24,8 @@ func (self *cg) forNumStat(node *ForNumStat) {
 	self.fixSbx(prepPc, loopPc-prepPc-1)
 	self.fixSbx(loopPc, prepPc-loopPc)
 
-	self.exitScope(self.pc() + 1)
-	self.fixEndPcOfLocVar(node.VarName, -1)
+	self.exitScope(self.pc())
+	self.fixEndPc(forIdxVar, 1)
+	self.fixEndPc(forLmtVar, 1)
+	self.fixEndPc(forStpVar, 1)
 }

@@ -65,6 +65,7 @@ test_dir "PiL3/ch01"
 test_dir "PiL3/ch02"
 test_dir "PiL3/ch03"
 test_dir "PiL3/ch04"
+test_dir "PiL3/ch05"
 # for ch in PiL3/ch*; do
 #   test_dir $ch
 # done

@@ -6,10 +6,6 @@ type tmpAllocator struct {
 	counter int
 }
 
-// func (self tmpAllocator) allocTmps(n int) int {
-// 	self.counter += n
-// 	return self.scope.allocTmps(n)
-// }
 func (self *tmpAllocator) allocTmp() int {
 	if self.tmpVar >= 0 {
 		tmp := self.tmpVar
@@ -23,6 +19,11 @@ func (self *tmpAllocator) allocTmp() int {
 func (self *tmpAllocator) freeTmp() {
 	self.counter -= 1
 	self.scope.freeTmp()
+}
+
+func (self *tmpAllocator) allocTmps(n int) int {
+	self.counter += n
+	return self.scope.allocTmps(n)
 }
 func (self *tmpAllocator) freeTmps(n int) {
 	self.counter -= n

@@ -12,6 +12,8 @@ const (
 	ARG_GLOBAL = 8 // ?
 	ARG_RK     = ARG_REG | ARG_CONST
 	ARG_RU     = ARG_REG | ARG_UPVAL
+	ARG_RUK    = ARG_REG | ARG_UPVAL | ARG_CONST
+	//ARG_RUG    = ARG_REG | ARG_UPVAL | ARG_GLOBAL
 	// ARG_LOCAL ?
 	// ARG_TMP ?
 )
@@ -276,25 +278,6 @@ func (self *cg) concatExp(exp *BinopExp, a int) {
 	self.inst(line, OP_CONCAT, a, b, c)
 }
 
-// todo: rename
-func (self *cg) toOperand0(exp Exp) (int, int) {
-	switch x := exp.(type) {
-	case *NilExp, *FalseExp, *TrueExp,
-		*IntegerExp, *FloatExp, *StringExp,
-		*VarargExp:
-		return -1, ARG_CONST
-	case *NameExp:
-		if slot := self.slotOf(x.Name); slot >= 0 {
-			return slot, ARG_REG
-		} else if idx := self.lookupUpval(x.Name); idx >= 0 {
-			return idx, ARG_UPVAL
-		} else {
-			return self.indexOf(x.Name), ARG_GLOBAL
-		}
-	}
-	return -1, -1
-}
-
 func (self *cg) toOpArg(exp Exp) (int, int) {
 	return self._toOpArg(exp, ARG_CONST|ARG_REG|ARG_UPVAL)
 }
@@ -343,5 +326,22 @@ func (self *cg) _toOpArg(exp Exp, argKinds int) (arg, argKind int) {
 			}
 		}
 	}
+	// if argKinds&(ARG_REG|ARG_UPVAL|ARG_GLOBAL) > 0 {
+	// 	if nameExp, ok := exp.(*NameExp); ok {
+	// 		if slot := self.slotOf(nameExp.Name); slot >= 0 {
+	// 			if argKinds&ARG_REG > 0 {
+	// 				return slot, ARG_REG
+	// 			}
+	// 		} else if idx := self.lookupUpval(nameExp.Name); idx >= 0 {
+	// 			if argKinds&ARG_UPVAL > 0 {
+	// 				return idx, ARG_UPVAL
+	// 			}
+	// 		} else {
+	// 			if argKinds&ARG_GLOBAL > 0 {
+	// 				return self.indexOf(nameExp.Name), ARG_GLOBAL
+	// 			}
+	// 		}
+	// 	}
+	// }
 	return -1, 0 // todo
 }

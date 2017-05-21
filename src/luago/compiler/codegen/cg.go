@@ -56,8 +56,8 @@ func (self *cg) lookupUpval(name string) int {
 }
 
 // todo: rename?
-func (self *cg) fixEndPcOfLocVar(name string, delta int) {
-	for i := len(self.scope.locVars) - 1; i > 0; i-- {
+func (self *cg) fixEndPc(name string, delta int) {
+	for i := len(self.scope.locVars) - 1; i >= 0; i-- {
 		locVar := self.scope.locVars[i]
 		if locVar.name == name {
 			locVar.endPc += delta
@@ -85,8 +85,20 @@ func (self *cg) freeTmps(n int) {
 func (self *cg) freeTmp() {
 	self.scope.freeTmp()
 }
+func (self *cg) isLocVarSlot(slot int) bool {
+	return self.scope.isLocVarSlot(slot)
+}
 func (self *cg) isTmpVar(slot int) bool {
 	return self.scope.isTmpVar(slot)
+}
+func (self *cg) isGlobalVar(name string) (int, int, bool) {
+	if self.slotOf(name) < 0 && self.lookupUpval(name) < 0 {
+		envIdx := self.lookupUpval("_ENV")
+		nameIdx := self.indexOf(name)
+		return envIdx, nameIdx, true
+	} else {
+		return -1, -1, false
+	}
 }
 func (self *cg) indexOf(k interface{}) int {
 	return self.scope.indexOf(k)

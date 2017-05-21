@@ -18,6 +18,13 @@ func (self *cg) forInStat(node *ForInStat) {
 		self.addLocVar(name, self.pc()+2)
 	}
 
+	// todo: ???
+	if len(node.NameList) < 3 {
+		n := 3 - len(node.NameList)
+		self.allocTmps(n)
+		self.freeTmps(n)
+	}
+
 	jmpToTFC := self.jmp(node.LineOfDo, 0)
 	self.block(node.Block)
 	self.fixSbx(jmpToTFC, self.pc()-jmpToTFC)
@@ -27,8 +34,8 @@ func (self *cg) forInStat(node *ForInStat) {
 	self.tForCall(line, slotOfGeneratorVar, len(node.NameList))
 	self.tForLoop(line, slotOfGeneratorVar+2, jmpToTFC-self.pc()-1)
 
-	self.exitScope(self.pc() + 1)
-	for _, name := range node.NameList {
-		self.fixEndPcOfLocVar(name, -2)
-	}
+	self.exitScope(self.pc() - 1)
+	self.fixEndPc(forGeneratorVar, 2)
+	self.fixEndPc(forStateVar, 2)
+	self.fixEndPc(forControlVar, 2)
 }

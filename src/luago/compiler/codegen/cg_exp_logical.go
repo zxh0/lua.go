@@ -12,7 +12,11 @@ func (self *cg) logicalBinopExp(exp *BinopExp, a int) {
 	for node := list; node != nil; node = node.next {
 		node.startPc = self.pc()
 
-		allocator := self.newTmpAllocator(a)
+		// allocator := self.newTmpAllocator(a)
+		allocator := &tmpAllocator{self.scope, a, 0}
+		if self.isLocVarSlot(a) && node.next != nil {
+			allocator = self.newTmpAllocator(-1)
+		}
 
 		if isRelationalBinopExp(node.exp) {
 			hasRelationalBinop = true

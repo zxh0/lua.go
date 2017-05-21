@@ -63,59 +63,17 @@ func (self *cg) assignStat1(line int, lhs, rhs Exp) {
 
 func (self *cg) assignToName(line int, name string, rhs Exp) {
 	if slot := self.slotOf(name); slot >= 0 {
-		iY, tY := self.toOperand0(rhs)
-		switch tY {
-		case ARG_CONST:
-			self.exp(rhs, slot, 1)
-		case ARG_REG:
-			self.move(line, slot, iY)
-		case ARG_UPVAL:
-			self.getUpval(line, slot, iY)
-		case ARG_GLOBAL: // todo
-			envIdx := self.lookupUpval("_ENV")
-			self.getTabUp(line, slot, envIdx, iY)
-		default:
-			// tmp := self.allocTmp()
-			// self.exp(rhs, tmp, 1)
-			// self.freeTmp()
-			switch rhs.(type) {
-			case *UnopExp:
-				self.exp(rhs, slot, 1)
-			case *BinopExp:
-				//tmp := self.allocTmp()
-				self.exp(rhs, slot, 1)
-				//self.freeTmp()
-				//self.fixA(len(self.insts)-1, slot)
-			case *BracketsExp:
-				self.exp(rhs, slot, 1)
-			default:
-				tmp := self.allocTmp()
-				self.exp(rhs, tmp, 1)
-				self.freeTmp()
-				self.move(line, slot, tmp)
-			}
-		}
+		self.assignToLocalVar(rhs, line, slot)
 	} else if idx := self.lookupUpval(name); idx >= 0 {
-		iY, tY := self.toOperand0(rhs)
-		switch tY {
-		case ARG_REG:
-			self.setUpval(line, iY, idx)
-		default:
-			tmp := self.allocTmp()
-			self.exp(rhs, tmp, 1)
-			self.freeTmp()
-			self.setUpval(line, tmp, idx)
-		}
+		self.assignToUpval(rhs, line, idx)
 	} else {
 		envIdx := self.lookupUpval("_ENV")
 		strIdx := self.indexOf(name)
 
-		iY, tY := self.toOpArg(rhs)
-		switch tY {
-		case ARG_CONST:
-			self.setTabUp(line, envIdx, strIdx, iY)
-		case ARG_REG:
-			self.setTabUp(line, envIdx, strIdx, iY)
+		arg, argKind := self.toOpArg(rhs)
+		switch argKind {
+		case ARG_CONST, ARG_REG:
+			self.setTabUp(line, envIdx, strIdx, arg)
 		default:
 			tmp := self.allocTmp()
 			self.exp(rhs, tmp, 1)
@@ -124,6 +82,37 @@ func (self *cg) assignToName(line int, name string, rhs Exp) {
 		}
 	}
 }
+
+func (self *cg) assignToLocalVar(node Exp, line, a int) {
+	switch exp := node.(type) {
+	case *NilExp, *FalseExp, *TrueExp,
+		*IntegerExp, *FloatExp, *StringExp,
+		*VarargExp,
+		*BinopExp, *UnopExp,
+		*NameExp, *BracketsExp:
+		self.exp(exp, a, 1)
+	default:
+		tmp := self.allocTmp()
+		self.exp(exp, tmp, 1)
+		self.freeTmp()
+		self.move(line, a, tmp)
+	}
+}
+
+func (self *cg) assignToUpval(node Exp, line, idx int) {
+	if slot, ok := self.isLocVar(node); ok {
+		self.setUpval(line, slot, idx)
+	} else {
+		tmp := self.allocTmp()
+		self.exp(node, tmp, 1)
+		self.freeTmp()
+		self.setUpval(line, tmp, idx)
+	}
+}
+
+// func (self *cg) assignToGlobalVar(node Exp, line, envIdx, nameIdx int) {
+
+// }
 
 func (self *cg) assignToField(line int, lhs *BracketsExp, rhs Exp) {
 	var a, b, c int
@@ -168,86 +157,130 @@ func (self *cg) assignStatN(node *AssignStat) {
 	exps := removeTailNils(node.ExpList)
 	nExps := len(exps)
 	nVars := len(node.VarList)
-	nTmps := 0
 
-	operands := make([]int, 0, 16)
-	flag := false // todo: rename
+	operands := make([]int, 0, 6*nVars)
+	allocator := self.newTmpAllocator(-1)
+	lastExpIsVarargOrFuncCall := nExps > 0 &&
+		isVarargOrFuncCallExp(exps[nExps-1])
+	// lastVarIsNameExp := isNameExp(node.VarList[nVars-1])
 
-	for i, lhs := range node.VarList {
-		var iTab, tTab, iKey, tKey int
-		iVal := 0 // placeholder
-		tVal := 0 // placeholder
+	for _, lhs := range node.VarList {
+		// if i == nVars-1 && nExps == nVars && lastVarIsNameExp {
+		// 	name := lhs.(*NameExp).Name
+		// 	self.isGlobalVar(name) // todo
+		// 	break
+		// }
+
+		var argTab, kindTab, argKey, kindKey, argVal, kindVal int
 		switch x := lhs.(type) {
 		case *NameExp:
-			if slot := self.slotOf(x.Name); slot >= 0 {
-				flag = nExps == nVars && i == nVars-1
-				iTab = -1
-				tTab = -1
-				iKey = slot
-				tKey = ARG_REG
-			} else if idx := self.lookupUpval(x.Name); idx >= 0 {
-				flag = nExps == nVars && i == nVars-1
-				iTab = -1
-				tTab = -1
-				iKey = idx
-				tKey = ARG_UPVAL
+			if envIdx, nameIdx, ok := self.isGlobalVar(x.Name); ok {
+				argTab, kindTab = envIdx, ARG_UPVAL
+				argKey, kindKey = nameIdx, ARG_CONST
 			} else {
-				iTab = self.lookupUpval("_ENV")
-				tTab = ARG_GLOBAL
-				iKey = self.indexOf(x.Name)
-				tKey = ARG_CONST
-			}
-			if !flag {
-				operands = append(operands, iTab, tTab, iKey, tKey, iVal, tVal)
+				argKey, kindKey = self.exp2OpArg(x, ARG_RU, allocator)
 			}
 		case *BracketsExp:
-			// todo
+			argTab, kindTab = self.exp2OpArg(x.PrefixExp, ARG_RU, allocator)
+			argKey, kindKey = self.exp2OpArg(x.KeyExp, ARG_RUK, allocator)
 		}
+		operands = append(operands,
+			argTab, kindTab, argKey, kindKey, argVal, kindVal)
 	}
 	for i, rhs := range exps {
-		if i < nExps-1 || !flag {
-			//iVal, tVal := self.toOpArg(rhs)
-			tVal := ARG_REG
-			iVal := self.allocTmp()
-			nTmps++
-			self.exp(rhs, iVal, 1)
-			if i*6 < len(operands) {
-				operands[i*6+4] = iVal
-				operands[i*6+5] = tVal
+		// if i == nExps-1 && nExps == nVars && lastVarIsNameExp {
+		// 	break
+		// }
+		if i == nExps-1 && nExps == nVars {
+			lhs := node.VarList[nExps-1]
+			if isNameExp(lhs) {
+				name := lhs.(*NameExp).Name
+				self.assignToName(node.LastLine, name, rhs)
+			} else {
+				argTab := operands[i*6+0]
+				//kindTab := operands[i*6+1]
+				argKey := operands[i*6+2]
+				//kindKey := operands[i*6+3]
+				argVal, _ := self.exp2OpArg(rhs, ARG_RK, allocator)
+				self.setTable(node.LastLine, argTab, argKey, argVal)
 			}
-		}
-	}
-	if flag {
-		self.assignStat1(node.LastLine,
-			node.VarList[nVars-1], exps[nExps-1])
-	} else if nVars > nExps {
-		nNils := nVars - nExps
-		tmp := self.allocTmps(nNils)
-		nTmps += nNils
-		self.loadNil(node.LastLine, tmp, nNils)
-		for i := nExps; i < nVars; i++ {
-			operands[i*6+4] = tmp + i - nExps
-			operands[i*6+5] = ARG_REG
-		}
-	}
 
-	self.freeTmps(nTmps)
-	for i := len(operands) - 1; i > 0; i -= 6 {
-		iTab := operands[i-5]
-		tTab := operands[i-4]
-		iKey := operands[i-3]
-		tKey := operands[i-2]
-		iVal := operands[i-1]
-		// tVal := operands[i]
-		if tTab == -1 {
-			if tKey == ARG_REG {
-				self.move(node.LastLine, iKey, iVal)
-			} else if tKey == ARG_UPVAL {
-				self.setUpval(node.LastLine, iVal, iKey)
-			}
-		} else if tTab == ARG_GLOBAL {
-			self.setTabUp(node.LastLine, iTab, iKey, iVal)
+			break
 		}
+		if i < nExps-1 || nExps >= nVars || !lastExpIsVarargOrFuncCall {
+			if i <= nVars-1 {
+				kindVal := ARG_REG
+				argVal := allocator.allocTmp()
+				self.exp(rhs, argVal, 1)
+				operands[i*6+4] = argVal
+				operands[i*6+5] = kindVal				
+			} else { // i > nVars-1
+				argVal := allocator.allocTmp()
+				self.exp(rhs, argVal, 0)
+			}
+		} else { // last exp & (vararg | funccall)
+			n := nVars-nExps+1
+			a := allocator.allocTmp()
+			self.exp(rhs, a, n)
+			for j := nExps-1; j < nVars; j++ {
+				operands[j*6+4] = a + j - nExps + 1
+				operands[j*6+5] = ARG_REG
+			}
+		}
+	}
+	if nExps < nVars && !lastExpIsVarargOrFuncCall {
+		n := nVars-nExps
+		a := allocator.allocTmps(n)
+		self.loadNil(node.LastLine, a, n)
+		for j := nExps; j < nVars; j++ {
+			operands[j*6+4] = a + j - nExps
+			operands[j*6+5] = ARG_REG
+		}
+	}
+	// if nExps == nVars && lastVarIsNameExp {
+	// 	self.assignStat1(node.LastLine, node.VarList[nVars-1], exps[nExps-1])
+	// }
+
+	allocator.freeAll()
+
+	for i := len(operands) - 1; i > 0; i -= 6 {
+		argTab := operands[i-5]
+		kindTab := operands[i-4]
+		argKey := operands[i-3]
+		kindKey := operands[i-2]
+		argVal := operands[i-1]
+		kindVal := operands[i]
+
+		switch kindTab {
+		case ARG_REG:
+			if kindVal == ARG_REG {
+				self.setTable(node.LastLine, argTab, argKey, argVal)
+			}
+		case ARG_UPVAL:
+			if kindVal == ARG_REG {
+				self.setTabUp(node.LastLine, argTab, argKey, argVal)
+			}
+		default:
+			if kindKey == ARG_UPVAL {
+				if kindVal == ARG_REG {
+					self.setUpval(node.LastLine, argVal, argKey)
+				}
+			} else {
+				if kindVal == ARG_REG {
+					self.move(node.LastLine, argKey, argVal)
+				}
+			}
+		}
+
+		// if kindTab == -1 {
+		// 	if kindKey == ARG_REG {
+		// 		self.move(node.LastLine, argKey, argVal)
+		// 	} else if kindKey == ARG_UPVAL {
+		// 		self.setUpval(node.LastLine, argVal, argKey)
+		// 	}
+		// } else if kindTab == ARG_GLOBAL {
+		// 	self.setTabUp(node.LastLine, argTab, argKey, argVal)
+		// }
 	}
 }
 
