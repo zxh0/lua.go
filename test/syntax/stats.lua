@@ -125,6 +125,10 @@ function stat_local_assign(...)
   local a = x and y or z
   local a = 1
   a=1
+  -- local a,b,c;
+  -- a=a^b^c^b^a
+  -- a=x^y^z^u^v
+  -- a=a^x^b^1^y
 end --]==]
 -- [==[
 function stat_assign_1(...)
@@ -332,3 +336,12 @@ function tc(...)
   --   {x=0, y=1}    -- polyline[4]
   -- }
 end --]==]
+
+
+-- function mod(a, b) return a % b end
+-- assert(mod( 2,  5) ==  2)
+-- assert(mod( 5,  2) ==  1)
+-- assert(mod( 5, -2) == -1)
+-- assert(mod(-5,  2) ==  1)
+-- assert(mod(-5, -1) ==  0)
+
