@@ -53,13 +53,17 @@ func parseParensExp(lexer *Lexer) Exp {
 	exp := parseExp(lexer)
 	lexer.NextTokenOfKind(TOKEN_SEP_RPAREN)
 
-	switch exp.(type) {
-	case *BinopExp, *UnopExp, // ?
-		*VarargExp, *FuncCallExp:
+	switch x := exp.(type) {
+	case *BinopExp:
+		if x.Op == TOKEN_OP_POW || x.Op == TOKEN_OP_CONCAT {
+			return &ParensExp{0, exp} // todo
+		}
+	case *VarargExp, *FuncCallExp:
 		return &ParensExp{0, exp} // todo
-	default: // no need to keep parens
-		return exp
 	}
+
+	// no need to keep parens
+	return exp
 }
 
 // functioncall ::=  prefixexp args | prefixexp ‘:’ Name args

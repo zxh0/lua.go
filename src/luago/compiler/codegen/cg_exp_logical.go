@@ -18,15 +18,15 @@ func (self *cg) logicalBinopExp(exp *BinopExp, a int) {
 			allocator = self.newTmpAllocator(-1)
 		}
 
-		if isRelationalBinopExp(node.exp) {
+		if bexp, ok := castToRelationalBinopExp(node.exp); ok {
 			hasRelationalBinop = true
 			if node.next != nil {
-				self.testRelationalBinopExpX(node.exp.(*BinopExp), allocator, 0)
+				self.testRelationalBinopExpX(bexp, allocator, 0)
 				node.jmpPc = self.jmp(node.line, 0)
 			} else {
 				lastExpIsRelationalBinop = true
 				lineOfLastExp = lineOfExp(node.exp)
-				self.testRelationalBinopExpX(node.exp.(*BinopExp), allocator, 1)
+				self.testRelationalBinopExpX(bexp, allocator, 1)
 			}
 			continue
 		}
@@ -84,18 +84,20 @@ func (self *cg) testLogicalBinopExp(exp *BinopExp, lineOfLastJmp int) (pendingJm
 		node.startPc = self.pc()
 		allocator := self.newTmpAllocator(-1)
 
-		if isRelationalBinopExp(node.exp) {
+		if bexp, ok := castToRelationalBinopExp(node.exp); ok {
+			line := lastLineOfExp(bexp)
+
 			if node.next != nil {
 				if node.op == TOKEN_OP_AND {
-					self.testRelationalBinopExp(node.exp.(*BinopExp), 0)
-					node.jmpPc = self.jmp(lineOfLastJmp, 0)
+					self.testRelationalBinopExp(bexp, 0)
+					node.jmpPc = self.jmp(line, 0)
 				} else {
-					self.testRelationalBinopExp(node.exp.(*BinopExp), 1)
-					node.jmpPc = self.jmp(lineOfLastJmp, 0)
+					self.testRelationalBinopExp(bexp, 1)
+					node.jmpPc = self.jmp(line, 0)
 				}
 			} else {
-				self.testRelationalBinopExp(node.exp.(*BinopExp), 0)
-				pc := self.jmp(lineOfLastJmp, 0)
+				self.testRelationalBinopExp(bexp, 0)
+				pc := self.jmp(line, 0)
 				pendingJmps = append(pendingJmps, pc)
 			}
 		} else {

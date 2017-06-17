@@ -33,7 +33,7 @@ func (self *cg) ifStat(node *IfStat) {
 			jmp2elseIfs = map[int]bool{} // clear map
 		}
 
-		self._cgIf(node, i, jmp2elseIfs, jmp2ends)
+		self.ifExpBlock(node, i, jmp2elseIfs, jmp2ends)
 	}
 
 	for pc, _ := range jmp2elseIfs {
@@ -45,7 +45,7 @@ func (self *cg) ifStat(node *IfStat) {
 }
 
 // todo: rename
-func (self *cg) _cgIf(node *IfStat, i int,
+func (self *cg) ifExpBlock(node *IfStat, i int,
 	jmp2elseIfs, jmp2ends map[int]bool) {
 
 	exp := node.Exps[i]
@@ -53,9 +53,8 @@ func (self *cg) _cgIf(node *IfStat, i int,
 	lineOfThen := node.Lines[i]
 
 	if isExpTrue(exp) {
-		switch x := exp.(type) {
-		case *StringExp:
-			self.indexOf(x.Str)
+		if strExp, ok := exp.(*StringExp); ok {
+			self.indexOf(strExp.Str)
 		}
 	} else {
 		pendingJmps := self.testExp(exp, lineOfThen)
