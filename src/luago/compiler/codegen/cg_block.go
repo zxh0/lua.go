@@ -3,13 +3,13 @@ package codegen
 import . "luago/compiler/ast"
 
 // todo: rename
-func (self *cg) blockWithNewScope(node *Block) {
+func (self *codeGen) blockWithNewScope(node *Block) {
 	self.enterScope()
 	self.block(node)
 	self.exitScope(self.pc() + 1)
 }
 
-func (self *cg) block(node *Block) {
+func (self *codeGen) block(node *Block) {
 	for _, stat := range node.Stats {
 		self.stat(stat)
 	}
@@ -19,10 +19,10 @@ func (self *cg) block(node *Block) {
 	}
 }
 
-func (self *cg) retStat(node *RetStat) {
+func (self *codeGen) retStat(node *RetStat) {
 	nExps := len(node.ExpList)
 	if nExps == 0 {
-		self._return(node.LastLine, 0, 0)
+		self.emitReturn(node.LastLine, 0, 0)
 		return
 	}
 
@@ -30,14 +30,14 @@ func (self *cg) retStat(node *RetStat) {
 		switch exp := node.ExpList[0].(type) {
 		case *NameExp:
 			if slot := self.slotOf(exp.Name); slot >= 0 {
-				self._return(node.LastLine, slot, 1)
+				self.emitReturn(node.LastLine, slot, 1)
 				return
 			}
 		case *FuncCallExp:
 			tmp := self.allocTmp()
 			self.tailCallExp(exp, tmp)
 			self.freeTmp()
-			self._return(node.LastLine, tmp, -1)
+			self.emitReturn(node.LastLine, tmp, -1)
 			return
 		}
 	}
@@ -56,8 +56,8 @@ func (self *cg) retStat(node *RetStat) {
 
 	a := self.scope.nLocals // correct?
 	if lastExpIsVarargOrFuncCall {
-		self._return(node.LastLine, a, -1)
+		self.emitReturn(node.LastLine, a, -1)
 	} else {
-		self._return(node.LastLine, a, nExps)
+		self.emitReturn(node.LastLine, a, nExps)
 	}
 }

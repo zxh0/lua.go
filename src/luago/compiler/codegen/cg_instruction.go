@@ -20,167 +20,167 @@ var arithAndBitwiseBinops = map[int]int{
 }
 
 // r[a], r[a+1], ..., r[a+b] = nil
-func (self *cg) loadNil(line, a, n int) {
-	self.inst(line, OP_LOADNIL, a, n-1, 0)
+func (self *codeGen) emitLoadNil(line, a, n int) {
+	self.emit(line, OP_LOADNIL, a, n-1, 0)
 }
 
 // r[a] = (bool)b; if (c) pc++
-func (self *cg) loadBool(line, a, b, c int) {
-	self.inst(line, OP_LOADBOOL, a, b, c)
+func (self *codeGen) emitLoadBool(line, a, b, c int) {
+	self.emit(line, OP_LOADBOOL, a, b, c)
 }
 
 // r[a] = kst[bx]
-func (self *cg) loadK(line, a int, k interface{}) {
+func (self *codeGen) emitLoadK(line, a int, k interface{}) {
 	idx := self.indexOf(k)
 	if idx-0x100 < 0x100 { // todo
-		self.inst(line, OP_LOADK, a, idx, 0)
+		self.emit(line, OP_LOADK, a, idx, 0)
 	} else {
-		self.inst(line, OP_LOADKX, a, 0, 0)
-		self.inst(line, OP_EXTRAARG, idx-0x100, 0, 0)
+		self.emit(line, OP_LOADKX, a, 0, 0)
+		self.emit(line, OP_EXTRAARG, idx-0x100, 0, 0)
 	}
 }
 
 // r[a] = {}
-func (self *cg) newTable(line, a, nArr, nRec int) {
-	self.inst(line, OP_NEWTABLE, a, INT2FB(nArr), INT2FB(nRec))
+func (self *codeGen) emitNewTable(line, a, nArr, nRec int) {
+	self.emit(line, OP_NEWTABLE, a, INT2FB(nArr), INT2FB(nRec))
 }
 
 // r[a][(c-1)*FPF+i] := r[a+i], 1 <= i <= b
-func (self *cg) setList(line, a, b, c int) {
-	self.inst(line, OP_SETLIST, a, b, c)
+func (self *codeGen) emitSetList(line, a, b, c int) {
+	self.emit(line, OP_SETLIST, a, b, c)
 }
 
-// r[a] = closure(proto[bx])
-func (self *cg) closure(line, a, bx int) {
-	self.inst(line, OP_CLOSURE, a, bx, 0)
+// r[a] = emitClosure(proto[bx])
+func (self *codeGen) emitClosure(line, a, bx int) {
+	self.emit(line, OP_CLOSURE, a, bx, 0)
 }
 
 // r[a] = r[b]
-func (self *cg) move(line, a, b int) {
-	self.inst(line, OP_MOVE, a, b, 0)
+func (self *codeGen) emitMove(line, a, b int) {
+	self.emit(line, OP_MOVE, a, b, 0)
 }
 
 // r[a] = upval[b]
-func (self *cg) getUpval(line, a, b int) {
-	self.inst(line, OP_GETUPVAL, a, b, 0)
+func (self *codeGen) emitGetUpval(line, a, b int) {
+	self.emit(line, OP_GETUPVAL, a, b, 0)
 }
 
 // upval[b] = r[a]
-func (self *cg) setUpval(line, a, b int) {
-	self.inst(line, OP_SETUPVAL, a, b, 0)
+func (self *codeGen) emitSetUpval(line, a, b int) {
+	self.emit(line, OP_SETUPVAL, a, b, 0)
 }
 
 // r[a] = upval[b][rk(c)]
-func (self *cg) getTabUp(line, a, b, c int) {
-	self.inst(line, OP_GETTABUP, a, b, c)
+func (self *codeGen) emitGetTabUp(line, a, b, c int) {
+	self.emit(line, OP_GETTABUP, a, b, c)
 }
 
 // upval[a][rk(b)] = rk(c)
-func (self *cg) setTabUp(line, a, b, c int) {
-	self.inst(line, OP_SETTABUP, a, b, c)
+func (self *codeGen) emitSetTabUp(line, a, b, c int) {
+	self.emit(line, OP_SETTABUP, a, b, c)
 }
 
 // r[a] := r[b][rk(c)]
-func (self *cg) getTable(line, a, b, c int) {
-	self.inst(line, OP_GETTABLE, a, b, c)
+func (self *codeGen) emitGetTable(line, a, b, c int) {
+	self.emit(line, OP_GETTABLE, a, b, c)
 }
 
 // r[a][rk(b)] = rk(c)
-func (self *cg) setTable(line, a, b, c int) {
-	self.inst(line, OP_SETTABLE, a, b, c)
+func (self *codeGen) emitSetTable(line, a, b, c int) {
+	self.emit(line, OP_SETTABLE, a, b, c)
 }
 
 // r[a], r[a+1], ..., r[a+b-2] = vararg
-func (self *cg) vararg(line, a, n int) {
-	self.inst(line, OP_VARARG, a, n+1, 0)
+func (self *codeGen) emitVararg(line, a, n int) {
+	self.emit(line, OP_VARARG, a, n+1, 0)
 }
 
 // r[a], ..., r[a+c-2] = r[a](r[a+1], ..., r[a+b-1])
-func (self *cg) call(line, a, nArgs, nRet int) {
-	self.inst(line, OP_CALL, a, nArgs+1, nRet+1)
+func (self *codeGen) emitCall(line, a, nArgs, nRet int) {
+	self.emit(line, OP_CALL, a, nArgs+1, nRet+1)
 }
 
 // return r[a](r[a+1], ... ,r[a+b-1])
-func (self *cg) tailCall(line, a, nArgs int) {
-	self.inst(line, OP_TAILCALL, a, nArgs+1, 0)
+func (self *codeGen) emitTailCall(line, a, nArgs int) {
+	self.emit(line, OP_TAILCALL, a, nArgs+1, 0)
 }
 
 // return r[a], ... ,r[a+b-2]
-func (self *cg) _return(line, a, n int) {
-	self.inst(line, OP_RETURN, a, n+1, 0)
+func (self *codeGen) emitReturn(line, a, n int) {
+	self.emit(line, OP_RETURN, a, n+1, 0)
 }
 
 // r[a+1] := r[b]; r[a] := r[b][rk(c)]
-func (self *cg) _self(line, a, b, c int) {
-	self.inst(line, OP_SELF, a, b, c)
+func (self *codeGen) emitSelf(line, a, b, c int) {
+	self.emit(line, OP_SELF, a, b, c)
 }
 
 // pc+=sBx; if (a) close all upvalues >= r[a - 1]
-func (self *cg) jmp(line, sBx int) int {
-	return self.inst(line, OP_JMP, 0, sBx, 0) // todo: a?
+func (self *codeGen) emitJmp(line, sBx int) int {
+	return self.emit(line, OP_JMP, 0, sBx, 0) // todo: a?
 }
 
 // if not (r[a] <=> c) then pc++
-func (self *cg) test(line, a, c int) {
-	self.inst(line, OP_TEST, a, 0, c)
+func (self *codeGen) emitTest(line, a, c int) {
+	self.emit(line, OP_TEST, a, 0, c)
 }
 
 // if (r[b] <=> c) then r[a] := r[b] else pc++
-func (self *cg) testSet(line, a, b, c int) {
-	self.inst(line, OP_TESTSET, a, b, c)
+func (self *codeGen) emitTestSet(line, a, b, c int) {
+	self.emit(line, OP_TESTSET, a, b, c)
 }
 
-func (self *cg) forPrep(line, a, sBx int) int {
-	return self.inst(line, OP_FORPREP, a, sBx, 0)
+func (self *codeGen) emitForPrep(line, a, sBx int) int {
+	return self.emit(line, OP_FORPREP, a, sBx, 0)
 }
 
-func (self *cg) forLoop(line, a, sBx int) int {
-	return self.inst(line, OP_FORLOOP, a, sBx, 0)
+func (self *codeGen) emitForLoop(line, a, sBx int) int {
+	return self.emit(line, OP_FORLOOP, a, sBx, 0)
 }
 
-func (self *cg) tForCall(line, a, c int) {
-	self.inst(line, OP_TFORCALL, a, 0, c)
+func (self *codeGen) emitTForCall(line, a, c int) {
+	self.emit(line, OP_TFORCALL, a, 0, c)
 }
 
-func (self *cg) tForLoop(line, a, sBx int) {
-	self.inst(line, OP_TFORLOOP, a, sBx, 0)
+func (self *codeGen) emitTForLoop(line, a, sBx int) {
+	self.emit(line, OP_TFORLOOP, a, sBx, 0)
 }
 
 // r[a] = op r[b]
-func (self *cg) unaryOp(line, op, a, b int) {
+func (self *codeGen) emitUnaryOp(line, op, a, b int) {
 	switch op {
 	case TOKEN_OP_NOT:
-		self.inst(line, OP_NOT, a, b, 0)
+		self.emit(line, OP_NOT, a, b, 0)
 	case TOKEN_OP_BNOT:
-		self.inst(line, OP_BNOT, a, b, 0)
+		self.emit(line, OP_BNOT, a, b, 0)
 	case TOKEN_OP_LEN:
-		self.inst(line, OP_LEN, a, b, 0)
+		self.emit(line, OP_LEN, a, b, 0)
 	case TOKEN_OP_UNM:
-		self.inst(line, OP_UNM, a, b, 0)
+		self.emit(line, OP_UNM, a, b, 0)
 	}
 }
 
 // arith & bitwise & relational
-func (self *cg) binaryOp(line, op, a, b, c int) {
+func (self *codeGen) emitBinaryOp(line, op, a, b, c int) {
 	if opcode, found := arithAndBitwiseBinops[op]; found {
-		self.inst(line, opcode, a, b, c)
+		self.emit(line, opcode, a, b, c)
 	} else { // relational
 		switch op {
 		case TOKEN_OP_EQ:
-			self.inst(line, OP_EQ, 1, b, c)
+			self.emit(line, OP_EQ, 1, b, c)
 		case TOKEN_OP_NE:
-			self.inst(line, OP_EQ, 0, b, c)
+			self.emit(line, OP_EQ, 0, b, c)
 		case TOKEN_OP_LT:
-			self.inst(line, OP_LT, 1, b, c)
+			self.emit(line, OP_LT, 1, b, c)
 		case TOKEN_OP_GT:
-			self.inst(line, OP_LT, 1, c, b)
+			self.emit(line, OP_LT, 1, c, b)
 		case TOKEN_OP_LE:
-			self.inst(line, OP_LE, 1, b, c)
+			self.emit(line, OP_LE, 1, b, c)
 		case TOKEN_OP_GE:
-			self.inst(line, OP_LE, 1, c, b)
+			self.emit(line, OP_LE, 1, c, b)
 		}
-		self.jmp(line, 1)
-		self.loadBool(line, a, 0, 1)
-		self.loadBool(line, a, 1, 0)
+		self.emitJmp(line, 1)
+		self.emitLoadBool(line, a, 0, 1)
+		self.emitLoadBool(line, a, 1, 0)
 	}
 }

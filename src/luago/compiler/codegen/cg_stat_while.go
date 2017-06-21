@@ -9,7 +9,7 @@ jmp2|    do     |jmp1
     '--[block]  |
          end <--'
 */
-func (self *cg) whileStat(node *WhileStat) {
+func (self *codeGen) whileStat(node *WhileStat) {
 	if nilExp, ok := node.Exp.(*NilExp); ok {
 		node.Exp = &FalseExp{nilExp.Line}
 	}
@@ -25,7 +25,7 @@ func (self *cg) whileStat(node *WhileStat) {
 	self.blockWithNewScope(node.Block)
 
 	endPc := self.pc()
-	self.jmp(node.Block.LastLine, startPc-endPc-1)
+	self.emitJmp(node.Block.LastLine, startPc-endPc-1)
 
 	if !endless && jmpToEndPcs != nil {
 		for _, pc := range jmpToEndPcs {

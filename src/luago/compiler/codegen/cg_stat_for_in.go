@@ -6,7 +6,7 @@ const forGeneratorVar = "(for generator)"
 const forStateVar = "(for state)"
 const forControlVar = "(for control)"
 
-func (self *cg) forInStat(node *ForInStat) {
+func (self *codeGen) forInStat(node *ForInStat) {
 	self.enterScope()
 
 	self.stat(&LocalAssignStat{
@@ -25,14 +25,14 @@ func (self *cg) forInStat(node *ForInStat) {
 		self.freeTmps(n)
 	}
 
-	jmpToTFC := self.jmp(node.LineOfDo, 0)
+	jmpToTFC := self.emitJmp(node.LineOfDo, 0)
 	self.block(node.Block)
 	self.fixSbx(jmpToTFC, self.pc()-jmpToTFC)
 
 	line := lineOfExp(node.ExpList[0])
 	slotOfGeneratorVar := self.slotOf(forGeneratorVar)
-	self.tForCall(line, slotOfGeneratorVar, len(node.NameList))
-	self.tForLoop(line, slotOfGeneratorVar+2, jmpToTFC-self.pc()-1)
+	self.emitTForCall(line, slotOfGeneratorVar, len(node.NameList))
+	self.emitTForLoop(line, slotOfGeneratorVar+2, jmpToTFC-self.pc()-1)
 
 	self.exitScope(self.pc() - 1)
 	self.fixEndPc(forGeneratorVar, 2)

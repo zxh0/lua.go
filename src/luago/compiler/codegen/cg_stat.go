@@ -2,7 +2,7 @@ package codegen
 
 import . "luago/compiler/ast"
 
-func (self *cg) stat(stat Stat) {
+func (self *codeGen) stat(stat Stat) {
 	switch node := stat.(type) {
 	case *IfStat:
 		self.ifStat(node)
@@ -29,7 +29,7 @@ func (self *cg) stat(stat Stat) {
 	}
 }
 
-func (self *cg) funcCallStat(stat FuncCallStat) {
+func (self *codeGen) funcCallStat(stat FuncCallStat) {
 	fcExp := (*FuncCallExp)(stat)
 	tmp := self.allocTmp()
 	self.exp(fcExp, tmp, 0)

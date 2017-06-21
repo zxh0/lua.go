@@ -2,7 +2,7 @@ package codegen
 
 import . "luago/compiler/ast"
 
-func (self *cg) localAssignStat(node *LocalAssignStat) {
+func (self *codeGen) localAssignStat(node *LocalAssignStat) {
 	if len(node.ExpList) == 1 {
 		exp0 := node.ExpList[0]
 		if fd, ok := exp0.(*FuncDefExp); ok {
@@ -36,7 +36,7 @@ func (self *cg) localAssignStat(node *LocalAssignStat) {
 	if nNames > nExps && !lastExpIsVarargOrFuncCall {
 		n := nNames - nExps
 		a := self.scope.stackSize - n
-		self.loadNil(node.LastLine, a, n)
+		self.emitLoadNil(node.LastLine, a, n)
 	} else if nExps > nNames {
 		for i := nNames; i < nExps; i++ {
 			a := self.allocTmp()
@@ -55,7 +55,7 @@ func (self *cg) localAssignStat(node *LocalAssignStat) {
 	}
 }
 
-func (self *cg) assignStat(node *AssignStat) {
+func (self *codeGen) assignStat(node *AssignStat) {
 	if len(node.VarList) == 1 && len(node.ExpList) == 1 {
 		self.assignStat1(node.LastLine,
 			node.VarList[0], node.ExpList[0])
@@ -64,7 +64,7 @@ func (self *cg) assignStat(node *AssignStat) {
 	}
 }
 
-func (self *cg) assignStat1(line int, lhs, rhs Exp) {
+func (self *codeGen) assignStat1(line int, lhs, rhs Exp) {
 	switch x := lhs.(type) {
 	case *NameExp: // x = y
 		self.assignToName(line, x.Name, rhs)
@@ -73,7 +73,7 @@ func (self *cg) assignStat1(line int, lhs, rhs Exp) {
 	}
 }
 
-func (self *cg) assignToName(line int, name string, rhs Exp) {
+func (self *codeGen) assignToName(line int, name string, rhs Exp) {
 	if slot := self.slotOf(name); slot >= 0 {
 		self.assignToLocalVar(rhs, line, slot)
 	} else if idx := self.lookupUpval(name); idx >= 0 {
@@ -85,17 +85,17 @@ func (self *cg) assignToName(line int, name string, rhs Exp) {
 		arg, argKind := self.toOpArg(rhs)
 		switch argKind {
 		case ARG_CONST, ARG_REG:
-			self.setTabUp(line, envIdx, strIdx, arg)
+			self.emitSetTabUp(line, envIdx, strIdx, arg)
 		default:
 			tmp := self.allocTmp()
 			self.exp(rhs, tmp, 1)
 			self.freeTmp()
-			self.setTabUp(line, envIdx, strIdx, tmp) // todo
+			self.emitSetTabUp(line, envIdx, strIdx, tmp) // todo
 		}
 	}
 }
 
-func (self *cg) assignToLocalVar(node Exp, line, a int) {
+func (self *codeGen) assignToLocalVar(node Exp, line, a int) {
 	switch exp := node.(type) {
 	case *NilExp, *FalseExp, *TrueExp,
 		*IntegerExp, *FloatExp, *StringExp,
@@ -107,26 +107,26 @@ func (self *cg) assignToLocalVar(node Exp, line, a int) {
 		tmp := self.allocTmp()
 		self.exp(exp, tmp, 1)
 		self.freeTmp()
-		self.move(line, a, tmp)
+		self.emitMove(line, a, tmp)
 	}
 }
 
-func (self *cg) assignToUpval(node Exp, line, idx int) {
+func (self *codeGen) assignToUpval(node Exp, line, idx int) {
 	if slot, ok := self.isLocVar(node); ok {
-		self.setUpval(line, slot, idx)
+		self.emitSetUpval(line, slot, idx)
 	} else {
 		tmp := self.allocTmp()
 		self.exp(node, tmp, 1)
 		self.freeTmp()
-		self.setUpval(line, tmp, idx)
+		self.emitSetUpval(line, tmp, idx)
 	}
 }
 
-// func (self *cg) assignToGlobalVar(node Exp, line, envIdx, nameIdx int) {
+// func (self *codeGen) assignToGlobalVar(node Exp, line, envIdx, nameIdx int) {
 
 // }
 
-func (self *cg) assignToField(line int, lhs *BracketsExp, rhs Exp) {
+func (self *codeGen) assignToField(line int, lhs *BracketsExp, rhs Exp) {
 	var a, b, c int
 	nTmps := 0
 
@@ -159,13 +159,13 @@ func (self *cg) assignToField(line int, lhs *BracketsExp, rhs Exp) {
 
 	self.freeTmps(nTmps)
 	if tTab == ARG_UPVAL {
-		self.setTabUp(line, a, b, c)
+		self.emitSetTabUp(line, a, b, c)
 	} else {
-		self.setTable(line, a, b, c)
+		self.emitSetTable(line, a, b, c)
 	}
 }
 
-func (self *cg) assignStatN(node *AssignStat) {
+func (self *codeGen) assignStatN(node *AssignStat) {
 	exps := removeTailNils(node.ExpList)
 	nExps := len(exps)
 	nVars := len(node.VarList)
@@ -214,7 +214,7 @@ func (self *cg) assignStatN(node *AssignStat) {
 				argKey := operands[i*6+2]
 				//kindKey := operands[i*6+3]
 				argVal, _ := self.exp2OpArg(rhs, ARG_RK, allocator)
-				self.setTable(node.LastLine, argTab, argKey, argVal)
+				self.emitSetTable(node.LastLine, argTab, argKey, argVal)
 			}
 
 			break
@@ -243,7 +243,7 @@ func (self *cg) assignStatN(node *AssignStat) {
 	if nExps < nVars && !lastExpIsVarargOrFuncCall {
 		n := nVars - nExps
 		a := allocator.allocTmps(n)
-		self.loadNil(node.LastLine, a, n)
+		self.emitLoadNil(node.LastLine, a, n)
 		for j := nExps; j < nVars; j++ {
 			operands[j*6+4] = a + j - nExps
 			operands[j*6+5] = ARG_REG
@@ -266,32 +266,32 @@ func (self *cg) assignStatN(node *AssignStat) {
 		switch kindTab {
 		case ARG_REG:
 			if kindVal == ARG_REG {
-				self.setTable(node.LastLine, argTab, argKey, argVal)
+				self.emitSetTable(node.LastLine, argTab, argKey, argVal)
 			}
 		case ARG_UPVAL:
 			if kindVal == ARG_REG {
-				self.setTabUp(node.LastLine, argTab, argKey, argVal)
+				self.emitSetTabUp(node.LastLine, argTab, argKey, argVal)
 			}
 		default:
 			if kindKey == ARG_UPVAL {
 				if kindVal == ARG_REG {
-					self.setUpval(node.LastLine, argVal, argKey)
+					self.emitSetUpval(node.LastLine, argVal, argKey)
 				}
 			} else {
 				if kindVal == ARG_REG {
-					self.move(node.LastLine, argKey, argVal)
+					self.emitMove(node.LastLine, argKey, argVal)
 				}
 			}
 		}
 
 		// if kindTab == -1 {
 		// 	if kindKey == ARG_REG {
-		// 		self.move(node.LastLine, argKey, argVal)
+		// 		self.emitMove(node.LastLine, argKey, argVal)
 		// 	} else if kindKey == ARG_UPVAL {
-		// 		self.setUpval(node.LastLine, argVal, argKey)
+		// 		self.emitSetUpval(node.LastLine, argVal, argKey)
 		// 	}
 		// } else if kindTab == ARG_GLOBAL {
-		// 	self.setTabUp(node.LastLine, argTab, argKey, argVal)
+		// 	self.emitSetTabUp(node.LastLine, argTab, argKey, argVal)
 		// }
 	}
 }

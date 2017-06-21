@@ -21,7 +21,7 @@ jmp5|   elseif <-'
     |,-[block]
     '-> end
 */
-func (self *cg) ifStat(node *IfStat) {
+func (self *codeGen) ifStat(node *IfStat) {
 	jmp2elseIfs := map[int]bool{}
 	jmp2ends := map[int]bool{}
 
@@ -45,7 +45,7 @@ func (self *cg) ifStat(node *IfStat) {
 }
 
 // todo: rename
-func (self *cg) ifExpBlock(node *IfStat, i int,
+func (self *codeGen) ifExpBlock(node *IfStat, i int,
 	jmp2elseIfs, jmp2ends map[int]bool) {
 
 	exp := node.Exps[i]
@@ -65,7 +65,7 @@ func (self *cg) ifExpBlock(node *IfStat, i int,
 
 	self.blockWithNewScope(block)
 	if i < len(node.Exps)-1 {
-		pc := self.jmp(block.LastLine, 0)
+		pc := self.emitJmp(block.LastLine, 0)
 		jmp2ends[pc] = true
 	}
 }

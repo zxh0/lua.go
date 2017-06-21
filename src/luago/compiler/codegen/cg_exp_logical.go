@@ -3,7 +3,7 @@ package codegen
 import . "luago/compiler/ast"
 import . "luago/compiler/lexer"
 
-func (self *cg) logicalBinopExp(exp *BinopExp, a int) {
+func (self *codeGen) logicalBinopExp(exp *BinopExp, a int) {
 	list := logicalBinopExpToList(exp)
 	hasRelationalBinop := false
 	lastExpIsRelationalBinop := false
@@ -22,7 +22,7 @@ func (self *cg) logicalBinopExp(exp *BinopExp, a int) {
 			hasRelationalBinop = true
 			if node.next != nil {
 				self.testRelationalBinopExpX(bexp, allocator, 0)
-				node.jmpPc = self.jmp(node.line, 0)
+				node.jmpPc = self.emitJmp(node.line, 0)
 			} else {
 				lastExpIsRelationalBinop = true
 				lineOfLastExp = lineOfExp(node.exp)
@@ -39,28 +39,28 @@ func (self *cg) logicalBinopExp(exp *BinopExp, a int) {
 				c = 0
 			}
 			if b == a {
-				self.test(node.line, a, c)
+				self.emitTest(node.line, a, c)
 			} else if node.jmpTo != nil {
-				self.test(node.line, b, c)
+				self.emitTest(node.line, b, c)
 			} else {
-				self.testSet(node.line, a, b, c)
+				self.emitTestSet(node.line, a, b, c)
 			}
-			node.jmpPc = self.jmp(node.line, 0)
+			node.jmpPc = self.emitJmp(node.line, 0)
 		} else {
 			lineOfLastExp = lineOfExp(node.exp)
 			if b != a {
-				self.move(lineOfLastExp, a, b)
+				self.emitMove(lineOfLastExp, a, b)
 			}
 		}
 	}
 	if hasRelationalBinop {
 		if lastExpIsRelationalBinop {
-			self.jmp(lineOfLastExp, 1)
+			self.emitJmp(lineOfLastExp, 1)
 		} else {
-			self.jmp(lineOfLastExp, 2)
+			self.emitJmp(lineOfLastExp, 2)
 		}
-		self.loadBool(lineOfLastExp, a, 0, 1)
-		self.loadBool(lineOfLastExp, a, 1, 0)
+		self.emitLoadBool(lineOfLastExp, a, 0, 1)
+		self.emitLoadBool(lineOfLastExp, a, 1, 0)
 	}
 	for node := list; node != nil; node = node.next {
 		if node.next != nil {
@@ -78,7 +78,7 @@ func (self *cg) logicalBinopExp(exp *BinopExp, a int) {
 	}
 }
 
-func (self *cg) testLogicalBinopExp(exp *BinopExp, lineOfLastJmp int) (pendingJmps []int) {
+func (self *codeGen) testLogicalBinopExp(exp *BinopExp, lineOfLastJmp int) (pendingJmps []int) {
 	list := logicalBinopExpToList(exp)
 	for node := list; node != nil; node = node.next {
 		node.startPc = self.pc()
@@ -90,14 +90,14 @@ func (self *cg) testLogicalBinopExp(exp *BinopExp, lineOfLastJmp int) (pendingJm
 			if node.next != nil {
 				if node.op == TOKEN_OP_AND {
 					self.testRelationalBinopExp(bexp, 0)
-					node.jmpPc = self.jmp(line, 0)
+					node.jmpPc = self.emitJmp(line, 0)
 				} else {
 					self.testRelationalBinopExp(bexp, 1)
-					node.jmpPc = self.jmp(line, 0)
+					node.jmpPc = self.emitJmp(line, 0)
 				}
 			} else {
 				self.testRelationalBinopExp(bexp, 0)
-				pc := self.jmp(line, 0)
+				pc := self.emitJmp(line, 0)
 				pendingJmps = append(pendingJmps, pc)
 			}
 		} else {
@@ -108,11 +108,11 @@ func (self *cg) testLogicalBinopExp(exp *BinopExp, lineOfLastJmp int) (pendingJm
 				if node.op == TOKEN_OP_AND {
 					c = 0
 				}
-				self.test(node.line, b, c)
-				node.jmpPc = self.jmp(node.line, 0)
+				self.emitTest(node.line, b, c)
+				node.jmpPc = self.emitJmp(node.line, 0)
 			} else {
-				self.test(lineOfLastJmp, b, 0)
-				pc := self.jmp(lineOfLastJmp, 0)
+				self.emitTest(lineOfLastJmp, b, 0)
+				pc := self.emitJmp(lineOfLastJmp, 0)
 				pendingJmps = append(pendingJmps, pc)
 			}
 		}

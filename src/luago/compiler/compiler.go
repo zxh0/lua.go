@@ -7,12 +7,12 @@ import "luago/compiler/parser"
 
 func Compile(source, chunk string) *binchunk.FuncProto {
 	block := parser.Parse(source, chunk)
-	funcBody := &ast.FuncDefExp{
+	funcDef := &ast.FuncDefExp{
 		LastLine: block.LastLine,
 		IsVararg: true,
 		Block:    block,
 	}
-	proto := codegen.GenProto(funcBody)
+	proto := codegen.GenProto(funcDef)
 	setSource(proto, source) // todo
 	return proto
 }

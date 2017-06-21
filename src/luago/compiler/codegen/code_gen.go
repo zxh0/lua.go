@@ -3,60 +3,60 @@ package codegen
 import . "luago/binchunk"
 import . "luago/compiler/ast"
 
-type cg struct {
+type codeGen struct {
 	scope  *scope
 	insts  insts
 	protos []*FuncProto
 }
 
-func newCG(parentScope *scope) *cg {
-	return &cg{
+func newCodeGen(parentScope *scope) *codeGen {
+	return &codeGen{
 		scope:  newScope(parentScope),
 		insts:  make([]instruction, 0, 8),
 		protos: []*FuncProto{},
 	}
 }
 
-func (self *cg) pc() int {
+func (self *codeGen) pc() int {
 	return len(self.insts) - 1
 }
 
-func (self *cg) inst(line, opcode, a, b, c int) int {
+func (self *codeGen) emit(line, opcode, a, b, c int) int {
 	i := instruction{line, opcode, a, b, c}
 	self.insts = append(self.insts, i)
 	return len(self.insts) - 1
 }
 
-func (self *cg) fixA(pc, a int) {
+func (self *codeGen) fixA(pc, a int) {
 	i := self.insts[pc]
 	i.a = a
 	self.insts[pc] = i
 }
 
-func (self *cg) fixSbx(pc, sbx int) {
+func (self *codeGen) fixSbx(pc, sbx int) {
 	i := self.insts[pc]
 	i.b = sbx
 	self.insts[pc] = i
 }
 
-func (self *cg) enterScope() {
+func (self *codeGen) enterScope() {
 	self.scope.incrLevel()
 }
-func (self *cg) exitScope(endPc int) {
+func (self *codeGen) exitScope(endPc int) {
 	self.scope.decrLevel(endPc)
 }
-func (self *cg) addLocVar(name string, startPc int) int {
+func (self *codeGen) addLocVar(name string, startPc int) int {
 	return self.scope.addLocVar(name, startPc)
 }
-func (self *cg) slotOf(name string) int {
+func (self *codeGen) slotOf(name string) int {
 	return self.scope.slotOf(name)
 }
-func (self *cg) lookupUpval(name string) int {
+func (self *codeGen) lookupUpval(name string) int {
 	return self.scope.lookupUpval(name)
 }
 
 // todo: rename?
-func (self *cg) fixEndPc(name string, delta int) {
+func (self *codeGen) fixEndPc(name string, delta int) {
 	for i := len(self.scope.locVars) - 1; i >= 0; i-- {
 		locVar := self.scope.locVars[i]
 		if locVar.name == name {
@@ -66,32 +66,32 @@ func (self *cg) fixEndPc(name string, delta int) {
 	}
 }
 
-func (self *cg) newTmpAllocator(a int) *tmpAllocator {
+func (self *codeGen) newTmpAllocator(a int) *tmpAllocator {
 	if self.isTmpVar(a) {
 		return &tmpAllocator{self.scope, a, 0}
 	} else {
 		return &tmpAllocator{self.scope, -1, 0}
 	}
 }
-func (self *cg) allocTmps(n int) int {
+func (self *codeGen) allocTmps(n int) int {
 	return self.scope.allocTmps(n)
 }
-func (self *cg) allocTmp() int {
+func (self *codeGen) allocTmp() int {
 	return self.scope.allocTmp()
 }
-func (self *cg) freeTmps(n int) {
+func (self *codeGen) freeTmps(n int) {
 	self.scope.freeTmps(n)
 }
-func (self *cg) freeTmp() {
+func (self *codeGen) freeTmp() {
 	self.scope.freeTmp()
 }
-func (self *cg) isLocVarSlot(slot int) bool {
+func (self *codeGen) isLocVarSlot(slot int) bool {
 	return self.scope.isLocVarSlot(slot)
 }
-func (self *cg) isTmpVar(slot int) bool {
+func (self *codeGen) isTmpVar(slot int) bool {
 	return self.scope.isTmpVar(slot)
 }
-func (self *cg) isGlobalVar(name string) (int, int, bool) {
+func (self *codeGen) isGlobalVar(name string) (int, int, bool) {
 	if self.slotOf(name) < 0 && self.lookupUpval(name) < 0 {
 		envIdx := self.lookupUpval("_ENV")
 		nameIdx := self.indexOf(name)
@@ -100,17 +100,17 @@ func (self *cg) isGlobalVar(name string) (int, int, bool) {
 		return -1, -1, false
 	}
 }
-func (self *cg) indexOf(k interface{}) int {
+func (self *codeGen) indexOf(k interface{}) int {
 	return self.scope.indexOf(k)
 }
 
-func (self *cg) genSubProto(fd *FuncDefExp) int {
-	proto := newCG(self.scope).genProto(fd)
+func (self *codeGen) genSubProto(fd *FuncDefExp) int {
+	proto := newCodeGen(self.scope).genProto(fd)
 	self.protos = append(self.protos, proto)
 	return len(self.protos) - 1
 }
 
-func (self *cg) genProto(fd *FuncDefExp) *FuncProto {
+func (self *codeGen) genProto(fd *FuncDefExp) *FuncProto {
 	if fd.Line == 0 { // main
 		self.scope.setupEnv()
 	}
@@ -127,7 +127,7 @@ func (self *cg) genProto(fd *FuncDefExp) *FuncProto {
 	return self.toProto(fd)
 }
 
-func (self *cg) toProto(fd *FuncDefExp) *FuncProto {
+func (self *codeGen) toProto(fd *FuncDefExp) *FuncProto {
 	proto := &FuncProto{
 		LineDefined:     uint32(fd.Line),
 		LastLineDefined: uint32(fd.LastLine),
@@ -159,5 +159,5 @@ func (self *cg) toProto(fd *FuncDefExp) *FuncProto {
 }
 
 func GenProto(fd *FuncDefExp) *FuncProto {
-	return newCG(nil).genProto(fd)
+	return newCodeGen(nil).genProto(fd)
 }

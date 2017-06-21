@@ -18,14 +18,14 @@ const (
 	// ARG_TMP ?
 )
 
-func (self *cg) testExp(node Exp, lineOfLastJmp int) (pendingJmps []int) {
+func (self *codeGen) testExp(node Exp, lineOfLastJmp int) (pendingJmps []int) {
 	if bexp, ok := node.(*BinopExp); ok {
 		switch bexp.Op {
 		case TOKEN_OP_EQ, TOKEN_OP_NE,
 			TOKEN_OP_LT, TOKEN_OP_GT,
 			TOKEN_OP_LE, TOKEN_OP_GE:
 			self.testRelationalBinopExp(bexp, 0)
-			pc := self.jmp(lineOfLastJmp, 0)
+			pc := self.emitJmp(lineOfLastJmp, 0)
 			return []int{pc}
 		case TOKEN_OP_AND, TOKEN_OP_OR:
 			pendingJmps := self.testLogicalBinopExp(bexp, lineOfLastJmp)
@@ -37,28 +37,28 @@ func (self *cg) testExp(node Exp, lineOfLastJmp int) (pendingJmps []int) {
 	a, _ := self.exp2OpArg(node, ARG_REG, allocator)
 	allocator.freeAll()
 
-	self.test(lineOfLastJmp, a, 0)
-	pc := self.jmp(lineOfLastJmp, 0)
+	self.emitTest(lineOfLastJmp, a, 0)
+	pc := self.emitJmp(lineOfLastJmp, 0)
 	return []int{pc}
 }
 
 // todo: rename to evalExp()?
-func (self *cg) exp(node Exp, a, n int) {
+func (self *codeGen) exp(node Exp, a, n int) {
 	switch exp := node.(type) {
 	case *NilExp:
-		self.loadNil(exp.Line, a, n)
+		self.emitLoadNil(exp.Line, a, n)
 	case *FalseExp:
-		self.loadBool(exp.Line, a, 0, 0)
+		self.emitLoadBool(exp.Line, a, 0, 0)
 	case *TrueExp:
-		self.loadBool(exp.Line, a, 1, 0)
+		self.emitLoadBool(exp.Line, a, 1, 0)
 	case *IntegerExp:
-		self.loadK(exp.Line, a, exp.Val)
+		self.emitLoadK(exp.Line, a, exp.Val)
 	case *FloatExp:
-		self.loadK(exp.Line, a, exp.Val)
+		self.emitLoadK(exp.Line, a, exp.Val)
 	case *StringExp:
-		self.loadK(exp.Line, a, exp.Str)
+		self.emitLoadK(exp.Line, a, exp.Str)
 	case *VarargExp:
-		self.vararg(exp.Line, a, n)
+		self.emitVararg(exp.Line, a, n)
 	case *ParensExp:
 		self.exp(exp.Exp, a, 1)
 	case *NameExp:
@@ -78,7 +78,7 @@ func (self *cg) exp(node Exp, a, n int) {
 	}
 }
 
-func (self *cg) tcExp(exp *TableConstructorExp, a int) {
+func (self *codeGen) tcExp(exp *TableConstructorExp, a int) {
 	nExps := len(exp.KeyExps)
 	nArr := exp.NArr
 	nRec := nExps - nArr
@@ -86,9 +86,9 @@ func (self *cg) tcExp(exp *TableConstructorExp, a int) {
 		isVarargOrFuncCallExp(exp.ValExps[nExps-1])
 
 	if lastExpIsVarargOrFuncCall {
-		self.newTable(exp.Line, a, nArr-1, nRec)
+		self.emitNewTable(exp.Line, a, nArr-1, nRec)
 	} else {
-		self.newTable(exp.Line, a, nArr, nRec)
+		self.emitNewTable(exp.Line, a, nArr, nRec)
 	}
 
 	for i, keyExp := range exp.KeyExps {
@@ -107,9 +107,9 @@ func (self *cg) tcExp(exp *TableConstructorExp, a int) {
 					self.freeTmps(50)
 					line := lineOfExp(valExp)
 					if i == nExps-1 && lastExpIsVarargOrFuncCall {
-						self.setList(line, a, 0, idx/50) // todo
+						self.emitSetList(line, a, 0, idx/50) // todo
 					} else {
-						self.setList(line, a, 50, idx/50) // todo
+						self.emitSetList(line, a, 50, idx/50) // todo
 					}
 				}
 
@@ -132,38 +132,38 @@ func (self *cg) tcExp(exp *TableConstructorExp, a int) {
 			self.exp(valExp, iVal, 1)
 		}
 		self.freeTmps(nTmps)
-		self.setTable(lastLineOfExp(valExp), a, iKey, iVal)
+		self.emitSetTable(lastLineOfExp(valExp), a, iKey, iVal)
 	}
 
 	if nArr > 0 {
 		self.freeTmps(nArr)
 		if lastExpIsVarargOrFuncCall {
-			self.setList(exp.LastLine, a, 0, 1) // todo
+			self.emitSetList(exp.LastLine, a, 0, 1) // todo
 		} else {
-			self.setList(exp.LastLine, a, nArr%50, nArr/50+1) // todo
+			self.emitSetList(exp.LastLine, a, nArr%50, nArr/50+1) // todo
 		}
 	}
 }
 
 // f[a] := function(args) body end
-func (self *cg) funcDefExp(exp *FuncDefExp, a int) {
+func (self *codeGen) funcDefExp(exp *FuncDefExp, a int) {
 	bx := self.genSubProto(exp)
-	self.closure(exp.LastLine, a, bx)
+	self.emitClosure(exp.LastLine, a, bx)
 }
 
 // r[a] := f(args)
-func (self *cg) funcCallExp(exp *FuncCallExp, a, n int) {
+func (self *codeGen) funcCallExp(exp *FuncCallExp, a, n int) {
 	nArgs := self.prepFuncCall(exp, a)
-	self.call(exp.Line, a, nArgs, n)
+	self.emitCall(exp.Line, a, nArgs, n)
 }
 
 // return f(args)
-func (self *cg) tailCallExp(exp *FuncCallExp, a int) {
+func (self *codeGen) tailCallExp(exp *FuncCallExp, a int) {
 	nArgs := self.prepFuncCall(exp, a)
-	self.tailCall(exp.Line, a, nArgs)
+	self.emitTailCall(exp.Line, a, nArgs)
 }
 
-func (self *cg) prepFuncCall(exp *FuncCallExp, a int) int {
+func (self *codeGen) prepFuncCall(exp *FuncCallExp, a int) int {
 	nArgs := len(exp.Args)
 	lastArgIsVarargOrFuncCall := false
 
@@ -171,7 +171,7 @@ func (self *cg) prepFuncCall(exp *FuncCallExp, a int) int {
 	if exp.MethodName != "" {
 		self.allocTmp()
 		idx := self.indexOf(exp.MethodName)
-		self._self(exp.Line, a, a, idx)
+		self.emitSelf(exp.Line, a, a, idx)
 	}
 	for i, arg := range exp.Args {
 		tmp := self.allocTmp()
@@ -196,11 +196,11 @@ func (self *cg) prepFuncCall(exp *FuncCallExp, a int) int {
 }
 
 // r[a] := name
-func (self *cg) nameExp(exp *NameExp, a int) {
+func (self *codeGen) nameExp(exp *NameExp, a int) {
 	if slot := self.slotOf(exp.Name); slot >= 0 {
-		self.move(exp.Line, a, slot)
+		self.emitMove(exp.Line, a, slot)
 	} else if idx := self.lookupUpval(exp.Name); idx >= 0 {
-		self.getUpval(exp.Line, a, idx)
+		self.emitGetUpval(exp.Line, a, idx)
 	} else { // x => _ENV['x']
 		bracketsExp := &BracketsExp{
 			Line:      exp.Line,
@@ -212,29 +212,29 @@ func (self *cg) nameExp(exp *NameExp, a int) {
 }
 
 // r[a] := prefix[key]
-func (self *cg) bracketsExp(exp *BracketsExp, a int) {
+func (self *codeGen) bracketsExp(exp *BracketsExp, a int) {
 	allocator := self.newTmpAllocator(a)
 	b, kindB := self.exp2OpArg(exp.PrefixExp, ARG_RU, allocator)
 	c, _ := self.exp2OpArg(exp.KeyExp, ARG_RK, allocator)
 	allocator.freeAll()
 
 	if kindB == ARG_UPVAL {
-		self.getTabUp(exp.Line, a, b, c)
+		self.emitGetTabUp(exp.Line, a, b, c)
 	} else {
-		self.getTable(exp.Line, a, b, c)
+		self.emitGetTable(exp.Line, a, b, c)
 	}
 }
 
 // r[a] := op exp
-func (self *cg) unopExp(exp *UnopExp, a int) {
+func (self *codeGen) unopExp(exp *UnopExp, a int) {
 	allocator := self.newTmpAllocator(a)
 	b, _ := self.exp2OpArg(exp.Exp, ARG_REG, allocator)
-	self.unaryOp(exp.Line, exp.Op, a, b)
+	self.emitUnaryOp(exp.Line, exp.Op, a, b)
 	allocator.freeAll()
 }
 
 // r[a] := exp1 op exp2
-func (self *cg) binopExp(exp *BinopExp, a int) {
+func (self *codeGen) binopExp(exp *BinopExp, a int) {
 	switch exp.Op {
 	case TOKEN_OP_CONCAT:
 		self.concatExp(exp, a)
@@ -244,13 +244,13 @@ func (self *cg) binopExp(exp *BinopExp, a int) {
 		allocator := self.newTmpAllocator(a)
 		rkb, _ := self.exp2OpArg(exp.Exp1, ARG_RK, allocator)
 		rkc, _ := self.exp2OpArg(exp.Exp2, ARG_RK, allocator)
-		self.binaryOp(exp.Line, exp.Op, a, rkb, rkc)
+		self.emitBinaryOp(exp.Line, exp.Op, a, rkb, rkc)
 		allocator.freeAll()
 	}
 }
 
 // r[a] := exp1 .. exp2
-func (self *cg) concatExp(exp *BinopExp, a int) {
+func (self *codeGen) concatExp(exp *BinopExp, a int) {
 	allocator := self.newTmpAllocator(a)
 	line, b, c := exp.Line, -1, -1
 
@@ -275,14 +275,14 @@ func (self *cg) concatExp(exp *BinopExp, a int) {
 	}
 
 	allocator.freeAll()
-	self.inst(line, OP_CONCAT, a, b, c)
+	self.emit(line, OP_CONCAT, a, b, c)
 }
 
-func (self *cg) toOpArg(exp Exp) (int, int) {
+func (self *codeGen) toOpArg(exp Exp) (int, int) {
 	return self._toOpArg(exp, ARG_CONST|ARG_REG|ARG_UPVAL)
 }
 
-func (self *cg) exp2OpArg(exp Exp, argKinds int,
+func (self *codeGen) exp2OpArg(exp Exp, argKinds int,
 	allocator *tmpAllocator) (arg, argKind int) {
 
 	arg, argKind = self._toOpArg(exp, argKinds)
@@ -295,7 +295,7 @@ func (self *cg) exp2OpArg(exp Exp, argKinds int,
 }
 
 // todo: rename
-func (self *cg) _toOpArg(exp Exp, argKinds int) (arg, argKind int) {
+func (self *codeGen) _toOpArg(exp Exp, argKinds int) (arg, argKind int) {
 	if argKinds&ARG_CONST > 0 {
 		switch x := exp.(type) {
 		case *NilExp:
