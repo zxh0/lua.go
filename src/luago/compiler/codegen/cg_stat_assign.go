@@ -2,7 +2,7 @@ package codegen
 
 import . "luago/compiler/ast"
 
-func (self *codeGen) localAssignStat(node *LocalAssignStat) {
+func (self *codeGen) cgLocalAssignStat(node *LocalAssignStat) {
 	if len(node.ExpList) == 1 {
 		exp0 := node.ExpList[0]
 		if fd, ok := exp0.(*FuncDefExp); ok {
@@ -55,7 +55,7 @@ func (self *codeGen) localAssignStat(node *LocalAssignStat) {
 	}
 }
 
-func (self *codeGen) assignStat(node *AssignStat) {
+func (self *codeGen) cgAssignStat(node *AssignStat) {
 	if len(node.VarList) == 1 && len(node.ExpList) == 1 {
 		self.assignStat1(node.LastLine,
 			node.VarList[0], node.ExpList[0])

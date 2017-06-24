@@ -119,7 +119,7 @@ func (self *codeGen) genProto(fd *FuncDefExp) *FuncProto {
 		self.addLocVar(param, 0)
 	}
 
-	self.block(fd.Block)
+	self.cgBlock(fd.Block)
 
 	endPc := self.pc() + 2
 	self.exitScope(endPc)

@@ -62,23 +62,23 @@ func (self *codeGen) exp(node Exp, a, n int) {
 	case *ParensExp:
 		self.exp(exp.Exp, a, 1)
 	case *NameExp:
-		self.nameExp(exp, a)
+		self.cgNameExp(exp, a)
 	case *TableConstructorExp:
-		self.tcExp(exp, a)
+		self.cgTableConstructorExp(exp, a)
 	case *FuncDefExp:
-		self.funcDefExp(exp, a)
+		self.cgFuncDefExp(exp, a)
 	case *FuncCallExp:
-		self.funcCallExp(exp, a, n)
+		self.cgFuncCallExp(exp, a, n)
 	case *BracketsExp:
-		self.bracketsExp(exp, a)
+		self.cgBracketsExp(exp, a)
 	case *UnopExp:
-		self.unopExp(exp, a)
+		self.cgUnopExp(exp, a)
 	case *BinopExp:
-		self.binopExp(exp, a)
+		self.cgBinopExp(exp, a)
 	}
 }
 
-func (self *codeGen) tcExp(exp *TableConstructorExp, a int) {
+func (self *codeGen) cgTableConstructorExp(exp *TableConstructorExp, a int) {
 	nExps := len(exp.KeyExps)
 	nArr := exp.NArr
 	nRec := nExps - nArr
@@ -146,19 +146,19 @@ func (self *codeGen) tcExp(exp *TableConstructorExp, a int) {
 }
 
 // f[a] := function(args) body end
-func (self *codeGen) funcDefExp(exp *FuncDefExp, a int) {
+func (self *codeGen) cgFuncDefExp(exp *FuncDefExp, a int) {
 	bx := self.genSubProto(exp)
 	self.emitClosure(exp.LastLine, a, bx)
 }
 
 // r[a] := f(args)
-func (self *codeGen) funcCallExp(exp *FuncCallExp, a, n int) {
+func (self *codeGen) cgFuncCallExp(exp *FuncCallExp, a, n int) {
 	nArgs := self.prepFuncCall(exp, a)
 	self.emitCall(exp.Line, a, nArgs, n)
 }
 
 // return f(args)
-func (self *codeGen) tailCallExp(exp *FuncCallExp, a int) {
+func (self *codeGen) cgTailCallExp(exp *FuncCallExp, a int) {
 	nArgs := self.prepFuncCall(exp, a)
 	self.emitTailCall(exp.Line, a, nArgs)
 }
@@ -196,7 +196,7 @@ func (self *codeGen) prepFuncCall(exp *FuncCallExp, a int) int {
 }
 
 // r[a] := name
-func (self *codeGen) nameExp(exp *NameExp, a int) {
+func (self *codeGen) cgNameExp(exp *NameExp, a int) {
 	if slot := self.slotOf(exp.Name); slot >= 0 {
 		self.emitMove(exp.Line, a, slot)
 	} else if idx := self.lookupUpval(exp.Name); idx >= 0 {
@@ -207,12 +207,12 @@ func (self *codeGen) nameExp(exp *NameExp, a int) {
 			PrefixExp: &NameExp{exp.Line, "_ENV"},
 			KeyExp:    &StringExp{exp.Line, exp.Name},
 		}
-		self.bracketsExp(bracketsExp, a)
+		self.cgBracketsExp(bracketsExp, a)
 	}
 }
 
 // r[a] := prefix[key]
-func (self *codeGen) bracketsExp(exp *BracketsExp, a int) {
+func (self *codeGen) cgBracketsExp(exp *BracketsExp, a int) {
 	allocator := self.newTmpAllocator(a)
 	b, kindB := self.exp2OpArg(exp.PrefixExp, ARG_RU, allocator)
 	c, _ := self.exp2OpArg(exp.KeyExp, ARG_RK, allocator)
@@ -226,7 +226,7 @@ func (self *codeGen) bracketsExp(exp *BracketsExp, a int) {
 }
 
 // r[a] := op exp
-func (self *codeGen) unopExp(exp *UnopExp, a int) {
+func (self *codeGen) cgUnopExp(exp *UnopExp, a int) {
 	allocator := self.newTmpAllocator(a)
 	b, _ := self.exp2OpArg(exp.Exp, ARG_REG, allocator)
 	self.emitUnaryOp(exp.Line, exp.Op, a, b)
@@ -234,10 +234,10 @@ func (self *codeGen) unopExp(exp *UnopExp, a int) {
 }
 
 // r[a] := exp1 op exp2
-func (self *codeGen) binopExp(exp *BinopExp, a int) {
+func (self *codeGen) cgBinopExp(exp *BinopExp, a int) {
 	switch exp.Op {
 	case TOKEN_OP_CONCAT:
-		self.concatExp(exp, a)
+		self.cgConcatExp(exp, a)
 	case TOKEN_OP_OR, TOKEN_OP_AND:
 		self.logicalBinopExp(exp, a)
 	default:
@@ -250,7 +250,7 @@ func (self *codeGen) binopExp(exp *BinopExp, a int) {
 }
 
 // r[a] := exp1 .. exp2
-func (self *codeGen) concatExp(exp *BinopExp, a int) {
+func (self *codeGen) cgConcatExp(exp *BinopExp, a int) {
 	allocator := self.newTmpAllocator(a)
 	line, b, c := exp.Line, -1, -1
 

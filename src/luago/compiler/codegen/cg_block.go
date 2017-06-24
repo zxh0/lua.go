@@ -3,15 +3,15 @@ package codegen
 import . "luago/compiler/ast"
 
 // todo: rename
-func (self *codeGen) blockWithNewScope(node *Block) {
+func (self *codeGen) cgBlockWithNewScope(node *Block) {
 	self.enterScope()
-	self.block(node)
+	self.cgBlock(node)
 	self.exitScope(self.pc() + 1)
 }
 
-func (self *codeGen) block(node *Block) {
+func (self *codeGen) cgBlock(node *Block) {
 	for _, stat := range node.Stats {
-		self.stat(stat)
+		self.cgStat(stat)
 	}
 
 	if node.RetStat != nil {
@@ -35,7 +35,7 @@ func (self *codeGen) retStat(node *RetStat) {
 			}
 		case *FuncCallExp:
 			tmp := self.allocTmp()
-			self.tailCallExp(exp, tmp)
+			self.cgTailCallExp(exp, tmp)
 			self.freeTmp()
 			self.emitReturn(node.LastLine, tmp, -1)
 			return
