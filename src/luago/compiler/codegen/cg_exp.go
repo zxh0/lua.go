@@ -2,7 +2,7 @@ package codegen
 
 import . "luago/compiler/ast"
 import . "luago/compiler/lexer"
-import . "luago/lua/vm"
+import . "luago/vm"
 
 // kind of operands
 const (

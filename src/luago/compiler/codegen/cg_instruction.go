@@ -1,8 +1,8 @@
 package codegen
 
 import . "luago/compiler/lexer"
-import . "luago/lua/vm"
-import . "luago/number" // todo
+import . "luago/lua"
+import . "luago/vm"
 
 var arithAndBitwiseBinops = map[int]int{
 	TOKEN_OP_ADD:  OP_ADD,

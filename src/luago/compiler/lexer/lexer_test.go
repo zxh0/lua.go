@@ -1,7 +1,7 @@
 package lexer
 
 import "testing"
-import "luago/assert"
+import "assert"
 
 func TestNextToken(t *testing.T) {
 	lexer := NewLexer("str", `;,()[]{}+-*^%%&|#`)

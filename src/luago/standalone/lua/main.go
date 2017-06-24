@@ -2,7 +2,7 @@ package main
 
 import "os"
 import . "luago/lua"
-import "luago/lua/state"
+import "luago/state"
 
 func main() {
 	if len(os.Args) > 1 {

@@ -1,7 +1,7 @@
 package stdlib
 
 import "testing"
-import "luago/assert"
+import "assert"
 
 func TestSubStr(t *testing.T) {
 	assert.StringEqual(t, subStr("1234567890", 0, 99), "1234567890")

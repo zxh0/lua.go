@@ -1,6 +1,6 @@
 package parser
 
-import . "luago/number"
+import . "luago/lua"
 import . "luago/compiler/ast"
 import . "luago/compiler/lexer"
 

@@ -1,6 +1,6 @@
 package codegen
 
-import . "luago/lua/vm"
+import . "luago/vm"
 
 // type opArg struct {
 // 	val  int

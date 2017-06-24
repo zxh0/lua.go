@@ -1,7 +1,6 @@
 package vm
 
 import . "luago/lua"
-import . "luago/number" // todo
 
 // R(A) := {} (size = B,C)
 func newTable(i Instruction, vm VM) {

@@ -2,7 +2,6 @@ package state
 
 import "math"
 import . "luago/lua"
-import . "luago/number"
 
 // [-(2|1), +1, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_arith

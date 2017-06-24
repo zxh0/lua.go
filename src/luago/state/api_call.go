@@ -1,7 +1,7 @@
 package state
 
 import . "luago/lua"
-import "luago/lua/vm"
+import "luago/vm"
 
 // [-(nargs+1), +nresults, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_call

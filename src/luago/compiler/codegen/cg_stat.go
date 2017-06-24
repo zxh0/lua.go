@@ -1,37 +1,35 @@
 package codegen
 
 import . "luago/compiler/ast"
-import . "luago/lua/vm"
+import . "luago/vm"
 
-func (self *codeGen) cgStat(stat Stat) {
-	switch node := stat.(type) {
-	case *IfStat:
-		self.cgIfStat(node)
-	case *WhileStat:
-		self.cgWhileStat(node)
-	case *RepeatStat:
-		self.cgRepeatStat(node)
-	case *ForNumStat:
-		self.cgForNumStat(node)
-	case *ForInStat:
-		self.cgForInStat(node)
+func (self *codeGen) cgStat(node Stat) {
+	switch stat := node.(type) {
+	case DoStat:
+		self.cgBlock(stat)
 	case FuncCallStat:
-		self.cgFuncCallStat(node)
+		self.cgFuncCallStat(stat)
+	case *RepeatStat:
+		self.cgRepeatStat(stat)
+	case *WhileStat:
+		self.cgWhileStat(stat)
+	case *IfStat:
+		self.cgIfStat(stat)
+	case *ForNumStat:
+		self.cgForNumStat(stat)
+	case *ForInStat:
+		self.cgForInStat(stat)
 	case *LocalAssignStat:
-		self.cgLocalAssignStat(node)
+		self.cgLocalAssignStat(stat)
 	case *AssignStat:
-		self.cgAssignStat(node)
+		self.cgAssignStat(stat)
 	case *BreakStat:
 		// todo
-	case DoStat:
-		self.cgBlock(node)
-	default:
-		panic("todo: stat!")
 	}
 }
 
-func (self *codeGen) cgFuncCallStat(stat FuncCallStat) {
-	fcExp := (*FuncCallExp)(stat)
+func (self *codeGen) cgFuncCallStat(node FuncCallStat) {
+	fcExp := (*FuncCallExp)(node)
 	tmp := self.allocTmp()
 	self.exp(fcExp, tmp, 0)
 	self.freeTmp()

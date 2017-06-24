@@ -3,7 +3,7 @@ package binchunk
 import "encoding/hex"
 import "strings"
 import "testing"
-import "luago/assert"
+import "assert"
 
 var fibonacciSrc = `
 function fibonacci(n)

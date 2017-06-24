@@ -1,4 +1,4 @@
-package number
+package lua
 
 // todo: move
 

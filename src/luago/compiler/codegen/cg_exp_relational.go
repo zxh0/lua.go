@@ -2,7 +2,7 @@ package codegen
 
 import . "luago/compiler/ast"
 import . "luago/compiler/lexer"
-import . "luago/lua/vm"
+import . "luago/vm"
 
 func (self *codeGen) testRelationalBinopExpX(exp *BinopExp, allocator *tmpAllocator, a int) {
 	rkb, _ := self.exp2OpArg(exp.Exp1, ARG_RK, allocator)

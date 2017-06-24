@@ -1,7 +1,7 @@
 package parser
 
 import "testing"
-import "luago/assert"
+import "assert"
 import "luago/compiler/lexer"
 
 func TestExpLiteral(t *testing.T) {

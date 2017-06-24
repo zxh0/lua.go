@@ -5,7 +5,6 @@ import "reflect"
 import "runtime"
 import "strings"
 import . "luago/lua"
-import . "luago/number"
 
 var _mtOfNil *luaTable = nil //?
 var _mtOfBool *luaTable = nil

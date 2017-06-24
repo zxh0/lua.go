@@ -2,7 +2,7 @@ package binchunk
 
 import "fmt"
 import "strings"
-import . "luago/lua/vm"
+import . "luago/vm"
 
 type printer struct {
 	buf []string

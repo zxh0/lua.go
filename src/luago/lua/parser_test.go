@@ -1,4 +1,4 @@
-package number
+package lua
 
 import "fmt"
 import "testing"

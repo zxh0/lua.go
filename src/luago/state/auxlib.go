@@ -2,7 +2,7 @@ package state
 
 import "io/ioutil"
 import . "luago/lua"
-import "luago/lua/stdlib"
+import "luago/stdlib"
 
 // [-0, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#luaL_checkversion
