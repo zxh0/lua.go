@@ -59,16 +59,16 @@ test_dir() { # $1:dir
   cd $old_dir
 }
 
-test_dir "ravi"
+# test_dir "ravi"
 test_dir "syntax"
-test_dir "PiL3/ch01"
-test_dir "PiL3/ch02"
-test_dir "PiL3/ch03"
-test_dir "PiL3/ch04"
-test_dir "PiL3/ch05"
-test_dir "PiL3/ch06"
-test_dir "PiL3/ch11"
-test_dir "PiL3/ch13"
+# test_dir "PiL3/ch01"
+# test_dir "PiL3/ch02"
+# test_dir "PiL3/ch03"
+# test_dir "PiL3/ch04"
+# test_dir "PiL3/ch05"
+# test_dir "PiL3/ch06"
+# test_dir "PiL3/ch11"
+# test_dir "PiL3/ch13"
 # for ch in PiL3/ch*; do
 #   test_dir $ch
 # done

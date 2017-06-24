@@ -31,12 +31,29 @@ func isExpTrue(exp Exp) bool {
 	}
 }
 
+func isTrueAtCompileTime(exp Exp) bool {
+	switch exp.(type) {
+	case *TrueExp, *IntegerExp, *FloatExp, *StringExp, FuncDefExp:
+		return true
+	default:
+		return false
+	}
+}
+
 func isVarargOrFuncCallExp(exp Exp) bool {
 	switch exp.(type) {
 	case *VarargExp, *FuncCallExp:
 		return true
 	default:
 		return false
+	}
+}
+
+func castNilToFalse(exp Exp) Exp {
+	if nilExp, ok := exp.(*NilExp); ok {
+		return &FalseExp{nilExp.Line}
+	} else {
+		return exp
 	}
 }
 

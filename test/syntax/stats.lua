@@ -1,5 +1,49 @@
 local u,v,w
+--[==[
+function stat_fc(...)
+  f()
+  f(a)
+  f(a, b)
+  f(a, b, c)
+  f.g.h()
+  f.g:h()
+  f[g][h]()
+  f[g[h]]()
+  f.g.h(a.b.c)
+  f(g())
+  f(g(), 1)
+  f(1, g())
+  return f(g())
+end --]==]
+--[==[
+function stat_repeat(...)
+  repeat f()          until false
+  repeat f()          until nil
+  repeat f()          until true
+  repeat f()          until 35
+  repeat f()          until 3.14
+  repeat f()          until "foo"
+  repeat f()          until ...
+  repeat f()          until {}
+  repeat f()          until function()end
+  repeat local x; f() until x
+  f()
+end --]==]
 -- [==[
+function stat_while(...)
+  while false         do f() end
+  while nil           do f() end
+  while true          do f() end
+  while 35            do f() end
+  while 3.14          do f() end
+  while "foo"         do f() end
+  while ...           do f() end
+  while {}            do f() end
+  while function()end do f() end
+  while f()           do local x end
+  f()
+end --]==]
+--[==[
 function stat_local_assign(...)
   local v1 = nil
   local v2 = true
@@ -130,7 +174,7 @@ function stat_local_assign(...)
   -- a=x^y^z^u^v
   -- a=a^x^b^1^y
 end --]==]
--- [==[
+--[==[
 function stat_assign_1(...)
   local a,b,c,d=1,2,3,4
   a = nil
@@ -199,7 +243,7 @@ function stat_assign_1(...)
   a[x],b[y],c[z] = c[u],b[v],a[w]
   local a; a=x[y]
 end --]==]
--- [==[
+--[==[
 function stat_assign_n(...)
   local a,b,c = 1,2,3
   a,b,c = nil
@@ -213,28 +257,12 @@ function stat_assign_n(...)
   -- u,v,x = 1,2,3
   -- x,y,z[1] = 1,2,3
 end --]==]
--- [==[
-function stat_fc(...)
-  f()
-  f(a)
-  f(a, b)
-  f(a, b, c)
-  f.g.h()
-  f.g:h()
-  f[g][h]()
-  f[g[h]]()
-  f.g.h(a.b.c)
-  f(g())
-  f(g(), 1)
-  f(1, g())
-  return f(g())
-end --]==]
--- [==[
+--[==[
 function stat_return(...)
   local a,b,c = 1,2,3
   return a,b,c
 end --]==]
--- [==[
+--[==[
 function stat_if(...)
   local a = 1,(x == 0)
   if true   then print(1) end
@@ -289,21 +317,6 @@ function stat_for_num(...)
   for i = 0, 100, 2  do print(i) end
   for i = 0, 100     do print(i) end
   for i = 100, 0, -1 do print(i) end
-end --]==]
---[==[
-function stat_while(...)
-  while true  do print(1) end
-  while 1234  do print(2) end
-  while x     do print(3) end
-  while false do print(4) end
-  while nil   do print(5) end
-  while true do f() end
-  while false do f() end
-  while i do f() end
-  while x do f() end
-  while i <= x do f() end
-  while x and y or z do f() end
-  while x or y and z do f() end
 end --]==]
 --[==[
 function stat_repeat(...)

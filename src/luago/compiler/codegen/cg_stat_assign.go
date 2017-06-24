@@ -80,7 +80,7 @@ func (self *codeGen) assignToName(line int, name string, rhs Exp) {
 		self.assignToUpval(rhs, line, idx)
 	} else {
 		envIdx := self.lookupUpval("_ENV")
-		strIdx := self.indexOf(name)
+		strIdx := self.indexOfConstant(name)
 
 		arg, argKind := self.toOpArg(rhs)
 		switch argKind {

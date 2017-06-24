@@ -94,14 +94,14 @@ func (self *codeGen) isTmpVar(slot int) bool {
 func (self *codeGen) isGlobalVar(name string) (int, int, bool) {
 	if self.slotOf(name) < 0 && self.lookupUpval(name) < 0 {
 		envIdx := self.lookupUpval("_ENV")
-		nameIdx := self.indexOf(name)
+		nameIdx := self.indexOfConstant(name)
 		return envIdx, nameIdx, true
 	} else {
 		return -1, -1, false
 	}
 }
-func (self *codeGen) indexOf(k interface{}) int {
-	return self.scope.indexOf(k)
+func (self *codeGen) indexOfConstant(k interface{}) int {
+	return self.scope.indexOfConstant(k)
 }
 
 func (self *codeGen) genSubProto(fd *FuncDefExp) int {

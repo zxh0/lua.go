@@ -182,8 +182,7 @@ func (self *scope) lookupUpval(name string) int {
 
 /* constants */
 
-// todo: rename
-func (self *scope) indexOf(k interface{}) int {
+func (self *scope) indexOfConstant(k interface{}) int {
 	if idx, found := self.constants[k]; found {
 		// todo: idx > 0xFF ?
 		return idx + 0x100

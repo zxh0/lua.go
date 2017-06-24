@@ -1,7 +1,6 @@
 package codegen
 
 import . "luago/compiler/ast"
-import . "luago/vm"
 
 func (self *codeGen) cgStat(node Stat) {
 	switch stat := node.(type) {
@@ -42,20 +41,25 @@ func (self *codeGen) cgFuncCallStat(node FuncCallStat) {
 repeat block until exp
 */
 func (self *codeGen) cgRepeatStat(node *RepeatStat) {
-	if nilExp, ok := node.Exp.(*NilExp); ok {
-		node.Exp = &FalseExp{nilExp.Line}
-	}
-
-	pc1 := self.pc()
+	self.enterScope()
+	pcBeforeBlock := self.pc()
 	self.cgBlock(node.Block)
-	if !isExpTrue(node.Exp) {
-		//self.exp(node.Exp, STAT_REPEAT, 0)
 
-		line := lineOfExp(node.Exp)
-		pc2 := self.emit(line, OP_TEST, 0, 0, 0) // todo
-		self.emit(line, OP_JMP, 0, pc1-pc2, 0)   // todo
-		self.freeTmp()
+	exp := node.Exp
+	if !isTrueAtCompileTime(exp) {
+		exp = castNilToFalse(exp)
+		tmp, _ := self.exp2OpArgX(exp, ARG_REG)
+		line := lastLineOfExp(exp)
+
+		self.emitTest(line, tmp, 0)
+		self.emitJmp(line, pcBeforeBlock-self.pc()-1)
+	} else {
+		if strExp, ok := exp.(*StringExp); ok {
+			self.indexOfConstant(strExp.Str)
+		}
 	}
+
+	self.exitScope(self.pc() + 1)
 }
 
 /*
@@ -63,32 +67,33 @@ func (self *codeGen) cgRepeatStat(node *RepeatStat) {
           /  false? jmp  |
          /               |
 while exp do block end <-'
-      ^           /
-      |__________/
+      ^           \
+      |___________/
            jmp
 */
-func (self *codeGen) cgWhileStat(node *WhileStat) {
-	if nilExp, ok := node.Exp.(*NilExp); ok {
-		node.Exp = &FalseExp{nilExp.Line}
-	}
+func (self *codeGen) cgWhileStat(node *WhileStat) {	
+	pcBeforeExp := self.pc()
+	pcOfJmpToEnd := -1
 
-	var jmpToEndPcs []int
-	startPc := self.pc()
-	endless := isExpTrue(node.Exp)
+	exp := node.Exp
+	if !isTrueAtCompileTime(exp) {
+		exp = castNilToFalse(exp)
+		tmp, _ := self.exp2OpArgX(exp, ARG_REG)
+		line := lastLineOfExp(exp)
 
-	if !endless {
-		jmpToEndPcs = self.testExp(node.Exp, node.Line)
+		self.emitTest(line, tmp, 0)
+		pcOfJmpToEnd = self.emitJmp(line, 0)
+	} else {
+		if strExp, ok := exp.(*StringExp); ok {
+			self.indexOfConstant(strExp.Str)
+		}
 	}
 
 	self.cgBlockWithNewScope(node.Block)
+	self.emitJmp(node.Block.LastLine, pcBeforeExp-self.pc()-1)
 
-	endPc := self.pc()
-	self.emitJmp(node.Block.LastLine, startPc-endPc-1)
-
-	if !endless && jmpToEndPcs != nil {
-		for _, pc := range jmpToEndPcs {
-			self.fixSbx(pc, endPc-pc+1)
-		}
+	if pcOfJmpToEnd >= 0 {
+		self.fixSbx(pcOfJmpToEnd, self.pc()-pcOfJmpToEnd)
 	}
 }
 
@@ -134,7 +139,7 @@ func (self *codeGen) ifExpBlock(node *IfStat, i int,
 
 	if isExpTrue(exp) {
 		if strExp, ok := exp.(*StringExp); ok {
-			self.indexOf(strExp.Str)
+			self.indexOfConstant(strExp.Str)
 		}
 	} else {
 		pendingJmps := self.testExp(exp, lineOfThen)

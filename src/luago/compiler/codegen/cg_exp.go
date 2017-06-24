@@ -170,7 +170,7 @@ func (self *codeGen) prepFuncCall(exp *FuncCallExp, a int) int {
 	self.exp(exp.PrefixExp, a, 1)
 	if exp.MethodName != "" {
 		self.allocTmp()
-		idx := self.indexOf(exp.MethodName)
+		idx := self.indexOfConstant(exp.MethodName)
 		self.emitSelf(exp.Line, a, a, idx)
 	}
 	for i, arg := range exp.Args {
@@ -282,6 +282,14 @@ func (self *codeGen) toOpArg(exp Exp) (int, int) {
 	return self._toOpArg(exp, ARG_CONST|ARG_REG|ARG_UPVAL)
 }
 
+// todo: rename
+func (self *codeGen) exp2OpArgX(exp Exp, argKinds int) (arg, argKind int) {
+	allocator := self.newTmpAllocator(-1)
+	arg, argKind = self.exp2OpArg(exp, argKinds, allocator)
+	allocator.freeAll()
+	return
+}
+
 func (self *codeGen) exp2OpArg(exp Exp, argKinds int,
 	allocator *tmpAllocator) (arg, argKind int) {
 
@@ -299,17 +307,17 @@ func (self *codeGen) _toOpArg(exp Exp, argKinds int) (arg, argKind int) {
 	if argKinds&ARG_CONST > 0 {
 		switch x := exp.(type) {
 		case *NilExp:
-			return self.indexOf(nil), ARG_CONST
+			return self.indexOfConstant(nil), ARG_CONST
 		case *FalseExp:
-			return self.indexOf(false), ARG_CONST
+			return self.indexOfConstant(false), ARG_CONST
 		case *TrueExp:
-			return self.indexOf(true), ARG_CONST
+			return self.indexOfConstant(true), ARG_CONST
 		case *IntegerExp:
-			return self.indexOf(x.Val), ARG_CONST
+			return self.indexOfConstant(x.Val), ARG_CONST
 		case *FloatExp:
-			return self.indexOf(x.Val), ARG_CONST
+			return self.indexOfConstant(x.Val), ARG_CONST
 		case *StringExp:
-			return self.indexOf(x.Str), ARG_CONST
+			return self.indexOfConstant(x.Str), ARG_CONST
 		}
 	}
 	if argKinds&ARG_REG > 0 {
@@ -338,7 +346,7 @@ func (self *codeGen) _toOpArg(exp Exp, argKinds int) (arg, argKind int) {
 	// 			}
 	// 		} else {
 	// 			if argKinds&ARG_GLOBAL > 0 {
-	// 				return self.indexOf(nameExp.Name), ARG_GLOBAL
+	// 				return self.indexOfConstant(nameExp.Name), ARG_GLOBAL
 	// 			}
 	// 		}
 	// 	}
