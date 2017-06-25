@@ -82,6 +82,7 @@ end --]==]
 function stat_break(...)
   repeat f(); break; g(); until y
   while x do f(); break; g(); end
+  while x do do do break; end end end
   for i = 0,100,1 do f(); break; g() end
   for k,v in ipairs(l) do f(k, v); break; end
   f()

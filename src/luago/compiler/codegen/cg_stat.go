@@ -8,6 +8,8 @@ func (self *codeGen) cgStat(node Stat) {
 		self.cgBlockWithNewScope(stat, false)
 	case FuncCallStat:
 		self.cgFuncCallStat(stat)
+	case *BreakStat:
+		self.cgBreakStat(stat)
 	case *RepeatStat:
 		self.cgRepeatStat(stat)
 	case *WhileStat:
@@ -22,8 +24,6 @@ func (self *codeGen) cgStat(node Stat) {
 		self.cgLocalAssignStat(stat)
 	case *AssignStat:
 		self.cgAssignStat(stat)
-	case *BreakStat:
-		self.cgBreakStat(stat)
 	case *LabelStat, *GotoStat:
 		panic("label and goto statements are not supported!")
 	}
@@ -34,6 +34,11 @@ func (self *codeGen) cgFuncCallStat(node FuncCallStat) {
 	tmp := self.allocTmp()
 	self.exp(fcExp, tmp, 0)
 	self.freeTmp()
+}
+
+func (self *codeGen) cgBreakStat(node *BreakStat) {
+	pc := self.emitJmp(node.Line, 0)
+	self.addBreakJmp(pc)
 }
 
 /*
@@ -213,9 +218,4 @@ func (self *codeGen) cgForInStat(node *ForInStat) {
 	self.fixEndPc(forGeneratorVar, 2)
 	self.fixEndPc(forStateVar, 2)
 	self.fixEndPc(forControlVar, 2)
-}
-
-func (self *codeGen) cgBreakStat(node *BreakStat) {
-	pc := self.emitJmp(node.Line, 0)
-	self.addBreakJmp(pc)
 }

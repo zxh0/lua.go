@@ -59,8 +59,8 @@ test_dir() { # $1:dir
   cd $old_dir
 }
 
+test_dir "compiler"
 # test_dir "ravi"
-test_dir "syntax"
 # test_dir "PiL3/ch01"
 # test_dir "PiL3/ch02"
 # test_dir "PiL3/ch03"

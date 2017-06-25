@@ -2,6 +2,7 @@ package codegen
 
 import . "luago/compiler/ast"
 import . "luago/compiler/lexer"
+import . "luago/vm"
 
 func (self *codeGen) logicalBinopExp(exp *BinopExp, a int) {
 	list := logicalBinopExpToList(exp)
@@ -78,59 +79,22 @@ func (self *codeGen) logicalBinopExp(exp *BinopExp, a int) {
 	}
 }
 
-func (self *codeGen) testLogicalBinopExp(exp *BinopExp, lineOfLastJmp int) (pendingJmps []int) {
-	list := logicalBinopExpToList(exp)
-	for node := list; node != nil; node = node.next {
-		node.startPc = self.pc()
-		allocator := self.newTmpAllocator(-1)
+func (self *codeGen) testRelationalBinopExpX(exp *BinopExp, allocator *tmpAllocator, a int) {
+	rkb, _ := self.exp2OpArg(exp.Exp1, ARG_RK, allocator)
+	rkc, _ := self.exp2OpArg(exp.Exp2, ARG_RK, allocator)
 
-		if bexp, ok := castToRelationalBinopExp(node.exp); ok {
-			line := lastLineOfExp(bexp)
-
-			if node.next != nil {
-				if node.op == TOKEN_OP_AND {
-					self.testRelationalBinopExp(bexp, 0)
-					node.jmpPc = self.emitJmp(line, 0)
-				} else {
-					self.testRelationalBinopExp(bexp, 1)
-					node.jmpPc = self.emitJmp(line, 0)
-				}
-			} else {
-				self.testRelationalBinopExp(bexp, 0)
-				pc := self.emitJmp(line, 0)
-				pendingJmps = append(pendingJmps, pc)
-			}
-		} else {
-			b, _ := self.exp2OpArg(node.exp, ARG_REG, allocator)
-			allocator.freeAll()
-			if node.next != nil {
-				c := 1
-				if node.op == TOKEN_OP_AND {
-					c = 0
-				}
-				self.emitTest(node.line, b, c)
-				node.jmpPc = self.emitJmp(node.line, 0)
-			} else {
-				self.emitTest(lineOfLastJmp, b, 0)
-				pc := self.emitJmp(lineOfLastJmp, 0)
-				pendingJmps = append(pendingJmps, pc)
-			}
-		}
+	switch exp.Op {
+	case TOKEN_OP_EQ:
+		self.emit(exp.Line, OP_EQ, a, rkb, rkc)
+	case TOKEN_OP_NE:
+		self.emit(exp.Line, OP_EQ, 1-a, rkb, rkc)
+	case TOKEN_OP_LT:
+		self.emit(exp.Line, OP_LT, a, rkb, rkc)
+	case TOKEN_OP_GT:
+		self.emit(exp.Line, OP_LT, a, rkc, rkb)
+	case TOKEN_OP_LE:
+		self.emit(exp.Line, OP_LE, a, rkb, rkc)
+	case TOKEN_OP_GE:
+		self.emit(exp.Line, OP_LE, a, rkc, rkb)
 	}
-	for node := list; node != nil; node = node.next {
-		if node.next != nil {
-			if node.jmpTo != nil {
-				sbx := node.jmpTo.startPc - node.jmpPc
-				self.fixSbx(node.jmpPc, sbx)
-			} else {
-				if node.op == TOKEN_OP_OR {
-					sbx := self.pc() - node.jmpPc
-					self.fixSbx(node.jmpPc, sbx)
-				} else {
-					pendingJmps = append(pendingJmps, node.jmpPc)
-				}
-			}
-		}
-	}
-	return pendingJmps
 }

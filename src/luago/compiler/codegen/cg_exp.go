@@ -18,30 +18,6 @@ const (
 	// ARG_TMP ?
 )
 
-func (self *codeGen) testExp(node Exp, lineOfLastJmp int) (pendingJmps []int) {
-	if bexp, ok := node.(*BinopExp); ok {
-		switch bexp.Op {
-		case TOKEN_OP_EQ, TOKEN_OP_NE,
-			TOKEN_OP_LT, TOKEN_OP_GT,
-			TOKEN_OP_LE, TOKEN_OP_GE:
-			self.testRelationalBinopExp(bexp, 0)
-			pc := self.emitJmp(lineOfLastJmp, 0)
-			return []int{pc}
-		case TOKEN_OP_AND, TOKEN_OP_OR:
-			pendingJmps := self.testLogicalBinopExp(bexp, lineOfLastJmp)
-			return pendingJmps
-		}
-	}
-
-	allocator := self.newTmpAllocator(-1)
-	a, _ := self.exp2OpArg(node, ARG_REG, allocator)
-	allocator.freeAll()
-
-	self.emitTest(lineOfLastJmp, a, 0)
-	pc := self.emitJmp(lineOfLastJmp, 0)
-	return []int{pc}
-}
-
 // todo: rename to evalExp()?
 func (self *codeGen) exp(node Exp, a, n int) {
 	switch exp := node.(type) {
