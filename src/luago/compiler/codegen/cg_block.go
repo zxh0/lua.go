@@ -3,8 +3,8 @@ package codegen
 import . "luago/compiler/ast"
 
 // todo: rename
-func (self *codeGen) cgBlockWithNewScope(node *Block) {
-	self.enterScope()
+func (self *codeGen) cgBlockWithNewScope(node *Block, breakable bool) {
+	self.enterScope(breakable)
 	self.cgBlock(node)
 	self.exitScope(self.pc() + 1)
 }

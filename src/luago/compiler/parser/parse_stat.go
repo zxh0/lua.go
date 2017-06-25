@@ -4,7 +4,6 @@ import . "luago/compiler/ast"
 import . "luago/compiler/lexer"
 
 var _statEmpty = &EmptyStat{}
-var _statBreak = &BreakStat{}
 
 /*
 stat ::=  ‘;’ |
@@ -29,8 +28,8 @@ func parseStat(lexer *Lexer) Stat {
 		lexer.NextToken()
 		return _statEmpty
 	case TOKEN_KW_BREAK:
-		lexer.NextToken()
-		return _statBreak
+		line, _, _ := lexer.NextToken()
+		return &BreakStat{line}
 	case TOKEN_SEP_LABEL:
 		return parseLabelStat(lexer)
 	case TOKEN_KW_GOTO:

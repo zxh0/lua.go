@@ -39,11 +39,17 @@ func (self *codeGen) fixSbx(pc, sbx int) {
 	self.insts[pc] = i
 }
 
-func (self *codeGen) enterScope() {
+func (self *codeGen) enterScope(breakable bool) {
 	self.scope.incrLevel()
+	if breakable {
+		self.scope.markBreakable()
+	}
 }
 func (self *codeGen) exitScope(endPc int) {
-	self.scope.decrLevel(endPc)
+	pendingBreakJmps := self.scope.decrLevel(endPc)
+	for _, pc := range pendingBreakJmps {
+		self.fixSbx(pc, self.pc()-pc)
+	}
 }
 func (self *codeGen) addLocVar(name string, startPc int) int {
 	return self.scope.addLocVar(name, startPc)
@@ -53,6 +59,10 @@ func (self *codeGen) slotOf(name string) int {
 }
 func (self *codeGen) lookupUpval(name string) int {
 	return self.scope.lookupUpval(name)
+}
+
+func (self *codeGen) addBreakJmp(pc int) {
+	self.scope.addBreakJmp(pc)
 }
 
 // todo: rename?

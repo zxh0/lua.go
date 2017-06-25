@@ -1,5 +1,11 @@
 local u,v,w
---[==[
+-- [==[
+function stat_do(...)
+  do local x = 1 end
+  do local x = 1 end
+  do local x,y,z end
+end --]==]
+-- [==[
 function stat_fc(...)
   f()
   f(a)
@@ -15,7 +21,7 @@ function stat_fc(...)
   f(1, g())
   return f(g())
 end --]==]
---[==[
+-- [==[
 function stat_repeat(...)
   repeat f()          until false
   repeat f()          until nil
@@ -40,9 +46,46 @@ function stat_while(...)
   while ...           do f() end
   while {}            do f() end
   while function()end do f() end
-  while f()           do local x end
+  while f()           do local x; f() end
   f()
 end --]==]
+-- [==[
+function stat_if(...)
+  if false  then f() end
+  if nil    then f() end
+  if true   then f() end
+  if 35     then f() end
+  if 3.14   then f() end
+  if "foo"  then f() end
+  if ...    then f() end
+  if {}     then f() end
+  if x then f() elseif false then g() end
+  if x then f() elseif nil   then g() end
+  if x then f() elseif true  then g() end
+  if x then f() elseif 35    then g() end
+  if x then f() elseif 3.14  then g() end
+  if x then f() elseif y then g() else h() end
+end --]==]
+-- [==[
+function stat_for_num(...)
+  for i = 0, 100, 2  do print(i) end
+  for i = 0, 100     do print(i) end
+  for i = 100, 0, -1 do print(i) end
+end --]==]
+-- [==[
+function stat_for_in(...)
+  for k, v in ipairs(l) do
+    f(k, v) 
+  end
+end --]==]
+-- [==[
+function stat_break(...)
+  repeat f(); break; g(); until y
+  while x do f(); break; g(); end
+  for i = 0,100,1 do f(); break; g() end
+  for k,v in ipairs(l) do f(k, v); break; end
+  f()
+end
 --[==[
 function stat_local_assign(...)
   local v1 = nil
@@ -261,70 +304,6 @@ end --]==]
 function stat_return(...)
   local a,b,c = 1,2,3
   return a,b,c
-end --]==]
---[==[
-function stat_if(...)
-  local a = 1,(x == 0)
-  if true   then print(1) end
-  if 1234   then print(2) end
-  if "ab"   then print(3) end
-  if false  then print(4) end
-  if nil    then print(4) end
-  if x      then print(5) end
-  if x == 0 then print(6) end
-  if x ~= 0 then print(6) end
-  if x >  0 then print(6) end
-  if x >= 0 then print(6) end
-  if x <  0 then print(6) end
-  if x <= 0 then print(6) end
-  if 0 == x then print(7) end
-  if x == y then print(8) end
-  if 1 == 2 then print(9) end
-  if n == 0 then return 1 else return fact(n-1) end
-  if x then print(a) elseif y then print(b) end
-  if x then print(a) elseif y then print(b) elseif z then print(c) end
-
-  local a,b,c=...
-  if nil     then print(1) end
-  if true    then print(1) end
-  if false   then print(1) end
-  if false   then print(1) end
-  if 1       then print(1) end
-  if {}      then print(1) end
-  if ...     then print(1) end
-  if f()     then print(1) end
-  if a[b]    then print(1) end
-  if a       then print(1) end
-  if u       then print(1) end
-  if x       then print(1) end
-  if a + b   then print(1) end
-  if a > b   then print(1) end
-  if a and b then print(1) end
-  if a or  b then print(1) end
-  if a > b > c     then f() end
-  if b + c + c     then f() end
-  if a or b or c   then f() end
-  if a and b and c then f() end
-  if a or b and c  then f() end
-  if a and b or c  then f() end
-  if a > b and a > c then f() end
-  if a < b and a < c then f() end
-  if a > b or a > c  then f() end
-  if a < b or a < c  then f() end
-end --]==]
---[==[
-function stat_for_num(...)
-  for i = 0, 100, 2  do print(i) end
-  for i = 0, 100     do print(i) end
-  for i = 100, 0, -1 do print(i) end
-end --]==]
---[==[
-function stat_repeat(...)
-  repeat print(1) until true
-  repeat print(2) until 1234
-  repeat print(3) until x
-  repeat print(3) until false
-  repeat print(3) until nil
 end --]==]
 --[==[
 function tc(...)

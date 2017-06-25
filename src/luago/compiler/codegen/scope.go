@@ -17,6 +17,11 @@ type locVarInfo struct {
 	endPc   int
 }
 
+type breakInfo struct {
+	breakable bool
+	breakJmps []int
+}
+
 type scope struct {
 	parent    *scope
 	level     int
@@ -27,6 +32,7 @@ type scope struct {
 	constants map[interface{}]int
 	stackSize int
 	stackMax  int
+	breaks    []*breakInfo
 }
 
 func newScope(parent *scope) *scope {
@@ -36,6 +42,7 @@ func newScope(parent *scope) *scope {
 		locNames:  map[string]*locVarInfo{},
 		upvalues:  map[string]upvalInfo{},
 		constants: map[interface{}]int{},
+		breaks:    make([]*breakInfo, 1),
 	}
 }
 
@@ -43,9 +50,10 @@ func newScope(parent *scope) *scope {
 
 func (self *scope) incrLevel() {
 	self.level++
+	self.breaks = append(self.breaks, nil)
 }
 
-func (self *scope) decrLevel(endPc int) {
+func (self *scope) decrLevel(endPc int) []int {
 	self.stackSize = 0
 	self.level--
 	for _, locVar := range self.locNames {
@@ -54,6 +62,14 @@ func (self *scope) decrLevel(endPc int) {
 			locVar.endPc = endPc
 			self.removeLocVar(locVar)
 		}
+	}
+
+	breakInfo := self.breaks[len(self.breaks)-1]
+	self.breaks = self.breaks[:len(self.breaks)-1]
+	if breakInfo != nil {
+		return breakInfo.breakJmps
+	} else {
+		return nil
 	}
 }
 
@@ -191,6 +207,31 @@ func (self *scope) indexOfConstant(k interface{}) int {
 	idx := len(self.constants)
 	self.constants[k] = idx
 	return idx + 0x100
+}
+
+/* break support */
+
+func (self *scope) markBreakable() {
+	self.breaks[self.level] = &breakInfo{
+		breakable: true,
+		breakJmps: []int{},
+	}
+}
+
+func (self *scope) addBreakJmp(pc int) {
+	var breakInfo *breakInfo
+	for i := self.level; i >= 0; i-- {
+		breakInfo = self.breaks[i]
+		if breakInfo != nil {
+			break
+		}
+	}
+	
+	if breakInfo == nil {
+		panic("<break> at line ? not inside a loop!")
+	} else {
+		breakInfo.breakJmps = append(breakInfo.breakJmps, pc)
+	}
 }
 
 /* summarize */

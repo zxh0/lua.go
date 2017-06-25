@@ -5,7 +5,7 @@ import . "luago/compiler/ast"
 func (self *codeGen) cgStat(node Stat) {
 	switch stat := node.(type) {
 	case DoStat:
-		self.cgBlock(stat)
+		self.cgBlockWithNewScope(stat, false)
 	case FuncCallStat:
 		self.cgFuncCallStat(stat)
 	case *RepeatStat:
@@ -23,7 +23,9 @@ func (self *codeGen) cgStat(node Stat) {
 	case *AssignStat:
 		self.cgAssignStat(stat)
 	case *BreakStat:
-		// todo
+		self.cgBreakStat(stat)
+	case *LabelStat, *GotoStat:
+		panic("label and goto statements are not supported!")
 	}
 }
 
@@ -41,7 +43,7 @@ func (self *codeGen) cgFuncCallStat(node FuncCallStat) {
 repeat block until exp
 */
 func (self *codeGen) cgRepeatStat(node *RepeatStat) {
-	self.enterScope()
+	self.enterScope(true)
 	pcBeforeBlock := self.pc()
 	self.cgBlock(node.Block)
 
@@ -71,7 +73,7 @@ while exp do block end <-'
       |___________/
            jmp
 */
-func (self *codeGen) cgWhileStat(node *WhileStat) {	
+func (self *codeGen) cgWhileStat(node *WhileStat) {
 	pcBeforeExp := self.pc()
 	pcOfJmpToEnd := -1
 
@@ -89,8 +91,10 @@ func (self *codeGen) cgWhileStat(node *WhileStat) {
 		}
 	}
 
-	self.cgBlockWithNewScope(node.Block)
+	self.enterScope(true)
+	self.cgBlock(node.Block)
 	self.emitJmp(node.Block.LastLine, pcBeforeExp-self.pc()-1)
+	self.exitScope(self.pc())
 
 	if pcOfJmpToEnd >= 0 {
 		self.fixSbx(pcOfJmpToEnd, self.pc()-pcOfJmpToEnd)
@@ -98,60 +102,50 @@ func (self *codeGen) cgWhileStat(node *WhileStat) {
 }
 
 /*
-        _____________           _____________           _____________
-       / false? jmp  |         / false? jmp  |         / false? jmp  |
-      /              V        /              V        /              V
+         _________________       _________________       _____________
+        / false? jmp      |     / false? jmp      |     / false? jmp  |
+       /                  V    /                  V    /              V
 if exp1 then block1 elseif exp2 then block2 elseif true then block3 end <-.
-                  \                       \                       \       |
-                   \_______________________\_______________________\______|
-                   jmp                     jmp                     jmp
+                   \                       \                       \      |
+                    \_______________________\_______________________\_____|
+                    jmp                     jmp                     jmp
 */
 func (self *codeGen) cgIfStat(node *IfStat) {
-	jmp2elseIfs := map[int]bool{}
-	jmp2ends := map[int]bool{}
+	pcOfJmpToEnds := make([]int, 0, len(node.Exps))
+	pcOfJmpToElseif := -1
 
 	for i := 0; i < len(node.Exps); i++ {
-		if i > 0 {
-			for pc, _ := range jmp2elseIfs {
-				self.fixSbx(pc, self.pc()-pc)
+		exp := node.Exps[i]
+		block := node.Blocks[i]
+
+		if pcOfJmpToElseif >= 0 {
+			self.fixSbx(pcOfJmpToElseif, self.pc()-pcOfJmpToElseif)
+		}
+		if !isTrueAtCompileTime(exp) {
+			tmp, _ := self.exp2OpArgX(exp, ARG_REG)
+			line := lastLineOfExp(exp)
+
+			self.emitTest(line, tmp, 0)
+			pcOfJmpToElseif = self.emitJmp(line, 0)
+		} else {
+			pcOfJmpToElseif = -1
+			if strExp, ok := exp.(*StringExp); ok {
+				self.indexOfConstant(strExp.Str)
 			}
-			jmp2elseIfs = map[int]bool{} // clear map
 		}
 
-		self.ifExpBlock(node, i, jmp2elseIfs, jmp2ends)
-	}
-
-	for pc, _ := range jmp2elseIfs {
-		self.fixSbx(pc, self.pc()-pc)
-	}
-	for pc, _ := range jmp2ends {
-		self.fixSbx(pc, self.pc()-pc)
-	}
-}
-
-// todo: rename
-func (self *codeGen) ifExpBlock(node *IfStat, i int,
-	jmp2elseIfs, jmp2ends map[int]bool) {
-
-	exp := node.Exps[i]
-	block := node.Blocks[i]
-	lineOfThen := node.Lines[i]
-
-	if isExpTrue(exp) {
-		if strExp, ok := exp.(*StringExp); ok {
-			self.indexOfConstant(strExp.Str)
-		}
-	} else {
-		pendingJmps := self.testExp(exp, lineOfThen)
-		for _, pc := range pendingJmps {
-			jmp2elseIfs[pc] = true
+		self.cgBlockWithNewScope(block, false)
+		if i < len(node.Exps)-1 {
+			pc := self.emitJmp(block.LastLine, 0)
+			pcOfJmpToEnds = append(pcOfJmpToEnds, pc)
 		}
 	}
 
-	self.cgBlockWithNewScope(block)
-	if i < len(node.Exps)-1 {
-		pc := self.emitJmp(block.LastLine, 0)
-		jmp2ends[pc] = true
+	if pcOfJmpToElseif >= 0 {
+		self.fixSbx(pcOfJmpToElseif, self.pc()-pcOfJmpToElseif)
+	}
+	for _, pc := range pcOfJmpToEnds {
+		self.fixSbx(pc, self.pc() - pc)
 	}
 }
 
@@ -160,7 +154,7 @@ func (self *codeGen) cgForNumStat(node *ForNumStat) {
 	forLmtVar := "(for limit)"
 	forStpVar := "(for step)"
 
-	self.enterScope()
+	self.enterScope(true)
 
 	self.cgStat(&LocalAssignStat{
 		LastLine: node.LineOfFor,
@@ -188,7 +182,7 @@ func (self *codeGen) cgForInStat(node *ForInStat) {
 	forStateVar := "(for state)"
 	forControlVar := "(for control)"
 
-	self.enterScope()
+	self.enterScope(true)
 
 	self.cgStat(&LocalAssignStat{
 		//LastLine: 0,
@@ -219,4 +213,9 @@ func (self *codeGen) cgForInStat(node *ForInStat) {
 	self.fixEndPc(forGeneratorVar, 2)
 	self.fixEndPc(forStateVar, 2)
 	self.fixEndPc(forControlVar, 2)
+}
+
+func (self *codeGen) cgBreakStat(node *BreakStat) {
+	pc := self.emitJmp(node.Line, 0)
+	self.addBreakJmp(pc)
 }
