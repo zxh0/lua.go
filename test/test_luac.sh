@@ -1,6 +1,6 @@
 #!/bin/sh
 
-echo "compile luago ..."
+echo "compile luac.go ..."
 export GOPATH=`cd ..; pwd`
 go install luago/standalone/luac
 

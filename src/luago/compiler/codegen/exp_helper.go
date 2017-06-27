@@ -18,19 +18,6 @@ func isNameExp(exp Exp) bool {
 	return ok
 }
 
-// todo: rename
-func isExpTrue(exp Exp) bool {
-	switch exp.(type) {
-	case *TrueExp,
-		*IntegerExp, *FloatExp, *StringExp,
-		//*TableConstructorExp,
-		FuncDefExp:
-		return true
-	default:
-		return false
-	}
-}
-
 func isTrueAtCompileTime(exp Exp) bool {
 	switch exp.(type) {
 	case *TrueExp, *IntegerExp, *FloatExp, *StringExp, FuncDefExp:
@@ -57,27 +44,6 @@ func castNilToFalse(exp Exp) Exp {
 	}
 }
 
-func castToRelationalBinopExp(exp Exp) (*BinopExp, bool) {
-	if bexp, ok := exp.(*BinopExp); ok {
-		switch bexp.Op {
-		case TOKEN_OP_EQ, TOKEN_OP_NE,
-			TOKEN_OP_LT, TOKEN_OP_LE,
-			TOKEN_OP_GT, TOKEN_OP_GE:
-			return bexp, true
-		}
-	}
-	return nil, false
-}
-
-func castToBinopExp(exp Exp, op int) (*BinopExp, bool) {
-	if bexp, ok := exp.(*BinopExp); ok {
-		if bexp.Op == op {
-			return bexp, true
-		}
-	}
-	return nil, false
-}
-
 func castToConcatExp(exp Exp) (*BinopExp, bool) {
 	if bexp, ok := exp.(*BinopExp); ok {
 		if bexp.Op == TOKEN_OP_CONCAT {
@@ -85,6 +51,19 @@ func castToConcatExp(exp Exp) (*BinopExp, bool) {
 		}
 	}
 	return nil, false
+}
+
+func removeTailNils(exps []Exp) []Exp {
+	for {
+		if n := len(exps); n > 0 {
+			if _, ok := exps[n-1].(*NilExp); ok {
+				exps = exps[:n-1]
+				continue
+			}
+		}
+		break
+	}
+	return exps
 }
 
 // todo

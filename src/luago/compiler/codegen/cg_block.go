@@ -47,9 +47,9 @@ func (self *codeGen) retStat(node *RetStat) {
 		tmp := self.allocTmp()
 		if i == nExps-1 && isVarargOrFuncCallExp(exp) {
 			lastExpIsVarargOrFuncCall = true
-			self.exp(exp, tmp, -1)
+			self.cgExp(exp, tmp, -1)
 		} else {
-			self.exp(exp, tmp, 1)
+			self.cgExp(exp, tmp, 1)
 		}
 	}
 	self.freeTmps(nExps)

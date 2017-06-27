@@ -19,7 +19,7 @@ const (
 )
 
 // todo: rename to evalExp()?
-func (self *codeGen) exp(node Exp, a, n int) {
+func (self *codeGen) cgExp(node Exp, a, n int) {
 	switch exp := node.(type) {
 	case *NilExp:
 		self.emitLoadNil(exp.Line, a, n)
@@ -36,7 +36,7 @@ func (self *codeGen) exp(node Exp, a, n int) {
 	case *VarargExp:
 		self.emitVararg(exp.Line, a, n)
 	case *ParensExp:
-		self.exp(exp.Exp, a, 1)
+		self.cgExp(exp.Exp, a, 1)
 	case *NameExp:
 		self.cgNameExp(exp, a)
 	case *TableConstructorExp:
@@ -74,9 +74,9 @@ func (self *codeGen) cgTableConstructorExp(exp *TableConstructorExp, a int) {
 			if idx, ok := keyExp.(int); ok {
 				tmp := self.allocTmp()
 				if i == nExps-1 && lastExpIsVarargOrFuncCall {
-					self.exp(valExp, tmp, -1)
+					self.cgExp(valExp, tmp, -1)
 				} else {
-					self.exp(valExp, tmp, 1)
+					self.cgExp(valExp, tmp, 1)
 				}
 
 				if idx%50 == 0 {
@@ -98,14 +98,14 @@ func (self *codeGen) cgTableConstructorExp(exp *TableConstructorExp, a int) {
 		if tKey != ARG_CONST && tKey != ARG_REG {
 			iKey = self.allocTmp()
 			nTmps++
-			self.exp(keyExp, iKey, 1)
+			self.cgExp(keyExp, iKey, 1)
 		}
 
 		iVal, tVal := self.toOpArg(valExp)
 		if tVal != ARG_CONST && tVal != ARG_REG {
 			iVal = self.allocTmp()
 			nTmps++
-			self.exp(valExp, iVal, 1)
+			self.cgExp(valExp, iVal, 1)
 		}
 		self.freeTmps(nTmps)
 		self.emitSetTable(lastLineOfExp(valExp), a, iKey, iVal)
@@ -143,7 +143,7 @@ func (self *codeGen) prepFuncCall(exp *FuncCallExp, a int) int {
 	nArgs := len(exp.Args)
 	lastArgIsVarargOrFuncCall := false
 
-	self.exp(exp.PrefixExp, a, 1)
+	self.cgExp(exp.PrefixExp, a, 1)
 	if exp.MethodName != "" {
 		self.allocTmp()
 		idx := self.indexOfConstant(exp.MethodName)
@@ -153,9 +153,9 @@ func (self *codeGen) prepFuncCall(exp *FuncCallExp, a int) int {
 		tmp := self.allocTmp()
 		if i == nArgs-1 && isVarargOrFuncCallExp(arg) {
 			lastArgIsVarargOrFuncCall = true
-			self.exp(arg, tmp, -1)
+			self.cgExp(arg, tmp, -1)
 		} else {
-			self.exp(arg, tmp, 1)
+			self.cgExp(arg, tmp, 1)
 		}
 	}
 	self.freeTmps(nArgs)
@@ -215,7 +215,11 @@ func (self *codeGen) cgBinopExp(exp *BinopExp, a int) {
 	case TOKEN_OP_CONCAT:
 		self.cgConcatExp(exp, a)
 	case TOKEN_OP_OR, TOKEN_OP_AND:
-		self.logicalBinopExp(exp, a)
+		allocator := self.newTmpAllocator(a)
+		rb, _ := self.exp2OpArg(exp.Exp1, ARG_REG, allocator)
+		rc, _ := self.exp2OpArg(exp.Exp2, ARG_REG, allocator)
+		self.emitBinaryOp(exp.Line, exp.Op, a, rb, rc)
+		allocator.freeAll()
 	default:
 		allocator := self.newTmpAllocator(a)
 		rkb, _ := self.exp2OpArg(exp.Exp1, ARG_RK, allocator)
@@ -232,7 +236,7 @@ func (self *codeGen) cgConcatExp(exp *BinopExp, a int) {
 
 	for {
 		tmp := allocator.allocTmp()
-		self.exp(exp.Exp1, tmp, 1)
+		self.cgExp(exp.Exp1, tmp, 1)
 		if b < 0 {
 			b = tmp
 			c = b
@@ -244,7 +248,7 @@ func (self *codeGen) cgConcatExp(exp *BinopExp, a int) {
 			exp = exp2
 		} else {
 			tmp := allocator.allocTmp()
-			self.exp(exp.Exp2, tmp, 1)
+			self.cgExp(exp.Exp2, tmp, 1)
 			c++
 			break
 		}
@@ -273,7 +277,7 @@ func (self *codeGen) exp2OpArg(exp Exp, argKinds int,
 	if arg < 0 {
 		argKind = ARG_REG
 		arg = allocator.allocTmp()
-		self.exp(exp, arg, 1)
+		self.cgExp(exp, arg, 1)
 	}
 	return
 }
