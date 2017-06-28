@@ -214,12 +214,22 @@ func (self *codeGen) cgBinopExp(exp *BinopExp, a int) {
 	switch exp.Op {
 	case TOKEN_OP_CONCAT:
 		self.cgConcatExp(exp, a)
-	case TOKEN_OP_OR, TOKEN_OP_AND:
+	case TOKEN_OP_AND, TOKEN_OP_OR:
 		allocator := self.newTmpAllocator(a)
+
 		rb, _ := self.exp2OpArg(exp.Exp1, ARG_REG, allocator)
+		if exp.Op == TOKEN_OP_AND {
+			self.emitTestSet(exp.Line, a, rb, 0)
+		} else {
+			self.emitTestSet(exp.Line, a, rb, 1)
+		}
+		pcOfJmp := self.emitJmp(exp.Line, 0)
+
 		rc, _ := self.exp2OpArg(exp.Exp2, ARG_REG, allocator)
-		self.emitBinaryOp(exp.Line, exp.Op, a, rb, rc)
+		self.emitMove(exp.Line, a, rc)
+
 		allocator.freeAll()
+		self.fixSbx(pcOfJmp, self.pc()-pcOfJmp)
 	default:
 		allocator := self.newTmpAllocator(a)
 		rkb, _ := self.exp2OpArg(exp.Exp1, ARG_RK, allocator)

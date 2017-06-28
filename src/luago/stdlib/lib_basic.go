@@ -1,5 +1,6 @@
 package stdlib
 
+import "fmt"
 import . "luago/lua"
 
 var baseFuncs = map[string]LuaGoFunction{
@@ -55,12 +56,12 @@ func basePrint(ls LuaState) int {
 		s, _ := ls.ToString(-1)
 		ls.Pop(1)
 
-		print(s)
+		fmt.Print(s)
 		if i < nArgs {
-			print("\t")
+			fmt.Print("\t")
 		}
 	}
-	println()
+	fmt.Println()
 	return 0
 }
 

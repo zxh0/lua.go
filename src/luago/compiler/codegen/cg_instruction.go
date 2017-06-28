@@ -160,19 +160,6 @@ func (self *codeGen) emitUnaryOp(line, op, a, b int) {
 	}
 }
 
-// r[a] = r[b] and/or r[c]
-func (self *codeGen) emitLogicalBinaryOp(line, op, a, b, c int) {
-	if op == TOKEN_OP_AND {
-		self.emit(line, OP_TESTSET, a, b, 0)
-		self.emit(line, OP_JMP, 0, 1, 0)
-		self.emit(line, OP_MOVE, a, c, 0)
-	} else if op == TOKEN_OP_OR {
-		self.emit(line, OP_TESTSET, a, b, 1)
-		self.emit(line, OP_JMP, 0, 1, 0)
-		self.emit(line, OP_MOVE, a, c, 0)
-	}
-}
-
 // r[a] = rk[b] op rk[c]
 // arith & bitwise & relational
 func (self *codeGen) emitBinaryOp(line, op, a, b, c int) {

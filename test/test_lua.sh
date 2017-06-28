@@ -20,8 +20,8 @@ test_file() { # $1:dir $2:file
   lua_output=$2".output"
   luago_output=$2"go.output"
 
-  $lua $2 > $lua_output
-  $luago $2 > $luago_output 2>&1 #todo
+  $lua $2 > $lua_output 2>&1
+  $luago $2 > $luago_output 2>&1
 
   x=`diff -B  $lua_output $luago_output`
   if [ ! -z "$x" ]; then
@@ -53,3 +53,4 @@ test_dir() { # $1:dir
 }
 
 test_dir "PiL4/ch01"
+test_dir "PiL4/ch03"

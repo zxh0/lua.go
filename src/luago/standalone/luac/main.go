@@ -29,7 +29,7 @@ func main() {
 	flag.Parse()
 
 	if *_v {
-		println(version)
+		fmt.Println(version)
 		return
 	}
 	if len(flag.Args()) != 1 {
