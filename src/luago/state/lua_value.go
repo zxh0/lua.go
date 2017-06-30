@@ -5,6 +5,7 @@ import "reflect"
 import "runtime"
 import "strings"
 import . "luago/lua"
+import "luago/luanum"
 
 var _mtOfNil *luaTable = nil //?
 var _mtOfBool *luaTable = nil
@@ -113,14 +114,14 @@ func valToInteger(val luaValue) (int64, bool) {
 	case int64:
 		return x, true
 	case float64:
-		return CastToInteger(x)
+		return luanum.CastToInteger(x)
 	case string:
 		x = strings.TrimSpace(x)
-		if i, ok := ParseInteger(x); ok {
+		if i, ok := luanum.ParseInteger(x); ok {
 			return i, true
 		}
-		if f, ok := ParseFloat(x); ok {
-			return CastToInteger(f)
+		if f, ok := luanum.ParseFloat(x); ok {
+			return luanum.CastToInteger(f)
 		}
 	}
 	return 0, false
@@ -134,7 +135,7 @@ func valToNumber(val luaValue) (float64, bool) {
 		return x, true
 	case string:
 		x = strings.TrimSpace(x)
-		return ParseFloat(x)
+		return luanum.ParseFloat(x)
 	}
 	return 0, false
 }

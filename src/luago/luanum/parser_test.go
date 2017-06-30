@@ -1,4 +1,4 @@
-package lua
+package luanum
 
 import "fmt"
 import "testing"

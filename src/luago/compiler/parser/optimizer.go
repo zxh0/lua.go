@@ -1,7 +1,7 @@
 package parser
 
 import "math"
-import . "luago/lua"
+import "luago/luanum"
 import . "luago/compiler/ast"
 import . "luago/compiler/lexer"
 
@@ -37,9 +37,9 @@ func optimizeBitwiseBinaryOp(exp *BinopExp) Exp {
 			case TOKEN_OP_BXOR:
 				return &IntegerExp{exp.Line, i ^ j}
 			case TOKEN_OP_SHL:
-				return &IntegerExp{exp.Line, SHL(i, j)}
+				return &IntegerExp{exp.Line, luanum.SHL(i, j)}
 			case TOKEN_OP_SHR:
-				return &IntegerExp{exp.Line, SHR(i, j)}
+				return &IntegerExp{exp.Line, luanum.SHR(i, j)}
 			}
 		}
 	}
@@ -145,7 +145,7 @@ func optimizeBnot(exp *UnopExp) Exp {
 		x.Val = ^x.Val
 		return x
 	case *FloatExp:
-		if i, ok := CastToInteger(x.Val); ok {
+		if i, ok := luanum.CastToInteger(x.Val); ok {
 			return &IntegerExp{x.Line, ^i}
 		}
 	}
@@ -175,7 +175,7 @@ func castToInt(exp Exp) (int64, bool) {
 	case *IntegerExp:
 		return x.Val, true
 	case *FloatExp:
-		return CastToInteger(x.Val)
+		return luanum.CastToInteger(x.Val)
 	default:
 		return 0, false
 	}

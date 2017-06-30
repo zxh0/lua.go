@@ -2,6 +2,7 @@ package state
 
 import "math"
 import . "luago/lua"
+import "luago/luanum"
 
 // [-(2|1), +1, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_arith
@@ -86,7 +87,7 @@ func (self *luaState) mul(a, b luaValue) {
 
 func (self *luaState) idiv(a, b luaValue) {
 	if x, y, ok := _castToInt64s(a, b); ok {
-		self.stack.push(IDIV(x, y)) //
+		self.stack.push(luanum.IDIV(x, y)) //
 	} else if x, y, ok := _convertToFloat64s(a, b); ok {
 		self.stack.push(math.Floor(x / y))
 	} else if result, ok := self.callMetaOp2(a, b, "__idiv"); ok {
@@ -98,7 +99,7 @@ func (self *luaState) idiv(a, b luaValue) {
 
 func (self *luaState) mod(a, b luaValue) {
 	if x, y, ok := _castToInt64s(a, b); ok {
-		self.stack.push(MOD(x, y)) //
+		self.stack.push(luanum.MOD(x, y)) //
 	} else if x, y, ok := _convertToFloat64s(a, b); ok {
 		self.stack.push(math.Mod(x, y))
 	} else if result, ok := self.callMetaOp2(a, b, "__mod"); ok {
@@ -176,7 +177,7 @@ func (self *luaState) bxor(a, b luaValue) {
 
 func (self *luaState) shl(a, b luaValue) {
 	if x, y, ok := _convertToInt64s(a, b); ok {
-		self.stack.push(SHL(x, y))
+		self.stack.push(luanum.SHL(x, y))
 	} else if result, ok := self.callMetaOp2(a, b, "__shl"); ok {
 		self.stack.push(result)
 	} else {
@@ -186,7 +187,7 @@ func (self *luaState) shl(a, b luaValue) {
 
 func (self *luaState) shr(a, b luaValue) {
 	if x, y, ok := _convertToInt64s(a, b); ok {
-		self.stack.push(SHR(x, y))
+		self.stack.push(luanum.SHR(x, y))
 	} else if result, ok := self.callMetaOp2(a, b, "__shr"); ok {
 		self.stack.push(result)
 	} else {

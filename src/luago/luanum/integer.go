@@ -1,4 +1,4 @@
-package lua
+package luanum
 
 import "regexp"
 import "strings"

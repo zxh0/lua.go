@@ -1,6 +1,6 @@
 package parser
 
-import . "luago/lua"
+import "luago/luanum"
 import . "luago/compiler/ast"
 import . "luago/compiler/lexer"
 
@@ -241,13 +241,13 @@ func parseExp0(lexer *Lexer) Exp {
 
 func parseNumberExp(lexer *Lexer, sign int) Exp {
 	line, _, token := lexer.NextToken()
-	if i, ok := ParseInteger(token); ok {
+	if i, ok := luanum.ParseInteger(token); ok {
 		if sign >= 0 {
 			return &IntegerExp{line, i}
 		} else {
 			return &IntegerExp{line, -i}
 		}
-	} else if f, ok := ParseFloat(token); ok {
+	} else if f, ok := luanum.ParseFloat(token); ok {
 		if sign >= 0 {
 			return &FloatExp{line, f}
 		} else {
