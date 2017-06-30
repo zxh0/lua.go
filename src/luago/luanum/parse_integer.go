@@ -6,38 +6,6 @@ import "strconv"
 
 var reInteger = regexp.MustCompile(`^-?[0-9]+$|^-?0x[0-9a-f]+$`)
 
-func SHL(x, y int64) int64 {
-	if y >= 0 {
-		return x << uint64(y)
-	} else {
-		return int64(uint64(x) >> uint64(-y))
-	}
-}
-
-func SHR(x, y int64) int64 {
-	if y >= 0 {
-		return int64(uint64(x) >> uint64(y))
-	} else {
-		return x << uint64(-y)
-	}
-}
-
-func MOD(x, y int64) int64 {
-	if x > 0 && y < 0 || x < 0 && y > 0 {
-		return x%y + y
-	} else {
-		return x % y
-	}
-}
-
-func IDIV(x, y int64) int64 {
-	if x > 0 && y > 0 || x < 0 && y < 0 || x%y == 0 {
-		return x / y
-	} else {
-		return x/y - 1
-	}
-}
-
 func ParseInteger(str string) (int64, bool) {
 	str = strings.ToLower(str)
 	if !reInteger.MatchString(str) { // float?
