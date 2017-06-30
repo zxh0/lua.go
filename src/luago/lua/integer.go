@@ -30,6 +30,14 @@ func MOD(x, y int64) int64 {
 	}
 }
 
+func IDIV(x, y int64) int64 {
+	if x > 0 && y > 0 || x < 0 && y < 0 || x % y == 0 {
+		return x / y
+	} else {
+		return x / y - 1
+	}
+}
+
 func ParseInteger(str string) (int64, bool) {
 	str = strings.ToLower(str)
 	if !reInteger.MatchString(str) { // float?

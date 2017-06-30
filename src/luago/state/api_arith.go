@@ -86,9 +86,9 @@ func (self *luaState) mul(a, b luaValue) {
 
 func (self *luaState) idiv(a, b luaValue) {
 	if x, y, ok := _castToInt64s(a, b); ok {
-		self.stack.push(x / y)
+		self.stack.push(IDIV(x, y)) //
 	} else if x, y, ok := _convertToFloat64s(a, b); ok {
-		self.stack.push(x / y)
+		self.stack.push(math.Floor(x / y))
 	} else if result, ok := self.callMetaOp2(a, b, "__idiv"); ok {
 		self.stack.push(result)
 	} else {
@@ -98,7 +98,7 @@ func (self *luaState) idiv(a, b luaValue) {
 
 func (self *luaState) mod(a, b luaValue) {
 	if x, y, ok := _castToInt64s(a, b); ok {
-		self.stack.push(MOD(x, y))
+		self.stack.push(MOD(x, y)) //
 	} else if x, y, ok := _convertToFloat64s(a, b); ok {
 		self.stack.push(math.Mod(x, y))
 	} else if result, ok := self.callMetaOp2(a, b, "__mod"); ok {

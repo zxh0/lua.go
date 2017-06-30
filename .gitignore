@@ -4,3 +4,4 @@ bin/
 *.out
 *.luac
 *.ll.txt
+*.output

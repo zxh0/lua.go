@@ -214,7 +214,9 @@ func mathAtan(ls LuaState) int {
 // math.ceil (x)
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.ceil
 func mathCeil(ls LuaState) int {
-	panic("math_ceil!")
+	x := ls.ToNumber(1)
+	ls.PushNumber(math.Ceil(x))
+	return 1
 }
 
 // math.floor (x)

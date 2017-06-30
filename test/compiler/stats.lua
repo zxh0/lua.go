@@ -329,12 +329,3 @@ function tc(...)
   --   {x=0, y=1}    -- polyline[4]
   -- }
 end --]==]
-
-
--- function mod(a, b) return a % b end
--- assert(mod( 2,  5) ==  2)
--- assert(mod( 5,  2) ==  1)
--- assert(mod( 5, -2) == -1)
--- assert(mod(-5,  2) ==  1)
--- assert(mod(-5, -1) ==  0)
-
