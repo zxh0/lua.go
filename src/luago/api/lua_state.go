@@ -118,7 +118,7 @@ type BasicAPI interface {
 // auxiliary library
 type AuxLib interface {
 	ArgCheck(cond bool, arg int, extraMsg string)           //
-	ArgError(arg int, extraMsg string)                      //
+	ArgError(arg int, extraMsg string) int                  //
 	CheckAny(arg int)                                       // r[arg] is None ?
 	CheckInteger(arg int) int64                             // r[arg] is LuaInteger ?
 	CheckNumber(arg int) float64                            // r[arg] is LuaNumber ?
@@ -128,8 +128,8 @@ type AuxLib interface {
 	CheckVersion()                                          //
 	DoFile(filename string) bool                            //
 	DoString(str string) bool                               //
-	//GetMetaField(obj int, e string) LuaType                 //
-	//GetMetaTableL(tname string) LuaType                     //
+	GetMetaField(obj int, e string) LuaType                 //
+	GetMetaTableL(tname string) LuaType                     //
 	GetSubTable(idx int, fname string) bool                 // push(r[idx][fname] || {})
 	LenL(index int) int64                                   // #(r[index])
 	LoadFile(filename string) LuaThreadStatus               //
@@ -143,6 +143,7 @@ type AuxLib interface {
 	OptString(arg int, d string) string                     // r[arg] or d
 	RequireF(modname string, openf LuaGoFunction, glb bool) //
 	SetFuncs(l LuaRegMap, nup int)                          // l.each{name,func => r[-1][name]=func}
+	TypeNameL(index int) string                             //
 }
 
 // type LuaLightUserData LuaUserData

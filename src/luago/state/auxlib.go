@@ -29,7 +29,7 @@ func (self *luaState) ArgCheck(cond bool, arg int, extraMsg string) {
 
 // [-0, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#luaL_argerror
-func (self *luaState) ArgError(arg int, extraMsg string) {
+func (self *luaState) ArgError(arg int, extraMsg string) int {
 	panic("todo: ArgError!")
 }
 
@@ -127,6 +127,14 @@ func (self *luaState) LenL(index int) int64 {
 	} else {
 		panic("todo!")
 	}
+}
+
+func (self *luaState) GetMetaField(obj int, e string) LuaType {
+	panic("todo!")
+}
+
+func (self *luaState) GetMetaTableL(tname string) LuaType {
+	panic("todo!")
 }
 
 // [-0, +1, e]
@@ -253,29 +261,33 @@ func (self *luaState) SetFuncs(l LuaRegMap, nup int) {
 	self.Pop(nup) /* remove upvalues */
 }
 
-// func (self *luaState) intError(arg int) {
-// 	if self.IsNumber(arg) {
-// 		self.ArgError(arg, "number has no integer representation")
-// 	} else {
+func (self *luaState) TypeNameL(index int) string {
+	panic("todo!")
+}
 
-// 		self.tagError(arg, LUA_TNUMBER)
-// 	}
-// }
+func (self *luaState) intError(arg int) {
+	if self.IsNumber(arg) {
+		self.ArgError(arg, "number has no integer representation")
+	} else {
 
-// func (self *luaState) tagError(arg, tag int) {
-// 	self.typeError(arg, self.TypeName(LuaType(tag)))
-// }
+		self.tagError(arg, LUA_TNUMBER)
+	}
+}
+
+func (self *luaState) tagError(arg, tag int) {
+	//self.typeError(arg, self.TypeName(LuaType(tag)))
+	panic("todo!")
+}
 
 // func (self *luaState) typeError(arg int, tname string) int {
 // 	var typearg string /* name for the type of the actual argument */
 // 	if self.GetMetaField(arg, "__name") == LUA_TSTRING {
-// 		typearg = self.ToString(-1) /* use the given type name */
-// 	} else if self.Type(arg) == LUA_TLIGHTUSERDATA {
-// 		typearg = "light userdata" /* special name for messages */
+// 		typearg, _ = self.ToString(-1) /* use the given type name */
+// 	//} else if self.Type(arg) == LUA_TLIGHTUSERDATA {
+// 	//	typearg = "light userdata" /* special name for messages */
 // 	} else {
-// 		typearg = self.TypeName(arg) /* standard name */
+// 		typearg = self.TypeNameL(arg) /* standard name */
 // 	}
 // 	msg := self.PushFString("%s expected, got %s", tname, typearg)
 // 	return self.ArgError(arg, msg)
 // }
-
