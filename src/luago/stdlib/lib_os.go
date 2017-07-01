@@ -2,7 +2,7 @@ package stdlib
 
 import "os"
 import "time"
-import . "luago/lua"
+import . "luago/api"
 
 var sysLib = map[string]LuaGoFunction{
 	"clock":     osClock,

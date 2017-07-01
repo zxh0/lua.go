@@ -1,6 +1,6 @@
 package state
 
-import . "luago/lua"
+import . "luago/api"
 import "luago/vm"
 
 // [-(nargs+1), +nresults, e]

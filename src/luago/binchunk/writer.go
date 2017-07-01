@@ -2,7 +2,7 @@ package binchunk
 
 import "encoding/binary"
 import "math"
-import "luago/lua"
+import "luago/api"
 
 type writer struct {
 	buf []byte
@@ -124,22 +124,22 @@ func (self *writer) writeConstants(constants []interface{}) {
 func (self *writer) writeConstant(constant interface{}) {
 	switch x := constant.(type) {
 	case nil:
-		self.writeByte(byte(lua.LUA_TNIL))
+		self.writeByte(byte(api.LUA_TNIL))
 	case bool:
-		self.writeByte(byte(lua.LUA_TBOOLEAN))
+		self.writeByte(byte(api.LUA_TBOOLEAN))
 		if x {
 			self.writeByte(1)
 		} else {
 			self.writeByte(0)
 		}
 	case int64:
-		self.writeByte(byte(lua.LUA_TNUMINT))
+		self.writeByte(byte(api.LUA_TNUMINT))
 		self.writeLuaInteger(x)
 	case float64:
-		self.writeByte(byte(lua.LUA_TNUMFLT))
+		self.writeByte(byte(api.LUA_TNUMFLT))
 		self.writeLuaNumber(x)
 	case string: // todo
-		self.writeByte(byte(lua.LUA_TSHRSTR))
+		self.writeByte(byte(api.LUA_TSHRSTR))
 		self.writeString(x)
 	default:
 		panic("unreachable!")

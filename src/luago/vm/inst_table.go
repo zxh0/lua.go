@@ -1,6 +1,6 @@
 package vm
 
-import . "luago/lua"
+import . "luago/api"
 
 // R(A) := {} (size = B,C)
 func newTable(i Instruction, vm VM) {

@@ -1,7 +1,7 @@
 package main
 
 import "os"
-import . "luago/lua"
+import . "luago/api"
 import "luago/state"
 
 func main() {

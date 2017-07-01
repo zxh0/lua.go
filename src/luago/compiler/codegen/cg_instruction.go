@@ -1,7 +1,7 @@
 package codegen
 
 import . "luago/compiler/lexer"
-import . "luago/lua"
+import . "luago/api"
 import . "luago/vm"
 
 var arithAndBitwiseBinops = map[int]int{

@@ -1,6 +1,6 @@
 package vm
 
-import . "luago/lua"
+import . "luago/api"
 
 func add(i Instruction, vm VM)  { _binaryArith(i, vm, LUA_OPADD) }  // +
 func sub(i Instruction, vm VM)  { _binaryArith(i, vm, LUA_OPSUB) }  // -

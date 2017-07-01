@@ -1,6 +1,6 @@
 package stdlib
 
-import . "luago/lua"
+import . "luago/api"
 
 func OpenCoroutineLib(ls LuaState) int {
 	panic("todo!")

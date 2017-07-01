@@ -1,6 +1,6 @@
 package vm
 
-import . "luago/lua"
+import . "luago/api"
 
 // pc+=sBx; if (A) close all upvalues >= R(A - 1)
 func jmp(i Instruction, vm VM) {

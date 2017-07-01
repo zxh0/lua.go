@@ -1,6 +1,6 @@
 package stdlib
 
-import . "luago/lua"
+import . "luago/api"
 
 /*
 ** functions for 'io' library

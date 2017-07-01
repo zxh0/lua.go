@@ -1,6 +1,6 @@
 package stdlib
 
-import . "luago/lua"
+import . "luago/api"
 
 /* key, in the registry, for table of loaded modules */
 const LUA_LOADED_TABLE = "_LOADED"

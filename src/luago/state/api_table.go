@@ -1,6 +1,6 @@
 package state
 
-import . "luago/lua"
+import . "luago/api"
 
 // [-0, +1, m]
 // http://www.lua.org/manual/5.3/manual.html#lua_createtable

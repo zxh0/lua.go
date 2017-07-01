@@ -1,6 +1,6 @@
 package vm
 
-import . "luago/lua"
+import . "luago/api"
 
 // R(A) := UpValue[B]
 func getUpval(i Instruction, vm VM) {

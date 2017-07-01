@@ -1,6 +1,6 @@
 package vm
 
-import . "luago/lua"
+import . "luago/api"
 
 // R(A) := Kst(Bx)
 func loadK(i Instruction, vm VM) {

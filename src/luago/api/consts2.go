@@ -1,4 +1,4 @@
-package lua
+package api
 
 const (
 	LUA_VERSION_MAJOR   = "5"

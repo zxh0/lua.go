@@ -2,7 +2,7 @@ package stdlib
 
 import "sort"
 import "strings"
-import . "luago/lua"
+import . "luago/api"
 
 var tabFuncs = map[string]LuaGoFunction{
 	"insert": tabInsert,

@@ -1,6 +1,6 @@
 package state
 
-import . "luago/lua"
+import . "luago/api"
 
 /*
  * luaState

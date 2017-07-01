@@ -1,6 +1,6 @@
 package vm
 
-import "luago/lua"
+import "luago/api"
 
 /* number of list items to accumulate before a SETLIST instruction */
 const LFIELDS_PER_FLUSH = 50
@@ -88,7 +88,7 @@ type opcode struct {
 	argCMode byte
 	opMode   byte
 	name     string
-	action   func(i Instruction, vm lua.VM)
+	action   func(i Instruction, vm api.VM)
 }
 
 var opcodes = []opcode{

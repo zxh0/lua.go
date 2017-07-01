@@ -1,4 +1,4 @@
-package lua
+package api
 
 type LuaType int
 type LuaArithOp int
@@ -127,6 +127,8 @@ type LuaStateAux interface {
 	CheckVersion()                                          //
 	DoFile(filename string) bool                            //
 	DoString(str string) bool                               //
+	//GetMetaField(obj int, e string) LuaType                 //
+	//GetMetaTableL(tname string) LuaType                     //
 	GetSubTable(idx int, fname string) bool                 // push(r[idx][fname] || {})
 	LenL(index int) int64                                   // #(r[index])
 	LoadFile(filename string) LuaThreadStatus               //

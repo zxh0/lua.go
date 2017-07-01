@@ -2,7 +2,7 @@ package state
 
 import "bytes"
 import "fmt"
-import . "luago/lua"
+import . "luago/api"
 
 /*
  sp->[ ] -.

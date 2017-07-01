@@ -1,7 +1,7 @@
 package state
 
 import "strings"
-import . "luago/lua"
+import . "luago/api"
 
 // [-0, +1, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_len

@@ -1,4 +1,4 @@
-package lua
+package api
 
 type VM interface {
 	LuaState

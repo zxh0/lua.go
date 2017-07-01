@@ -4,7 +4,7 @@ import "runtime"
 import "luago/binchunk"
 import "luago/compiler"
 import "luago/luanum"
-import . "luago/lua"
+import . "luago/api"
 
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_atpanic

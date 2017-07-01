@@ -1,4 +1,4 @@
-package lua
+package api
 
 /* basic types */
 const (

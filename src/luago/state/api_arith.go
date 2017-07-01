@@ -1,7 +1,7 @@
 package state
 
 import "math"
-import . "luago/lua"
+import . "luago/api"
 import "luago/luanum"
 
 // [-(2|1), +1, e]

@@ -1,6 +1,6 @@
 package vm
 
-import . "luago/lua"
+import . "luago/api"
 
 // R(A+1) := R(B); R(A) := R(B)[RK(C)]
 func _self(i Instruction, vm VM) {

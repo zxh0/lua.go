@@ -2,7 +2,7 @@ package stdlib
 
 import "math"
 import "math/rand"
-import . "luago/lua"
+import . "luago/api"
 
 var mathLib = map[string]LuaGoFunction{
 	"random":     mathRandom,

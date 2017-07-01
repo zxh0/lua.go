@@ -1,7 +1,7 @@
 package stdlib
 
 import "fmt"
-import . "luago/lua"
+import . "luago/api"
 
 // todo: remove?
 func getOptionalBoolArg(ls LuaState, idx int, defaultVal bool) bool {

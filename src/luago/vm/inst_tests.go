@@ -1,6 +1,6 @@
 package vm
 
-import . "luago/lua"
+import . "luago/api"
 
 func eq(i Instruction, vm VM) { _compare(i, vm, LUA_OPEQ) } // ==
 func lt(i Instruction, vm VM) { _compare(i, vm, LUA_OPLT) } // <

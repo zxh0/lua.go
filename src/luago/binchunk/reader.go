@@ -2,7 +2,7 @@ package binchunk
 
 import "encoding/binary"
 import "math"
-import "luago/lua"
+import "luago/api"
 
 type reader struct {
 	data []byte
@@ -127,16 +127,16 @@ func (self *reader) readConstants() []interface{} {
 }
 
 func (self *reader) readConstant() interface{} {
-	switch lua.LuaType(self.readByte()) {
-	case lua.LUA_TNIL:
+	switch api.LuaType(self.readByte()) {
+	case api.LUA_TNIL:
 		return nil
-	case lua.LUA_TBOOLEAN:
+	case api.LUA_TBOOLEAN:
 		return self.readByte() != 0
-	case lua.LUA_TNUMINT:
+	case api.LUA_TNUMINT:
 		return self.readLuaInteger()
-	case lua.LUA_TNUMFLT:
+	case api.LUA_TNUMFLT:
 		return self.readLuaNumber()
-	case lua.LUA_TSHRSTR, lua.LUA_TLNGSTR:
+	case api.LUA_TSHRSTR, api.LUA_TLNGSTR:
 		return self.readString()
 	default:
 		panic("corrupted!") // todo

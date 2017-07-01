@@ -1,7 +1,7 @@
 package state
 
 import "io/ioutil"
-import . "luago/lua"
+import . "luago/api"
 import "luago/stdlib"
 
 // [-0, +0, v]
@@ -52,6 +52,7 @@ func (self *luaState) CheckType(arg int, t LuaType) {
 
 // [-0, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#luaL_checkinteger
+// lua-5.3.4/src/lauxlib.c#luaL_checkinteger()
 func (self *luaState) CheckInteger(arg int) int64 {
 	if i, ok := self.ToIntegerX(arg); ok {
 		return i
@@ -85,6 +86,7 @@ func (self *luaState) CheckString(arg int) string {
 
 // [-0, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#luaL_optinteger
+// lua-5.3.4/src/lauxlib.c#luaL_optinteger()
 func (self *luaState) OptInteger(arg int, def int64) int64 {
 	if self.IsNoneOrNil(arg) {
 		return def
@@ -250,3 +252,30 @@ func (self *luaState) SetFuncs(l LuaRegMap, nup int) {
 	}
 	self.Pop(nup) /* remove upvalues */
 }
+
+// func (self *luaState) intError(arg int) {
+// 	if self.IsNumber(arg) {
+// 		self.ArgError(arg, "number has no integer representation")
+// 	} else {
+
+// 		self.tagError(arg, LUA_TNUMBER)
+// 	}
+// }
+
+// func (self *luaState) tagError(arg, tag int) {
+// 	self.typeError(arg, self.TypeName(LuaType(tag)))
+// }
+
+// func (self *luaState) typeError(arg int, tname string) int {
+// 	var typearg string /* name for the type of the actual argument */
+// 	if self.GetMetaField(arg, "__name") == LUA_TSTRING {
+// 		typearg = self.ToString(-1) /* use the given type name */
+// 	} else if self.Type(arg) == LUA_TLIGHTUSERDATA {
+// 		typearg = "light userdata" /* special name for messages */
+// 	} else {
+// 		typearg = self.TypeName(arg) /* standard name */
+// 	}
+// 	msg := self.PushFString("%s expected, got %s", tname, typearg)
+// 	return self.ArgError(arg, msg)
+// }
+

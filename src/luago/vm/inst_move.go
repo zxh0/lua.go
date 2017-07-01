@@ -1,6 +1,6 @@
 package vm
 
-import . "luago/lua"
+import . "luago/api"
 
 // R(A) := R(B)
 func move(i Instruction, vm VM) {

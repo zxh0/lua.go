@@ -1,6 +1,6 @@
 package state
 
-import . "luago/lua"
+import . "luago/api"
 
 // http://www.lua.org/manual/5.3/manual.html#lua_newthread
 func (self *luaState) NewThread() LuaState {

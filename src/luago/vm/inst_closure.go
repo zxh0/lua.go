@@ -1,6 +1,6 @@
 package vm
 
-import . "luago/lua"
+import . "luago/api"
 
 // R(A) := closure(KPROTO[Bx])
 func closure(i Instruction, vm VM) {

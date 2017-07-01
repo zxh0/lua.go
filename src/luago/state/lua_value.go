@@ -4,7 +4,7 @@ import "fmt"
 import "reflect"
 import "runtime"
 import "strings"
-import . "luago/lua"
+import . "luago/api"
 import "luago/luanum"
 
 var _mtOfNil *luaTable = nil //?

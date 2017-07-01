@@ -2,7 +2,7 @@ package stdlib
 
 import "fmt"
 import "strings"
-import . "luago/lua"
+import . "luago/api"
 
 var strLib = map[string]LuaGoFunction{
 	"len":      strLen,

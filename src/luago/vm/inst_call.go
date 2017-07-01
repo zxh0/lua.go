@@ -1,6 +1,6 @@
 package vm
 
-import . "luago/lua"
+import . "luago/api"
 
 // R(A), R(A+1), ..., R(A+B-2) = vararg
 func vararg(i Instruction, vm VM) {

@@ -1,6 +1,6 @@
 package vm
 
-import . "luago/lua"
+import . "luago/api"
 
 // R(A)-=R(A+2); pc+=sBx
 func forPrep(i Instruction, vm VM) {

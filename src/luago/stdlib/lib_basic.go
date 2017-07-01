@@ -1,7 +1,7 @@
 package stdlib
 
 import "fmt"
-import . "luago/lua"
+import . "luago/api"
 import "luago/luanum"
 
 var baseFuncs = map[string]LuaGoFunction{
