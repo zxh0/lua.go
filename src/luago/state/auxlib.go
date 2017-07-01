@@ -44,7 +44,7 @@ func (self *luaState) CheckAny(arg int) {
 // [-0, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#luaL_checktype
 func (self *luaState) CheckType(arg int, t LuaType) {
-	if self.Type(arg) == t {
+	if self.Type(arg) != t {
 		// tag_error(L, arg, t);
 		panic("todo: bad type!")
 	}

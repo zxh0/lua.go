@@ -1,8 +1,8 @@
 package parser
 
-import "luago/luanum"
 import . "luago/compiler/ast"
 import . "luago/compiler/lexer"
+import "luago/luanum"
 
 // explist ::= exp {‘,’ exp}
 func parseExpList(lexer *Lexer) []Exp {
@@ -241,7 +241,7 @@ func parseExp0(lexer *Lexer) Exp {
 
 func parseNumberExp(lexer *Lexer, sign int) Exp {
 	line, _, token := lexer.NextToken()
-	if i, ok := luanum.ParseInteger(token); ok {
+	if i, ok := luanum.ParseInteger(token, 10); ok {
 		if sign >= 0 {
 			return &IntegerExp{line, i}
 		} else {

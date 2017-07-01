@@ -5,6 +5,7 @@ import "strings"
 import "strconv"
 
 func ParseFloat(str string) (float64, bool) {
+	str = strings.TrimSpace(str)
 	str = strings.ToLower(str)
 	if strings.HasPrefix(str, "0x") {
 		return parseHexFloat(str[2:])

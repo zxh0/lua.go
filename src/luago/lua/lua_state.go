@@ -96,7 +96,7 @@ type LuaStateBasic interface {
 	SetTop(index int)                                          // stack.top = index
 	SetUserValue(index int)                                    // r[index].userValue = pop()
 	Status() int                                               // todo
-	StringToNumber()                                           // todo
+	StringToNumber(s string) bool                              // push(number(s))
 	ToBoolean(index int) bool                                  // r[index] as bool
 	ToGoFunction(index int) LuaGoFunction                      // r[index] as LuaGoFunction
 	ToInteger(index int) int64                                 // r[index] as LuaInteger

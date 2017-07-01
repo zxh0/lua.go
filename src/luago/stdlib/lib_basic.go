@@ -2,6 +2,7 @@ package stdlib
 
 import "fmt"
 import . "luago/lua"
+import "luago/luanum"
 
 var baseFuncs = map[string]LuaGoFunction{
 	"print":          basePrint,
@@ -261,20 +262,32 @@ func baseRawSet(ls LuaState) int {
 
 // tonumber (e [, base])
 // http://www.lua.org/manual/5.3/manual.html#pdf-tonumber
+// lua-5.3.4/src/lbaselib.c#luaB_tonumber()
 func baseToNumber(ls LuaState) int {
-	if ls.GetTop() == 1 {
-		if i, ok := ls.ToIntegerX(1); ok {
-			ls.Pop(1)
-			ls.PushInteger(i)
+	if isNoneOrNil(ls, 2) { /* standard conversion? */
+		ls.CheckAny(1)
+		if ls.Type(1) == LUA_TNUMBER { /* already a number? */
+			ls.SetTop(1) /* yes; return it */
 			return 1
+		} else {
+			if s, ok := ls.ToString(1); ok {
+				if ok && ls.StringToNumber(s) {
+					return 1 /* successful conversion to number */
+				} /* else not a number */
+			}
 		}
-
-		num := ls.ToNumber(1)
-		ls.Pop(1)
-		ls.PushNumber(num)
-		return 1
-	}
-	panic("todo! baseToNumber")
+	} else {
+		ls.CheckType(1, LUA_TSTRING) /* no numbers as strings */
+		s, _ := ls.ToString(1)
+		base := int(ls.CheckInteger(2))
+		ls.ArgCheck(2 <= base && base <= 36, 2, "base out of range")
+		if n, ok := luanum.ParseInteger(s, base); ok {
+			ls.PushInteger(n)
+			return 1
+		} /* else not a number */
+	} /* else not a number */
+	ls.PushNil() /* not a number */
+	return 1
 }
 
 // tostring (v)

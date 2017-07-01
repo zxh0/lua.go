@@ -1,9 +1,10 @@
 package state
 
 import "runtime"
-import . "luago/lua"
 import "luago/binchunk"
 import "luago/compiler"
+import "luago/luanum"
+import . "luago/lua"
 
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_atpanic
@@ -97,8 +98,16 @@ func (self *luaState) Load(chunk []byte, chunkName, mode string) LuaThreadStatus
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_stringtonumber
-func (self *luaState) StringToNumber() {
-	panic("todo!")
+func (self *luaState) StringToNumber(s string) bool {
+	if n, ok := luanum.ParseInteger(s, 10); ok {
+		self.PushInteger(n)
+		return true
+	}
+	if n, ok := luanum.ParseFloat(s); ok {
+		self.PushNumber(n)
+		return true
+	}
+	return false
 }
 
 // [-0, +0, –]

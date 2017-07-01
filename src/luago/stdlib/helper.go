@@ -3,6 +3,10 @@ package stdlib
 import "fmt"
 import . "luago/lua"
 
+func isNoneOrNil(ls LuaState, idx int) bool {
+	return ls.Type(idx) <= 0
+}
+
 // todo: remove?
 func getOptionalBoolArg(ls LuaState, idx int, defaultVal bool) bool {
 	if ls.GetTop() >= idx {

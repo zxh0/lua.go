@@ -116,8 +116,7 @@ func valToInteger(val luaValue) (int64, bool) {
 	case float64:
 		return luanum.CastToInteger(x)
 	case string:
-		x = strings.TrimSpace(x)
-		if i, ok := luanum.ParseInteger(x); ok {
+		if i, ok := luanum.ParseInteger(x, 10); ok {
 			return i, true
 		}
 		if f, ok := luanum.ParseFloat(x); ok {
@@ -134,7 +133,6 @@ func valToNumber(val luaValue) (float64, bool) {
 	case float64:
 		return x, true
 	case string:
-		x = strings.TrimSpace(x)
 		return luanum.ParseFloat(x)
 	}
 	return 0, false
