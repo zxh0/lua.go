@@ -2,12 +2,12 @@ package vm
 
 import . "luago/api"
 
-func eq(i Instruction, vm VM) { _compare(i, vm, LUA_OPEQ) } // ==
-func lt(i Instruction, vm VM) { _compare(i, vm, LUA_OPLT) } // <
-func le(i Instruction, vm VM) { _compare(i, vm, LUA_OPLE) } // <=
+func eq(i Instruction, vm LuaVM) { _compare(i, vm, LUA_OPEQ) } // ==
+func lt(i Instruction, vm LuaVM) { _compare(i, vm, LUA_OPLT) } // <
+func le(i Instruction, vm LuaVM) { _compare(i, vm, LUA_OPLE) } // <=
 
 // if ((RK(B) op RK(C)) ~= A) then pc++
-func _compare(i Instruction, vm VM, op LuaCompareOp) {
+func _compare(i Instruction, vm LuaVM, op LuaCompareOp) {
 	a, b, c := i.ABC()
 
 	vm.CheckStack(2)
@@ -20,7 +20,7 @@ func _compare(i Instruction, vm VM, op LuaCompareOp) {
 }
 
 // if not (R(A) <=> C) then pc++
-func test(i Instruction, vm VM) {
+func test(i Instruction, vm LuaVM) {
 	a, _, c := i.ABC()
 	a += 1
 
@@ -30,7 +30,7 @@ func test(i Instruction, vm VM) {
 }
 
 // if (R(B) <=> C) then R(A) := R(B) else pc++
-func testSet(i Instruction, vm VM) {
+func testSet(i Instruction, vm LuaVM) {
 	a, b, c := i.ABC()
 	a += 1
 	b += 1

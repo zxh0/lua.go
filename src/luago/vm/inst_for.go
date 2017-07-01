@@ -3,7 +3,7 @@ package vm
 import . "luago/api"
 
 // R(A)-=R(A+2); pc+=sBx
-func forPrep(i Instruction, vm VM) {
+func forPrep(i Instruction, vm LuaVM) {
 	a, sBx := i.AsBx()
 	a += 1
 
@@ -19,7 +19,7 @@ func forPrep(i Instruction, vm VM) {
 // if R(A) <?= R(A+1) then {
 //   pc+=sBx; R(A+3)=R(A)
 // }
-func forLoop(i Instruction, vm VM) {
+func forLoop(i Instruction, vm LuaVM) {
 	a, sBx := i.AsBx()
 	a += 1
 
@@ -43,7 +43,7 @@ func forLoop(i Instruction, vm VM) {
 // if R(A+1) ~= nil then {
 //   R(A)=R(A+1); pc += sBx
 // }
-func tForLoop(i Instruction, vm VM) {
+func tForLoop(i Instruction, vm LuaVM) {
 	a, sBx := i.AsBx()
 	a += 1
 

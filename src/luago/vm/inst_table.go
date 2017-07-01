@@ -3,7 +3,7 @@ package vm
 import . "luago/api"
 
 // R(A) := {} (size = B,C)
-func newTable(i Instruction, vm VM) {
+func newTable(i Instruction, vm LuaVM) {
 	a, b, c := i.ABC()
 	a += 1
 
@@ -13,7 +13,7 @@ func newTable(i Instruction, vm VM) {
 }
 
 // R(A) := R(B)[RK(C)]
-func getTable(i Instruction, vm VM) {
+func getTable(i Instruction, vm LuaVM) {
 	a, b, c := i.ABC()
 	a += 1
 	b += 1
@@ -25,7 +25,7 @@ func getTable(i Instruction, vm VM) {
 }
 
 // R(A)[RK(B)] := RK(C)
-func setTable(i Instruction, vm VM) {
+func setTable(i Instruction, vm LuaVM) {
 	a, b, c := i.ABC()
 	a += 1
 
@@ -36,7 +36,7 @@ func setTable(i Instruction, vm VM) {
 }
 
 // R(A)[(C-1)*FPF+i] := R(A+i), 1 <= i <= B
-func setList(i Instruction, vm VM) {
+func setList(i Instruction, vm LuaVM) {
 	a, b, c := i.ABC()
 	a += 1
 

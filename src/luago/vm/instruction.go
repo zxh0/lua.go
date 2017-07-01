@@ -19,7 +19,7 @@ const HALF_BX = (1<<18 - 1) >> 1 // 131071
 */
 type Instruction uint32
 
-func (self Instruction) Execute(vm api.VM) {
+func (self Instruction) Execute(vm api.LuaVM) {
 	opcodes[self.Opcode()].action(self, vm)
 }
 

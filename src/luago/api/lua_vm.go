@@ -1,6 +1,6 @@
 package api
 
-type VM interface {
+type LuaVM interface {
 	LuaState
 	AddPC(n int)          // pc += n
 	GetBottom() int       // stack.bottom

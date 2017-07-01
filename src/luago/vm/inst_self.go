@@ -3,7 +3,7 @@ package vm
 import . "luago/api"
 
 // R(A+1) := R(B); R(A) := R(B)[RK(C)]
-func _self(i Instruction, vm VM) {
+func _self(i Instruction, vm LuaVM) {
 	a, b, c := i.ABC()
 	a += 1
 	b += 1

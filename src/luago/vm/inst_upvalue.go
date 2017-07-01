@@ -3,7 +3,7 @@ package vm
 import . "luago/api"
 
 // R(A) := UpValue[B]
-func getUpval(i Instruction, vm VM) {
+func getUpval(i Instruction, vm LuaVM) {
 	a, b, _ := i.ABC()
 	a += 1
 
@@ -13,7 +13,7 @@ func getUpval(i Instruction, vm VM) {
 }
 
 // UpValue[B] := R(A)
-func setUpval(i Instruction, vm VM) {
+func setUpval(i Instruction, vm LuaVM) {
 	a, b, _ := i.ABC()
 	a += 1
 
@@ -23,7 +23,7 @@ func setUpval(i Instruction, vm VM) {
 }
 
 // R(A) := UpValue[B][RK(C)]
-func getTabUp(i Instruction, vm VM) {
+func getTabUp(i Instruction, vm LuaVM) {
 	a, b, c := i.ABC()
 	a += 1
 
@@ -36,7 +36,7 @@ func getTabUp(i Instruction, vm VM) {
 }
 
 // UpValue[A][RK(B)] := RK(C)
-func setTabUp(i Instruction, vm VM) {
+func setTabUp(i Instruction, vm LuaVM) {
 	a, b, c := i.ABC()
 
 	vm.CheckStack(3)

@@ -3,7 +3,7 @@ package vm
 import . "luago/api"
 
 // R(A), R(A+1), ..., R(A+B-2) = vararg
-func vararg(i Instruction, vm VM) {
+func vararg(i Instruction, vm LuaVM) {
 	a, b, _ := i.ABC()
 	a += 1
 
@@ -16,7 +16,7 @@ func vararg(i Instruction, vm VM) {
 }
 
 // R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2));
-func tForCall(i Instruction, vm VM) {
+func tForCall(i Instruction, vm LuaVM) {
 	a, _, c := i.ABC()
 	a += 1
 
@@ -26,7 +26,7 @@ func tForCall(i Instruction, vm VM) {
 }
 
 // R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1))
-func call(i Instruction, vm VM) {
+func call(i Instruction, vm LuaVM) {
 	a, b, c := i.ABC()
 	a += 1
 
@@ -37,7 +37,7 @@ func call(i Instruction, vm VM) {
 }
 
 // return R(A)(R(A+1), ... ,R(A+B-1))
-func tailCall(i Instruction, vm VM) {
+func tailCall(i Instruction, vm LuaVM) {
 	a, b, _ := i.ABC()
 	a += 1
 
@@ -48,7 +48,7 @@ func tailCall(i Instruction, vm VM) {
 	_moveResults(a, c, vm)
 }
 
-func _pushFuncAndArgs(a, b int, vm VM) (nArgs int) {
+func _pushFuncAndArgs(a, b int, vm LuaVM) (nArgs int) {
 	if b == 1 {
 		nArgs = 0
 		vm.CheckStack(1)
@@ -85,7 +85,7 @@ func _pushFuncAndArgs(a, b int, vm VM) (nArgs int) {
 	return
 }
 
-func _moveResults(a, c int, vm VM) {
+func _moveResults(a, c int, vm LuaVM) {
 	if c == 1 {
 		// no results
 	} else if c > 1 {
@@ -109,7 +109,7 @@ func _moveResults(a, c int, vm VM) {
 }
 
 // return R(A), ... ,R(A+B-2)
-func _return(i Instruction, vm VM) {
+func _return(i Instruction, vm LuaVM) {
 	a, b, _ := i.ABC()
 	a += 1
 
