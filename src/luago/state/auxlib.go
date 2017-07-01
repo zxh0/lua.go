@@ -85,37 +85,33 @@ func (self *luaState) CheckString(arg int) string {
 
 // [-0, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#luaL_optinteger
-func (self *luaState) OptInteger(arg int, d int64) int64 {
-	if t := self.Type(arg); t == LUA_TNONE || t == LUA_TNIL {
-		return d
-	} else if i, ok := self.ToIntegerX(arg); ok {
-		return i
+func (self *luaState) OptInteger(arg int, def int64) int64 {
+	if self.IsNoneOrNil(arg) {
+		return def
 	} else {
-		panic("todo!")
+		return self.CheckInteger(arg)
 	}
 }
 
 // [-0, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#luaL_optnumber
-func (self *luaState) OptNumber(arg int, d float64) float64 {
-	if t := self.Type(arg); t == LUA_TNONE && t == LUA_TNIL {
-		return d
-	} else if f, ok := self.ToNumberX(arg); ok {
-		return f
+// lua-5.3.4/src/lauxlib.c#luaL_optnumber()
+func (self *luaState) OptNumber(arg int, def float64) float64 {
+	if self.IsNoneOrNil(arg) {
+		return def
 	} else {
-		panic("todo!")
+		return self.CheckNumber(arg)
 	}
 }
 
 // [-0, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#luaL_optstring
-func (self *luaState) OptString(arg int, d string) string {
-	if t := self.Type(arg); t == LUA_TNONE && t == LUA_TNIL {
-		return d
-	} else if s, ok := self.ToString(arg); ok {
-		return s
+// lua-5.3.4/src/lauxlib.c#luaL_optlstring()
+func (self *luaState) OptString(arg int, def string) string {
+	if self.IsNoneOrNil(arg) {
+		return def
 	} else {
-		panic("todo!")
+		return self.CheckString(arg)
 	}
 }
 

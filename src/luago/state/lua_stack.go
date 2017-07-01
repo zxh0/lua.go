@@ -121,7 +121,7 @@ func (self *luaStack) popN(n int) []luaValue {
 		panic(fmt.Sprintf("stack underflow! n=%d", n))
 	}
 	self.sp -= n
-	return self.slots[self.sp:self.sp+n]
+	return self.slots[self.sp : self.sp+n]
 }
 
 func (self *luaStack) popAll() []luaValue {

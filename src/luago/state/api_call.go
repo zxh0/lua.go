@@ -33,7 +33,7 @@ func (self *luaState) callGoClosure(nArgs, nResults int, f *goClosure) {
 	// pass args
 	calleeStack.check(nArgs)
 	calleeStack.pushN(args)
-	
+
 	// call func
 	self.pushLuaStack(calleeStack)
 	r := f.goFunc(self)
@@ -56,7 +56,7 @@ func (self *luaState) callLuaClosure(nArgs, nResults int, f *luaClosure) {
 	nRegs := int(f.proto.MaxStackSize)
 	calleeStack := newLuaStack(nRegs+4, nRegs, self)
 	calleeStack.luaCl = f
-	
+
 	// pass args
 	nParams := int(f.proto.NumParams)
 	for i, arg := range args {
@@ -69,7 +69,7 @@ func (self *luaState) callLuaClosure(nArgs, nResults int, f *luaClosure) {
 			calleeStack.xArgs = args[nParams:]
 		}
 	}
-	
+
 	// call func
 	self.pushLuaStack(calleeStack)
 	self.runLuaClosure(f)

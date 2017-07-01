@@ -264,7 +264,7 @@ func baseRawSet(ls LuaState) int {
 // http://www.lua.org/manual/5.3/manual.html#pdf-tonumber
 // lua-5.3.4/src/lbaselib.c#luaB_tonumber()
 func baseToNumber(ls LuaState) int {
-	if isNoneOrNil(ls, 2) { /* standard conversion? */
+	if ls.IsNoneOrNil(2) { /* standard conversion? */
 		ls.CheckAny(1)
 		if ls.Type(1) == LUA_TNUMBER { /* already a number? */
 			ls.SetTop(1) /* yes; return it */

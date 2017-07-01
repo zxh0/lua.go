@@ -53,24 +53,29 @@ func strLen(ls LuaState) int {
 
 // string.rep (s, n [, sep])
 // http://www.lua.org/manual/5.3/manual.html#pdf-string.rep
+// lua-5.3.4/src/lstrlib.c#str_rep()
 func strRep(ls LuaState) int {
 	s := ls.CheckString(1)
-	n := int(ls.ToInteger(2))
+	n := ls.CheckInteger(2)
 	sep := ls.OptString(3, "")
 
-	if n < 1 {
+	if n <= 0 {
 		ls.PushString("")
 	} else if n == 1 {
 		ls.PushString(s)
 	} else {
-		a := make([]string, n)
-		for i := 0; i < n; i++ {
-			a[i] = s
-		}
-		ls.PushString(strings.Join(a, sep))
+		ls.PushString(_rep(int(n), s, sep))
 	}
 
 	return 1
+}
+
+func _rep(n int, s, sep string) string {
+	a := make([]string, n)
+	for i := 0; i < n; i++ {
+		a[i] = s
+	}
+	return strings.Join(a, sep)
 }
 
 // string.reverse (s)
