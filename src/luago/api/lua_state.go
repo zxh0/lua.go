@@ -13,12 +13,12 @@ type LuaUserData interface{}
 type LuaRegMap map[string]LuaGoFunction
 
 type LuaState interface {
-	LuaStateBasic   // basic api
-	LuaStateAux     // auxiliary lib
+	BasicAPI
+	AuxLib
 	String() string // debug
 }
 
-type LuaStateBasic interface {
+type BasicAPI interface {
 	AbsIndex(idx int) int                                      // abs(idx)
 	Arith(op LuaArithOp)                                       // b=pop(); a=pop(); push(a op b)
 	AtPanic(panicf LuaGoFunction) LuaGoFunction                //
@@ -115,7 +115,8 @@ type LuaStateBasic interface {
 	YieldK()                                                   // todo
 }
 
-type LuaStateAux interface {
+// auxiliary library
+type AuxLib interface {
 	ArgCheck(cond bool, arg int, extraMsg string)           //
 	ArgError(arg int, extraMsg string)                      //
 	CheckAny(arg int)                                       // r[arg] is None ?
