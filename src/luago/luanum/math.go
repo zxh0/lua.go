@@ -14,7 +14,7 @@ func CastToInteger(x float64) (int64, bool) {
 	return 0, false
 }
 
-func SHL(x, y int64) int64 {
+func ShiftLeft(x, y int64) int64 {
 	if y >= 0 {
 		return x << uint64(y)
 	} else {
@@ -22,7 +22,7 @@ func SHL(x, y int64) int64 {
 	}
 }
 
-func SHR(x, y int64) int64 {
+func ShiftRight(x, y int64) int64 {
 	if y >= 0 {
 		return int64(uint64(x) >> uint64(y))
 	} else {
@@ -30,7 +30,7 @@ func SHR(x, y int64) int64 {
 	}
 }
 
-func MOD(x, y int64) int64 {
+func IMod(x, y int64) int64 {
 	if x > 0 && y < 0 || x < 0 && y > 0 {
 		return x%y + y
 	} else {
@@ -38,10 +38,23 @@ func MOD(x, y int64) int64 {
 	}
 }
 
-func IDIV(x, y int64) int64 {
+func FMod(x, y float64) float64 {
+	if x > 0 && y < 0 || x < 0 && y > 0 {
+		return math.Mod(x, y) + y
+	} else {
+		return math.Mod(x, y)
+	}
+}
+
+func IFloorDiv(x, y int64) int64 {
 	if x > 0 && y > 0 || x < 0 && y < 0 || x%y == 0 {
 		return x / y
 	} else {
 		return x/y - 1
 	}
+}
+
+func FFloorDiv(x, y float64) float64 {
+	// todo
+	return x / y
 }

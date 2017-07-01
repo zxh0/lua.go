@@ -37,9 +37,9 @@ func optimizeBitwiseBinaryOp(exp *BinopExp) Exp {
 			case TOKEN_OP_BXOR:
 				return &IntegerExp{exp.Line, i ^ j}
 			case TOKEN_OP_SHL:
-				return &IntegerExp{exp.Line, luanum.SHL(i, j)}
+				return &IntegerExp{exp.Line, luanum.ShiftLeft(i, j)}
 			case TOKEN_OP_SHR:
-				return &IntegerExp{exp.Line, luanum.SHR(i, j)}
+				return &IntegerExp{exp.Line, luanum.ShiftRight(i, j)}
 			}
 		}
 	}
