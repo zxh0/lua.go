@@ -5,26 +5,9 @@ import . "luago/api"
 import "luago/stdlib"
 
 // [-0, +0, v]
-// http://www.lua.org/manual/5.3/manual.html#luaL_checkversion
-func (self *luaState) CheckVersion() {
-	//panic("todo!")
-}
-
-// [-0, +0, v]
-// http://www.lua.org/manual/5.3/manual.html#luaL_checkstack
-func (self *luaState) CheckStackL(sz int, msg string) {
-	if !self.CheckStack(sz) {
-		// todo
-		panic(msg)
-	}
-}
-
-// [-0, +0, v]
-// http://www.lua.org/manual/5.3/manual.html#luaL_argcheck
-func (self *luaState) ArgCheck(cond bool, arg int, extraMsg string) {
-	if !cond {
-		self.ArgError(arg, extraMsg)
-	}
+// http://www.lua.org/manual/5.3/manual.html#luaL_error
+func (self *luaState) ErrorL(fmt string) {
+	panic("todo: ErrorL!")
 }
 
 // [-0, +0, v]
@@ -34,7 +17,36 @@ func (self *luaState) ArgError(arg int, extraMsg string) int {
 }
 
 // [-0, +0, v]
+// http://www.lua.org/manual/5.3/manual.html#luaL_argcheck
+// lua-5.3.4/src/lauxlib.c#luaL_argcheck()
+func (self *luaState) ArgCheck(cond bool, arg int, extraMsg string) {
+	if !cond {
+		self.ArgError(arg, extraMsg)
+	}
+}
+
+// [-0, +0, v]
+// http://www.lua.org/manual/5.3/manual.html#luaL_checkversion
+func (self *luaState) CheckVersion() {
+	//panic("todo: CheckVersion!")
+}
+
+// [-0, +0, v]
+// http://www.lua.org/manual/5.3/manual.html#luaL_checkstack
+// lua-5.3.4/src/lauxlib.c#luaL_checkstack()
+func (self *luaState) CheckStackL(sz int, msg string) {
+	if !self.CheckStack(sz) {
+		if msg != "" {
+			self.ErrorL("stack overflow (" + msg + ")")
+		} else {
+			self.ErrorL("stack overflow")
+		}
+	}
+}
+
+// [-0, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#luaL_checkany
+// lua-5.3.4/src/lauxlib.c#luaL_checkany()
 func (self *luaState) CheckAny(arg int) {
 	if self.Type(arg) == LUA_TNONE {
 		self.ArgError(arg, "value expected")
@@ -43,10 +55,10 @@ func (self *luaState) CheckAny(arg int) {
 
 // [-0, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#luaL_checktype
+// lua-5.3.4/src/lauxlib.c#luaL_checktype()
 func (self *luaState) CheckType(arg int, t LuaType) {
 	if self.Type(arg) != t {
-		// tag_error(L, arg, t);
-		panic("todo: bad type!")
+		self.tagError(arg, t)
 	}
 }
 
@@ -57,30 +69,33 @@ func (self *luaState) CheckInteger(arg int) int64 {
 	if i, ok := self.ToIntegerX(arg); ok {
 		return i
 	} else {
-		// interror(L, arg);
-		panic("todo: interror!")
+		self.intError(arg)
+		panic("unreachable!")
 	}
 }
 
 // [-0, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#luaL_checknumber
+// lua-5.3.4/src/lauxlib.c#luaL_checknumber()
 func (self *luaState) CheckNumber(arg int) float64 {
 	if f, ok := self.ToNumberX(arg); ok {
 		return f
 	} else {
-		// tag_error(L, arg, LUA_TNUMBER);
-		panic("todo: not number!")
+		self.tagError(arg, LUA_TNUMBER)
+		panic("unreachable!")
 	}
 }
 
 // [-0, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#luaL_checkstring
 // http://www.lua.org/manual/5.3/manual.html#luaL_checklstring
+// lua-5.3.4/src/lauxlib.c#luaL_checklstring()
 func (self *luaState) CheckString(arg int) string {
 	if s, ok := self.ToString(arg); ok {
 		return s
 	} else {
-		panic("todo: not string!")
+		self.tagError(arg, LUA_TSTRING)
+		panic("unreachable!")
 	}
 }
 
@@ -214,7 +229,7 @@ func (self *luaState) OpenLibs() {
 		"os":     stdlib.OpenOSLib,
 		"string": stdlib.OpenStringLib,
 		"math":   stdlib.OpenMathLib,
-		// "utf8":      stdlib.OpenUTF8Lib,
+		"utf8":   stdlib.OpenUTF8Lib,
 		// "debug":     stdlib.OpenDebugLib,
 	}
 
@@ -274,7 +289,7 @@ func (self *luaState) intError(arg int) {
 	}
 }
 
-func (self *luaState) tagError(arg, tag int) {
+func (self *luaState) tagError(arg int, tag LuaType) {
 	//self.typeError(arg, self.TypeName(LuaType(tag)))
 	panic("todo!")
 }

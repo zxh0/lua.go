@@ -128,6 +128,7 @@ type AuxLib interface {
 	CheckVersion()                                          //
 	DoFile(filename string) bool                            //
 	DoString(str string) bool                               //
+	ErrorL(fmt string)                                      // todo
 	GetMetaField(obj int, e string) LuaType                 //
 	GetMetaTableL(tname string) LuaType                     //
 	GetSubTable(idx int, fname string) bool                 // push(r[idx][fname] || {})
