@@ -40,6 +40,7 @@ func (self *luaTable) len() int {
 }
 
 func (self *luaTable) get(key luaValue) luaValue {
+	// todo: try to cast float key to integer
 	if idx, ok := key.(int64); ok && idx >= 1 {
 		listLen := int64(len(self.list))
 		if idx <= listLen {
@@ -54,6 +55,7 @@ func (self *luaTable) get(key luaValue) luaValue {
 }
 
 func (self *luaTable) put(key, val luaValue) {
+	// todo: try to cast float key to integer
 	self.pairs = nil // invalidate pairs
 	if idx, ok := key.(int64); ok && idx >= 1 {
 		listLen := int64(len(self.list))

@@ -4,7 +4,7 @@ import "regexp"
 import "strings"
 import "strconv"
 
-var reInteger = regexp.MustCompile(`^-?[0-9]+$|^-?0x[0-9a-f]+$`)
+var reInteger = regexp.MustCompile(`^[+-]?[0-9]+$|^-?0x[0-9a-f]+$`)
 
 func ParseInteger(str string, base int) (int64, bool) {
 	str = strings.TrimSpace(str)
@@ -17,6 +17,9 @@ func ParseInteger(str string, base int) (int64, bool) {
 
 	if !reInteger.MatchString(str) { // float?
 		return 0, false
+	}
+	if str[0] == '+' {
+		str = str[1:]
 	}
 	if strings.Index(str, "0x") < 0 { // decimal
 		i, err := strconv.ParseInt(str, base, 64)

@@ -4,6 +4,8 @@ import "fmt"
 import "testing"
 
 func TestParseInteger(t *testing.T) {
+	testInteger(t, "+100", 100)
+	testInteger(t, "-100", -100)
 	testInteger(t, "0xffffffffffffffff", -1)
 	testInteger(t, "0xfffffffffffffffe", -2)
 	testInteger(t, "-0XFFFFFFFFFFFFFFFE", 2)

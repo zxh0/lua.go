@@ -55,3 +55,5 @@ test_dir() { # $1:dir
 test_dir "PiL4/ch01"
 test_dir "PiL4/ch03"
 test_dir "PiL4/ch04"
+test_dir "PiL4/ch05"
+test_dir "PiL4/ch06"

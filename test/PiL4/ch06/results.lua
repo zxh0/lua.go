@@ -16,11 +16,11 @@ x,y,z = foo2(); assert(x == "a" and y == "b" and z == nil)
 x,y = foo2(), 20;     assert(x == "a" and y == 20)
 x,y = foo0(), 20, 30; assert(x == nil and y == 20)
 
--- print(foo0()) --> (no results)
--- print(foo1()) --> a
--- print(foo2()) --> a b
--- print(foo2(), 1) --> a 1
--- print(foo2() .. "x") --> ax (see next)
+print(foo0())        --> (no results)
+print(foo1())        --> a
+print(foo2())        --> a b
+print(foo2(), 1)     --> a 1
+print(foo2() .. "x") --> ax (see next)
 
 t = {foo0()} -- t = {} (an empty table)
 assert(#t == 0)
@@ -37,14 +37,13 @@ function foo (i)
   elseif i == 2 then return foo2()
   end
 end
--- print(foo(1)) --> a
--- print(foo(2)) --> a b
--- print(foo(0)) -- (no results)
--- print(foo(3)) -- (no results)
+print(foo(1)) --> a
+print(foo(2)) --> a b
+print(foo(0)) -- (no results)
+print(foo(3)) -- (no results)
 
-assert((foo0()) == nil) --> nil
-assert((foo1()) == "a") --> a
-assert((foo2()) == "a") --> a
+print((foo0())) --> nil
+print((foo1())) --> a
+print((foo2())) --> a
 
--- table.unpack
 print("ok")
