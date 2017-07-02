@@ -219,26 +219,25 @@ func (self *luaState) NewLibTable(l LuaRegMap) {
 
 // [-0, +0, e]
 // http://www.lua.org/manual/5.3/manual.html#luaL_openlibs
+// lua-5.3.4/src/linit.c#luaL_openlibs()
 func (self *luaState) OpenLibs() {
 	libs := map[string]LuaGoFunction{
-		"_G":      stdlib.OpenBaseLib,
-		"package": stdlib.OpenPackageLib,
-		// "coroutine": stdlib.OpenCoroutineLib,
-		"table": stdlib.OpenTableLib,
-		// "io":        stdlib.OpenIOLib,
-		"os":     stdlib.OpenOSLib,
-		"string": stdlib.OpenStringLib,
-		"math":   stdlib.OpenMathLib,
-		"utf8":   stdlib.OpenUTF8Lib,
-		// "debug":     stdlib.OpenDebugLib,
+		"_G":        stdlib.OpenBaseLib,
+		"package":   stdlib.OpenPackageLib,
+		"coroutine": stdlib.OpenCoroutineLib,
+		"table":     stdlib.OpenTableLib,
+		"io":        stdlib.OpenIOLib,
+		"os":        stdlib.OpenOSLib,
+		"string":    stdlib.OpenStringLib,
+		"math":      stdlib.OpenMathLib,
+		"utf8":      stdlib.OpenUTF8Lib,
+		"debug":     stdlib.OpenDebugLib,
 	}
 
 	for name, fun := range libs {
 		self.RequireF(name, fun, true)
 		self.Pop(1)
 	}
-
-	//panic("todo!")
 }
 
 // [-0, +1, e]
