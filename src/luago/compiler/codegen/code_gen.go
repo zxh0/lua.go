@@ -6,14 +6,14 @@ import . "luago/compiler/ast"
 type codeGen struct {
 	scope  *scope
 	insts  insts
-	protos []*FuncProto
+	protos []*Prototype
 }
 
 func newCodeGen(parentScope *scope) *codeGen {
 	return &codeGen{
 		scope:  newScope(parentScope),
 		insts:  make([]instruction, 0, 8),
-		protos: []*FuncProto{},
+		protos: []*Prototype{},
 	}
 }
 
@@ -120,7 +120,7 @@ func (self *codeGen) genSubProto(fd *FuncDefExp) int {
 	return len(self.protos) - 1
 }
 
-func (self *codeGen) genProto(fd *FuncDefExp) *FuncProto {
+func (self *codeGen) genProto(fd *FuncDefExp) *Prototype {
 	if fd.Line == 0 { // main
 		self.scope.setupEnv()
 	}
@@ -137,8 +137,8 @@ func (self *codeGen) genProto(fd *FuncDefExp) *FuncProto {
 	return self.toProto(fd)
 }
 
-func (self *codeGen) toProto(fd *FuncDefExp) *FuncProto {
-	proto := &FuncProto{
+func (self *codeGen) toProto(fd *FuncDefExp) *Prototype {
+	proto := &Prototype{
 		LineDefined:     uint32(fd.Line),
 		LastLineDefined: uint32(fd.LastLine),
 		NumParams:       byte(len(fd.ParList)),
@@ -168,6 +168,6 @@ func (self *codeGen) toProto(fd *FuncDefExp) *FuncProto {
 	return proto
 }
 
-func GenProto(fd *FuncDefExp) *FuncProto {
+func GenProto(fd *FuncDefExp) *Prototype {
 	return newCodeGen(nil).genProto(fd)
 }

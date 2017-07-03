@@ -88,12 +88,12 @@ func (self *reader) readHeader() {
 	}
 }
 
-func (self *reader) readProto(parentSource string) *FuncProto {
+func (self *reader) readProto(parentSource string) *Prototype {
 	source := self.readString()
 	if source == "" {
 		source = parentSource
 	}
-	return &FuncProto{
+	return &Prototype{
 		Source:          source,
 		LineDefined:     self.readUint32(),
 		LastLineDefined: self.readUint32(),
@@ -154,8 +154,8 @@ func (self *reader) readUpvalues() []Upvalue {
 	return upvalues
 }
 
-func (self *reader) readProtos(parentSource string) []*FuncProto {
-	protos := make([]*FuncProto, self.readUint32())
+func (self *reader) readProtos(parentSource string) []*Prototype {
+	protos := make([]*Prototype, self.readUint32())
 	for i := range protos {
 		protos[i] = self.readProto(parentSource)
 	}

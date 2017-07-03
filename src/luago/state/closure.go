@@ -9,11 +9,11 @@ type goClosure struct {
 }
 
 type luaClosure struct {
-	proto  *binchunk.FuncProto
+	proto  *binchunk.Prototype
 	upvals []*luaValue
 }
 
-func newLuaClosure(proto *binchunk.FuncProto) *luaClosure {
+func newLuaClosure(proto *binchunk.Prototype) *luaClosure {
 	upvals := make([]*luaValue, len(proto.Upvalues))
 	return &luaClosure{
 		proto:  proto,

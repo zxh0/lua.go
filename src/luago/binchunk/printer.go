@@ -12,7 +12,7 @@ func (self *printer) printf(format string, a ...interface{}) {
 	self.buf = append(self.buf, fmt.Sprintf(format, a...))
 }
 
-func (self *printer) printFunc(f *FuncProto, full bool) string {
+func (self *printer) printFunc(f *Prototype, full bool) string {
 	self.printHeader(f)
 	self.printCode(f)
 	if full {
@@ -24,7 +24,7 @@ func (self *printer) printFunc(f *FuncProto, full bool) string {
 	return strings.Join(self.buf, "")
 }
 
-func (self *printer) printHeader(f *FuncProto) {
+func (self *printer) printHeader(f *Prototype) {
 	self.printf("\n%s <%s:%d,%d> (%d instruction%s)\n",
 		_t(f.LineDefined == 0, "main", "function"),
 		_t(f.Source == "", "=?", f.Source)[1:], // todo
@@ -45,7 +45,7 @@ func (self *printer) printHeader(f *FuncProto) {
 	)
 }
 
-func (self *printer) printCode(f *FuncProto) {
+func (self *printer) printCode(f *Prototype) {
 	for pc := 0; pc < len(f.Code); pc++ {
 		i := Instruction(f.Code[pc])
 		a, b, c := i.ABC()
@@ -153,7 +153,7 @@ func (self *printer) printCode(f *FuncProto) {
 	}
 }
 
-func (self *printer) printConstant(f *FuncProto, i int) {
+func (self *printer) printConstant(f *Prototype, i int) {
 	k := f.Constants[i]
 	switch x := k.(type) {
 	case nil:
@@ -171,7 +171,7 @@ func (self *printer) printConstant(f *FuncProto, i int) {
 	}
 }
 
-func (self *printer) printDebug(f *FuncProto) {
+func (self *printer) printDebug(f *Prototype) {
 	self.printf("constants (%d):\n", len(f.Constants))
 	for i, _ := range f.Constants {
 		self.printf("\t%d\t", i+1)
@@ -210,7 +210,7 @@ func myk(x int) int {
 }
 
 // #define UPVALNAME(x) ((f->upvalues[x].name) ? getstr(f->upvalues[x].name) : "-")
-func upvalName(f *FuncProto, x int) string {
+func upvalName(f *Prototype, x int) string {
 	if len(f.UpvalueNames) > 0 {
 		return f.UpvalueNames[x]
 	} else {

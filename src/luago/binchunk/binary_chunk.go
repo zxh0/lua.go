@@ -16,7 +16,7 @@ const LUAC_NUM float64 = 370.5
 type binaryChunk struct {
 	binaryChunkHeader
 	sizeUpvalues byte // ?
-	mainFunc     *FuncProto
+	mainFunc     *Prototype
 }
 
 type binaryChunkHeader struct {
@@ -34,7 +34,7 @@ type binaryChunkHeader struct {
 }
 
 // function prototype
-type FuncProto struct {
+type Prototype struct {
 	Source          string // debug
 	LineDefined     uint32
 	LastLineDefined uint32
@@ -44,7 +44,7 @@ type FuncProto struct {
 	Code            []uint32
 	Constants       []interface{}
 	Upvalues        []Upvalue
-	Protos          []*FuncProto
+	Protos          []*Prototype
 	LineInfo        []uint32 // debug
 	LocVars         []LocVar // debug
 	UpvalueNames    []string // debug
@@ -66,14 +66,14 @@ func IsBinaryChunk(data []byte) bool {
 		string(data[:4]) == LUA_SIGNATURE
 }
 
-func Undump(data []byte) *FuncProto {
+func Undump(data []byte) *Prototype {
 	reader := &reader{data}
 	reader.readHeader()
 	reader.readByte() // size_upvalues
 	return reader.readProto("")
 }
 
-func Dump(proto *FuncProto) []byte {
+func Dump(proto *Prototype) []byte {
 	writer := &writer{}
 	writer.writeHeader()
 	writer.writeByte(byte(len(proto.Upvalues)))
@@ -81,12 +81,12 @@ func Dump(proto *FuncProto) []byte {
 	return writer.data()
 }
 
-func List(proto *FuncProto, full bool) string {
+func List(proto *Prototype, full bool) string {
 	printer := &printer{make([]string, 0, 64)}
 	return printer.printFunc(proto, full)
 }
 
-func StripDebug(proto *FuncProto) {
+func StripDebug(proto *Prototype) {
 	proto.Source = ""
 	proto.LineInfo = nil
 	proto.LocVars = nil

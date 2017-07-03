@@ -186,7 +186,7 @@ func decodeHexStr(str string) []byte {
 	return bytes
 }
 
-func _stripDebug(proto *FuncProto) *FuncProto {
+func _stripDebug(proto *Prototype) *Prototype {
 	StripDebug(proto)
 	return proto
 }

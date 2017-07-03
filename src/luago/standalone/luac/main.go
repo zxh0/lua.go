@@ -60,7 +60,7 @@ func printUsage() {
 	fmt.Printf(usage, os.Args[0])
 }
 
-func loadOrCompile(filename string) *binchunk.FuncProto {
+func loadOrCompile(filename string) *binchunk.Prototype {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		panic(err)

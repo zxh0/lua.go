@@ -5,7 +5,7 @@ import "luago/compiler/ast"
 import "luago/compiler/codegen"
 import "luago/compiler/parser"
 
-func Compile(source, chunk string) *binchunk.FuncProto {
+func Compile(source, chunk string) *binchunk.Prototype {
 	block := parser.Parse(source, chunk)
 	funcDef := &ast.FuncDefExp{
 		LastLine: block.LastLine,
@@ -18,7 +18,7 @@ func Compile(source, chunk string) *binchunk.FuncProto {
 }
 
 // todo
-func setSource(proto *binchunk.FuncProto, source string) {
+func setSource(proto *binchunk.Prototype, source string) {
 	proto.Source = "@" + source
 	for _, f := range proto.Protos {
 		setSource(f, source)

@@ -87,7 +87,7 @@ func (self *writer) writeHeader() {
 	self.writeLuaNumber(LUAC_NUM)
 }
 
-func (self *writer) writeProto(proto *FuncProto, parentSource string) {
+func (self *writer) writeProto(proto *Prototype, parentSource string) {
 	if proto.Source == parentSource {
 		self.writeString("")
 	} else {
@@ -154,7 +154,7 @@ func (self *writer) writeUpvalues(upvalues []Upvalue) {
 	}
 }
 
-func (self *writer) writeProtos(protos []*FuncProto, parentSource string) {
+func (self *writer) writeProtos(protos []*Prototype, parentSource string) {
 	self.writeUint32(uint32(len(protos)))
 	for _, proto := range protos {
 		self.writeProto(proto, parentSource)

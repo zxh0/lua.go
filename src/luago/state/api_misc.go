@@ -80,7 +80,7 @@ func (self *luaState) GC(what, data int) int {
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_load
 func (self *luaState) Load(chunk []byte, chunkName, mode string) LuaThreadStatus {
-	var proto *binchunk.FuncProto
+	var proto *binchunk.Prototype
 	if binchunk.IsBinaryChunk(chunk) {
 		proto = binchunk.Undump(chunk)
 	} else {
