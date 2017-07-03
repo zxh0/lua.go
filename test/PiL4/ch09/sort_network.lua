@@ -4,6 +4,7 @@ network = {
   {name = "lua",     IP = "210.26.23.12"},
   {name = "derain",  IP = "210.26.23.20"},
 }
+
 table.sort(network, function(a, b) return (a.name > b.name) end)
 assert(network[1].name == "lua")
 assert(network[2].name == "grauna")
