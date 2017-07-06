@@ -78,6 +78,7 @@ func (self *luaState) PushGlobalTable() {
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_pushthread
-func (self *luaState) PushThread() bool {
-	panic("todo!")
+func (self *luaState) PushThread(ls LuaState) bool {
+	self.stack.push(ls)
+	return false // todo
 }

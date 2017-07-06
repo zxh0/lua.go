@@ -82,6 +82,8 @@ func fullTypeOf(val luaValue) LuaType {
 		return LUA_TNUMFLT
 	case string:
 		return LUA_TSTRING
+	case *luaState:
+		return LUA_TTHREAD
 	case *luaTable:
 		return LUA_TTABLE
 	case *userData:
@@ -93,7 +95,7 @@ func fullTypeOf(val luaValue) LuaType {
 	case LuaGoFunction:
 		return LUA_TLGF
 	default:
-		panic("todo")
+		panic("todo!")
 	}
 }
 
@@ -161,7 +163,7 @@ func valToString(val luaValue) string {
 		return goFuncToString(val)
 	default:
 		fmt.Printf("%T\n", val)
-		panic("todo")
+		panic("todo!")
 	}
 }
 

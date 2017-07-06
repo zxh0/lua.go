@@ -72,7 +72,7 @@ type BasicAPI interface {
 	PushNil()                                                  // push(nil)
 	PushNumber(n float64)                                      // push(n)
 	PushString(s string)                                       // push(s)
-	PushThread() bool                                          // todo
+	PushThread(ls LuaState) bool                               // push(ls)
 	PushValue(index int)                                       // push(r[index])
 	PushVFString()                                             // todo
 	RawEqual(index1, index2 int) bool                          // r[index1] == r[index2]
