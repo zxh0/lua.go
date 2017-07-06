@@ -14,7 +14,7 @@ const LUA_PATHVARVERSION = LUA_PATH_VAR + LUA_PATHSUFFIX
 
 var _GOLIBS = "golibs"
 
-var pkgFuncs = map[string]LuaGoFunction{
+var pkgFuncs = map[string]GoFunction{
 	"loadlib":    pkgLoadLib,
 	"searchpath": pkgSearchPath,
 	/* placeholders */
@@ -25,7 +25,7 @@ var pkgFuncs = map[string]LuaGoFunction{
 	"loaded":    nil,
 }
 
-var llFuncs = map[string]LuaGoFunction{
+var llFuncs = map[string]GoFunction{
 	"require": llRequire,
 }
 
@@ -68,7 +68,7 @@ func createGoLibsTable(ls LuaState) {
 }
 
 func createSearchersTable(ls LuaState) {
-	searchers := []LuaGoFunction{
+	searchers := []GoFunction{
 		searcherPreload,
 		searcherLua,
 		searcherGo,

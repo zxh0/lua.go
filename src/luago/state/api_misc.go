@@ -8,7 +8,7 @@ import . "luago/api"
 
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_atpanic
-func (self *luaState) AtPanic(panicf LuaGoFunction) LuaGoFunction {
+func (self *luaState) AtPanic(panicf GoFunction) GoFunction {
 	oldPanicf := self.panicf
 	self.panicf = panicf
 	return oldPanicf
@@ -16,7 +16,7 @@ func (self *luaState) AtPanic(panicf LuaGoFunction) LuaGoFunction {
 
 // [-0, +0, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_register
-func (self *luaState) Register(name string, f LuaGoFunction) {
+func (self *luaState) Register(name string, f GoFunction) {
 	self.PushGoFunction(f)
 	self.SetGlobal(name)
 }
@@ -79,7 +79,7 @@ func (self *luaState) GC(what, data int) int {
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_load
-func (self *luaState) Load(chunk []byte, chunkName, mode string) LuaThreadStatus {
+func (self *luaState) Load(chunk []byte, chunkName, mode string) ThreadStatus {
 	var proto *binchunk.Prototype
 	if binchunk.IsBinaryChunk(chunk) {
 		proto = binchunk.Undump(chunk)

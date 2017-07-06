@@ -3,7 +3,7 @@ package stdlib
 import . "luago/api"
 
 /* functions for 'io' library */
-var ioLib = map[string]LuaGoFunction{
+var ioLib = map[string]GoFunction{
 	"close":   ioClose,
 	"flush":   ioFlush,
 	"input":   ioInput,

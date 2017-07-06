@@ -7,7 +7,7 @@ func lt(i Instruction, vm LuaVM) { _compare(i, vm, LUA_OPLT) } // <
 func le(i Instruction, vm LuaVM) { _compare(i, vm, LUA_OPLE) } // <=
 
 // if ((RK(B) op RK(C)) ~= A) then pc++
-func _compare(i Instruction, vm LuaVM, op LuaCompareOp) {
+func _compare(i Instruction, vm LuaVM, op CompareOp) {
 	a, b, c := i.ABC()
 
 	vm.CheckStack(2)

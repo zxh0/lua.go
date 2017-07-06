@@ -8,8 +8,9 @@ func (self *luaState) NewThread() LuaState {
 	return NewLuaState() // todo
 }
 
+// [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_status
-func (self *luaState) Status() int {
+func (self *luaState) Status() ThreadStatus {
 	panic("todo!")
 }
 

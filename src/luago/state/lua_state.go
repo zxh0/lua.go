@@ -13,7 +13,7 @@ import . "luago/api"
  *   callDepth
  */
 type luaState struct {
-	panicf    LuaGoFunction
+	panicf    GoFunction
 	registry  *luaTable
 	stack     *luaStack // virtual stack
 	callDepth int       // todo: rename

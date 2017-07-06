@@ -8,7 +8,7 @@ const UTF8PATT = "[\x00-\x7F\xC2-\xF4][\x80-\xBF]*"
 
 const MAX_UNICODE = 0x10FFFF
 
-var utf8Lib = map[string]LuaGoFunction{
+var utf8Lib = map[string]GoFunction{
 	"offset":    utfByteOffset,
 	"codepoint": utfCodePoint,
 	"char":      utfChar,

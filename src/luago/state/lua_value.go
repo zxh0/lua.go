@@ -26,7 +26,7 @@ func getMetaTable(val luaValue) *luaTable {
 		return _mtOfNumber
 	case string:
 		return _mtOfString
-	case *luaClosure, *goClosure, LuaGoFunction:
+	case *luaClosure, *goClosure, GoFunction:
 		return _mtOfFunc
 	case *luaTable:
 		return x.metaTable
@@ -47,7 +47,7 @@ func setMetaTable(val luaValue, mt *luaTable) {
 		_mtOfNumber = mt
 	case string:
 		_mtOfString = mt
-	case *luaClosure, *goClosure, LuaGoFunction:
+	case *luaClosure, *goClosure, GoFunction:
 		_mtOfFunc = mt
 	case *luaTable:
 		x.metaTable = mt
@@ -92,7 +92,7 @@ func fullTypeOf(val luaValue) LuaType {
 		return LUA_TLCL
 	case *goClosure:
 		return LUA_TGCL
-	case LuaGoFunction:
+	case GoFunction:
 		return LUA_TLGF
 	default:
 		panic("todo!")
@@ -159,7 +159,7 @@ func valToString(val luaValue) string {
 		return luaFuncToString(x)
 	case *goClosure:
 		return goFuncToString(x.goFunc) + "!"
-	case LuaGoFunction:
+	case GoFunction:
 		return goFuncToString(val)
 	default:
 		fmt.Printf("%T\n", val)

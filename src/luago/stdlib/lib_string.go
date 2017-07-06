@@ -4,7 +4,7 @@ import "fmt"
 import "strings"
 import . "luago/api"
 
-var strLib = map[string]LuaGoFunction{
+var strLib = map[string]GoFunction{
 	"len":      strLen,
 	"rep":      strRep,
 	"reverse":  strReverse,

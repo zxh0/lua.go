@@ -6,7 +6,7 @@ import "luago/luanum"
 
 // [-(2|1), +1, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_arith
-func (self *luaState) Arith(op LuaArithOp) {
+func (self *luaState) Arith(op ArithOp) {
 	var operand1, operand2 luaValue
 	if op != LUA_OPUNM && op != LUA_OPBNOT {
 		operand2 = self.stack.pop()

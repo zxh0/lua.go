@@ -65,10 +65,10 @@ func (self *luaState) ToString(index int) (string, bool) {
 
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_tocfunction
-func (self *luaState) ToGoFunction(index int) LuaGoFunction {
+func (self *luaState) ToGoFunction(index int) GoFunction {
 	val := self.stack.get(index)
 	switch x := val.(type) {
-	case LuaGoFunction:
+	case GoFunction:
 		return x
 	default:
 		return nil
@@ -77,7 +77,7 @@ func (self *luaState) ToGoFunction(index int) LuaGoFunction {
 
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_touserdata
-func (self *luaState) ToUserData(index int) LuaUserData {
+func (self *luaState) ToUserData(index int) UserData {
 	val := self.stack.get(index)
 	if val != nil {
 		if ud, ok := val.(*userData); ok {

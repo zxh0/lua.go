@@ -4,7 +4,7 @@ import "fmt"
 import . "luago/api"
 import "luago/luanum"
 
-var baseFuncs = map[string]LuaGoFunction{
+var baseFuncs = map[string]GoFunction{
 	"print":          basePrint,
 	"assert":         baseAssert,
 	"error":          baseError,

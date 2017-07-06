@@ -2,7 +2,7 @@ package stdlib
 
 import . "luago/api"
 
-var coFuncs = map[string]LuaGoFunction{
+var coFuncs = map[string]GoFunction{
 	"create":      coCreate,
 	"resume":      coResume,
 	"running":     coRunning,

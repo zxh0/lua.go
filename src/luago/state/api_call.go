@@ -9,7 +9,7 @@ func (self *luaState) Call(nArgs, nResults int) {
 	x := self.stack.get(-(nArgs + 1))
 
 	switch f := x.(type) {
-	case LuaGoFunction: // todo
+	case GoFunction: // todo
 		self.callGoClosure(nArgs, nResults, &goClosure{goFunc: f})
 	case *goClosure:
 		self.callGoClosure(nArgs, nResults, f)
@@ -121,7 +121,7 @@ func _pushResults(nResults int, results []luaValue, stack *luaStack) {
 
 // Calls a function in protected mode.
 // http://www.lua.org/manual/5.3/manual.html#lua_pcall
-func (self *luaState) PCall(nArgs, nResults, msgh int) (status LuaThreadStatus) {
+func (self *luaState) PCall(nArgs, nResults, msgh int) (status ThreadStatus) {
 	callDepth := self.callDepth
 
 	// catch error

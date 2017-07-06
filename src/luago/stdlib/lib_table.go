@@ -4,7 +4,7 @@ import "sort"
 import "strings"
 import . "luago/api"
 
-var tabFuncs = map[string]LuaGoFunction{
+var tabFuncs = map[string]GoFunction{
 	"insert": tabInsert,
 	"remove": tabRemove,
 	"move":   tabMove,

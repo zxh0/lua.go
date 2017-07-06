@@ -4,7 +4,7 @@ import . "luago/api"
 import "luago/binchunk"
 
 type goClosure struct {
-	goFunc LuaGoFunction
+	goFunc GoFunction
 	upvals []luaValue
 }
 

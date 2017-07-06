@@ -18,7 +18,7 @@ func unm(i Instruction, vm LuaVM)  { _unaryArith(i, vm, LUA_OPUNM) }   // -
 func bnot(i Instruction, vm LuaVM) { _unaryArith(i, vm, LUA_OPBNOT) }  // ~
 
 // R(A) := RK(B) op RK(C)
-func _binaryArith(i Instruction, vm LuaVM, op LuaArithOp) {
+func _binaryArith(i Instruction, vm LuaVM, op ArithOp) {
 	a, b, c := i.ABC()
 	a += 1
 
@@ -30,7 +30,7 @@ func _binaryArith(i Instruction, vm LuaVM, op LuaArithOp) {
 }
 
 // R(A) := op R(B)
-func _unaryArith(i Instruction, vm LuaVM, op LuaArithOp) {
+func _unaryArith(i Instruction, vm LuaVM, op ArithOp) {
 	a, b, _ := i.ABC()
 	a += 1
 	b += 1

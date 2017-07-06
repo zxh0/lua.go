@@ -140,14 +140,14 @@ func (self *luaState) SetField(index int, k string) {
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_rawgetp
-func (self *luaState) RawGetP(index int, p LuaUserData) LuaType {
+func (self *luaState) RawGetP(index int, p UserData) LuaType {
 	t := self.stack.get(index)
 	return self._getTable(t, p, true)
 }
 
 // [-1, +0, m]
 // http://www.lua.org/manual/5.3/manual.html#lua_rawsetp
-func (self *luaState) RawSetP(index int, p LuaUserData) {
+func (self *luaState) RawSetP(index int, p UserData) {
 	t := self.stack.get(index)
 	v := self.stack.pop()
 	self._setTable(t, p, v, true)
@@ -169,7 +169,7 @@ func (self *luaState) _getTable(t, k luaValue, raw bool) LuaType {
 		switch x := mf.(type) {
 		case *luaTable:
 			return self._getTable(x, k, true)
-		case *luaClosure, LuaGoFunction:
+		case *luaClosure, GoFunction:
 			self.stack.push(mf)
 			self.stack.push(t)
 			self.stack.push(k)
@@ -198,7 +198,7 @@ func (self *luaState) _setTable(t, k, v luaValue, raw bool) {
 		case *luaTable:
 			self._setTable(x, k, v, true)
 			return
-		case *luaClosure, LuaGoFunction:
+		case *luaClosure, GoFunction:
 			self.stack.push(mf)
 			self.stack.push(t)
 			self.stack.push(k)

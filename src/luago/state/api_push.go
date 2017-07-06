@@ -34,13 +34,13 @@ func (self *luaState) PushString(s string) {
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_pushcfunction
-func (self *luaState) PushGoFunction(f LuaGoFunction) {
+func (self *luaState) PushGoFunction(f GoFunction) {
 	self.stack.push(f)
 }
 
 // [-n, +1, m]
 // http://www.lua.org/manual/5.3/manual.html#lua_pushcclosure
-func (self *luaState) PushGoClosure(fn LuaGoFunction, n int) {
+func (self *luaState) PushGoClosure(fn GoFunction, n int) {
 	if n == 0 {
 		self.stack.push(fn)
 	} else { // closure
@@ -52,7 +52,7 @@ func (self *luaState) PushGoClosure(fn LuaGoFunction, n int) {
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_pushlightuserdata
-func (self *luaState) PushUserData(d LuaUserData) {
+func (self *luaState) PushUserData(d UserData) {
 	ud := &userData{data: d}
 	self.stack.push(ud)
 }

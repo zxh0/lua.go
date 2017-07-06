@@ -128,12 +128,12 @@ func (self *luaStack) popAll() []luaValue {
 	return self.popN(self.sp - self.bp)
 }
 
-func (self *luaStack) popLuaGoFunction() LuaGoFunction {
+func (self *luaStack) popGoFunction() GoFunction {
 	val := self.pop()
-	if f, ok := val.(LuaGoFunction); ok {
+	if f, ok := val.(GoFunction); ok {
 		return f
 	}
-	panic("not LuaGoFunction!")
+	panic("not GoFunction!")
 }
 
 /* debug */

@@ -168,13 +168,13 @@ func (self *luaState) GetSubTable(idx int, fname string) bool {
 
 // [-0, +1, m]
 // http://www.lua.org/manual/5.3/manual.html#luaL_loadfile
-func (self *luaState) LoadFile(filename string) LuaThreadStatus {
+func (self *luaState) LoadFile(filename string) ThreadStatus {
 	return self.LoadFileX(filename, "")
 }
 
 // [-0, +1, m]
 // http://www.lua.org/manual/5.3/manual.html#luaL_loadfile
-func (self *luaState) LoadFileX(filename, mode string) LuaThreadStatus {
+func (self *luaState) LoadFileX(filename, mode string) ThreadStatus {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		panic(err)
@@ -186,7 +186,7 @@ func (self *luaState) LoadFileX(filename, mode string) LuaThreadStatus {
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#luaL_loadstring
-func (self *luaState) LoadString(s string) LuaThreadStatus {
+func (self *luaState) LoadString(s string) ThreadStatus {
 	panic("todo!")
 }
 
@@ -221,7 +221,7 @@ func (self *luaState) NewLibTable(l LuaRegMap) {
 // http://www.lua.org/manual/5.3/manual.html#luaL_openlibs
 // lua-5.3.4/src/linit.c#luaL_openlibs()
 func (self *luaState) OpenLibs() {
-	libs := map[string]LuaGoFunction{
+	libs := map[string]GoFunction{
 		"_G":        stdlib.OpenBaseLib,
 		"package":   stdlib.OpenPackageLib,
 		"coroutine": stdlib.OpenCoroutineLib,
@@ -242,7 +242,7 @@ func (self *luaState) OpenLibs() {
 
 // [-0, +1, e]
 // http://www.lua.org/manual/5.3/manual.html#luaL_requiref
-func (self *luaState) RequireF(modname string, openf LuaGoFunction, glb bool) {
+func (self *luaState) RequireF(modname string, openf GoFunction, glb bool) {
 	self.GetSubTable(LUA_REGISTRYINDEX, "_LOADED") // ~/_LOADED
 	self.GetField(-1, modname)                     // ~/_LOADED/_LOADED[modname]
 	if !self.ToBoolean(-1) {                       /* package not already loaded? */

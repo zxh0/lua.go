@@ -2,7 +2,7 @@ package stdlib
 
 import . "luago/api"
 
-var dbLib = map[string]LuaGoFunction{
+var dbLib = map[string]GoFunction{
 	"debug":        dbDebug,
 	"getuservalue": dbGetUserValue,
 	"gethook":      dbGetHook,

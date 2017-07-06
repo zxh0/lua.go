@@ -18,7 +18,7 @@ func (self *luaState) RawEqual(index1, index2 int) bool {
 
 // [-0, +0, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_compare
-func (self *luaState) Compare(index1, index2 int, op LuaCompareOp) bool {
+func (self *luaState) Compare(index1, index2 int, op CompareOp) bool {
 	val1 := self.stack.get(index1)
 	val2 := self.stack.get(index2)
 	switch op {
@@ -61,9 +61,9 @@ func (self *luaState) eq(val1, val2 luaValue, raw bool) bool {
 	case string:
 		y, ok := val2.(string)
 		return ok && x == y
-	case LuaGoFunction:
+	case GoFunction:
 		// todo: funcs are uncomparable!
-		if y, ok := val2.(LuaGoFunction); ok {
+		if y, ok := val2.(GoFunction); ok {
 			return fmt.Sprintf("%p", x) == fmt.Sprintf("%p", y)
 		} else {
 			return false

@@ -4,7 +4,7 @@ import "math"
 import "math/rand"
 import . "luago/api"
 
-var mathLib = map[string]LuaGoFunction{
+var mathLib = map[string]GoFunction{
 	"random":     mathRandom,
 	"randomseed": mathRandomSeed,
 	"max":        mathMax,

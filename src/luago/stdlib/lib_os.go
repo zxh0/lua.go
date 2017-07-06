@@ -4,7 +4,7 @@ import "os"
 import "time"
 import . "luago/api"
 
-var sysLib = map[string]LuaGoFunction{
+var sysLib = map[string]GoFunction{
 	"clock":     osClock,
 	"difftime":  osDiffTime,
 	"time":      osTime,
