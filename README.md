@@ -28,3 +28,4 @@ bin/lua hello_world.luac
 * [Lua-Source-Internal](https://github.com/lichuang/Lua-Source-Internal)
 * [Linear Scan Register Allocation](http://www.cs.ucla.edu/~palsberg/course/cs132/linearscan.pdf)
 * [Programming in Lua](https://www.lua.org/pil/)
+* https://www.0value.com/implementing-lua-coroutines-in-go
