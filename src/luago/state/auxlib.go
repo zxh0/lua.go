@@ -206,14 +206,14 @@ func (self *luaState) DoString(str string) bool {
 
 // [-0, +1, m]
 // http://www.lua.org/manual/5.3/manual.html#luaL_newlib
-func (self *luaState) NewLib(l LuaRegMap) {
+func (self *luaState) NewLib(l FuncReg) {
 	self.NewLibTable(l)
 	self.SetFuncs(l, 0)
 }
 
 // [-0, +1, m]
 // http://www.lua.org/manual/5.3/manual.html#luaL_newlibtable
-func (self *luaState) NewLibTable(l LuaRegMap) {
+func (self *luaState) NewLibTable(l FuncReg) {
 	self.CreateTable(0, len(l))
 }
 
@@ -262,7 +262,7 @@ func (self *luaState) RequireF(modname string, openf GoFunction, glb bool) {
 
 // [-nup, +0, m]
 // http://www.lua.org/manual/5.3/manual.html#luaL_setfuncs
-func (self *luaState) SetFuncs(l LuaRegMap, nup int) {
+func (self *luaState) SetFuncs(l FuncReg, nup int) {
 	self.CheckStackL(nup, "too many upvalues")
 	for name, fun := range l { /* fill the table with given functions */
 		for i := 0; i < nup; i++ { /* copy upvalues to the top */

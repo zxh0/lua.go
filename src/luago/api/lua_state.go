@@ -10,7 +10,7 @@ type ThreadStatus int
 // type LuaNumber float64
 type GoFunction func(LuaState) int
 type UserData interface{}
-type LuaRegMap map[string]GoFunction
+type FuncReg map[string]GoFunction
 
 type LuaState interface {
 	BasicAPI
@@ -136,14 +136,14 @@ type AuxLib interface {
 	LoadFile(filename string) ThreadStatus               //
 	LoadFileX(filename, mode string) ThreadStatus        //
 	LoadString(s string) ThreadStatus                    //
-	NewLib(l LuaRegMap)                                  //
-	NewLibTable(l LuaRegMap)                             //
+	NewLib(l FuncReg)                                    //
+	NewLibTable(l FuncReg)                               //
 	OpenLibs()                                           //
 	OptInteger(arg int, d int64) int64                   // r[arg] or d
 	OptNumber(arg int, d float64) float64                // r[arg] or d
 	OptString(arg int, d string) string                  // r[arg] or d
 	RequireF(modname string, openf GoFunction, glb bool) //
-	SetFuncs(l LuaRegMap, nup int)                       // l.each{name,func => r[-1][name]=func}
+	SetFuncs(l FuncReg, nup int)                         // l.each{name,func => r[-1][name]=func}
 	TypeNameL(index int) string                          //
 }
 
