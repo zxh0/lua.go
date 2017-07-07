@@ -12,8 +12,7 @@ cd lua.go
 export GOPATH=`pwd`
 go install luago/standalone/lua
 
-luac -o hello_world.luac test/Pil4/ch01/hello_world.lua
-bin/lua hello_world.luac
+bin/lua test/Pil4/ch01/hello_world.lua
 ```
 
 # Links
