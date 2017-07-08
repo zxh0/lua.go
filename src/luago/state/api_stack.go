@@ -28,7 +28,7 @@ func (self *luaState) CheckStack(n int) bool {
 // http://www.lua.org/manual/5.3/manual.html#lua_gettop
 // lua-5.3.4/src/lapi.c#lua_gettop()
 func (self *luaState) GetTop() int {
-	return self.stack.sp
+	return self.stack.top
 }
 
 // [-?, +?, –]
@@ -39,7 +39,7 @@ func (self *luaState) SetTop(idx int) {
 		idx = self.stack.absIndex(idx)
 	}
 
-	n := self.stack.sp - idx
+	n := self.stack.top - idx
 	if n > 0 {
 		for i := 0; i < n; i++ {
 			self.stack.pop()
@@ -104,7 +104,7 @@ func (self *luaState) Replace(idx int) {
 // lua-5.3.4/src/lapi.c#lua_rotate()
 func (self *luaState) Rotate(idx, n int) {
 	stack := self.stack
-	t := stack.sp - 1        /* end of stack segment being rotated */
+	t := stack.top - 1        /* end of stack segment being rotated */
 	p := stack.absIndex(idx) /* start of segment */
 	p -= 1
 	var m int /* end of prefix */

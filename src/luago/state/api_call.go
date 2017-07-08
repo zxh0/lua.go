@@ -77,7 +77,7 @@ func (self *luaState) callLuaClosure(nArgs, nResults int, f *luaClosure) {
 
 	// return results
 	if nResults != 0 {
-		results := calleeStack.popAll()
+		results := calleeStack.popN(calleeStack.top - nRegs) // todo
 		_pushResults(nResults, results, callerStack)
 	}
 }

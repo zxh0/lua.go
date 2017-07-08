@@ -136,5 +136,5 @@ func (self *luaState) callMetaOp2(a, b luaValue, mmName string) (luaValue, bool)
 
 // debug
 func (self *luaState) String() string {
-	return self.stack.toString()
+	return stackToString(self.stack)
 }

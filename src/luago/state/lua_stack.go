@@ -1,17 +1,8 @@
 package state
 
-import "bytes"
 import "fmt"
 import . "luago/api"
 
-/*
- sp->[ ] -.
-     [ ]  |- stack
- bp->[ ] -'
-     [ ] -.
-     [ ]  |- registers
-     [ ] -'
-*/
 type luaStack struct {
 	prev  *luaStack
 	state *luaState   // todo: remove?
@@ -19,8 +10,7 @@ type luaStack struct {
 	goCl  *goClosure  // todo: move to luaState?
 	xArgs []luaValue  // extraArgs
 	slots []luaValue  // registers+stack
-	bp    int         // stack base pointer
-	sp    int         // stack pointer
+	top   int         // stack pointer
 	pc    int         // todo: move to somewhere?
 }
 
@@ -28,13 +18,12 @@ func newLuaStack(nSlots, nRegs int, state *luaState) *luaStack {
 	return &luaStack{
 		state: state,
 		slots: make([]luaValue, nSlots),
-		sp:    nRegs,
-		bp:    nRegs,
+		top:   nRegs,
 	}
 }
 
 func (self *luaStack) check(n int) bool {
-	free := len(self.slots) - self.sp
+	free := len(self.slots) - self.top
 	if free >= n {
 		return true
 	}
@@ -50,8 +39,8 @@ func (self *luaStack) absIndex(idx int) int {
 	if idx > 0 || idx <= LUA_REGISTRYINDEX {
 		return idx
 	}
-	if idx < 0 && idx >= -self.sp {
-		return idx + self.sp + 1
+	if idx < 0 && idx >= -self.top {
+		return idx + self.top + 1
 	}
 	return 0 // todo
 }
@@ -123,20 +112,20 @@ func (self *luaStack) reverse(from, to int) {
 /* stack */
 
 func (self *luaStack) push(val luaValue) {
-	if self.sp == len(self.slots) {
-		panic(fmt.Sprintf("stack overflow! sp=%d", self.sp))
+	if self.top == len(self.slots) {
+		panic(fmt.Sprintf("stack overflow! sp=%d", self.top))
 	}
-	self.slots[self.sp] = val
-	self.sp++
+	self.slots[self.top] = val
+	self.top++
 }
 
 func (self *luaStack) pop() luaValue {
-	if self.sp-self.bp < 1 {
-		panic(fmt.Sprintf("stack underflow! sp=%d", self.sp))
+	if self.top < 1 {
+		panic(fmt.Sprintf("stack underflow! sp=%d", self.top))
 	}
-	self.sp--
-	val := self.slots[self.sp]
-	self.slots[self.sp] = nil
+	self.top--
+	val := self.slots[self.top]
+	self.slots[self.top] = nil
 	return val
 }
 
@@ -147,38 +136,9 @@ func (self *luaStack) pushN(vals []luaValue) {
 }
 
 func (self *luaStack) popN(n int) []luaValue {
-	if self.sp-self.bp < n {
+	if self.top < n {
 		panic(fmt.Sprintf("stack underflow! n=%d", n))
 	}
-	self.sp -= n
-	return self.slots[self.sp : self.sp+n]
-}
-
-func (self *luaStack) popAll() []luaValue {
-	return self.popN(self.sp - self.bp)
-}
-
-func (self *luaStack) popGoFunction() GoFunction {
-	val := self.pop()
-	if f, ok := val.(GoFunction); ok {
-		return f
-	}
-	panic("not GoFunction!")
-}
-
-/* debug */
-
-func (self *luaStack) toString() string {
-	var buf bytes.Buffer
-
-	for i := 0; i < self.sp; i++ {
-		if i == self.bp {
-			buf.WriteString("~")
-		}
-		buf.WriteString("[")
-		buf.WriteString(valToString(self.slots[i]))
-		buf.WriteString("]")
-	}
-
-	return buf.String()
+	self.top -= n
+	return self.slots[self.top : self.top+n]
 }

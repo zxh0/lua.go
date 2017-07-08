@@ -4,8 +4,9 @@ func (self *luaState) AddPC(n int) {
 	self.stack.pc += n
 }
 
+// todo
 func (self *luaState) GetBottom() int {
-	return self.stack.bp
+	return int(self.stack.luaCl.proto.MaxStackSize)
 }
 
 func (self *luaState) LoadProto(index int) {
