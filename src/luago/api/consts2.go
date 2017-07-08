@@ -32,11 +32,6 @@ const LUA_MULTRET = -1
  */
 const LUA_REGISTRYINDEX = -LUAI_MAXSTACK - 1000
 
-/* test for pseudo index */
-func IsPseudo(i int) bool {
-	return i <= LUA_REGISTRYINDEX
-}
-
 func LuaUpvalueIndex(i int) int {
 	return LUA_REGISTRYINDEX - i
 }
@@ -48,3 +43,9 @@ const LUA_MINSTACK = 20
 const LUA_RIDX_MAINTHREAD int64 = 1
 const LUA_RIDX_GLOBALS int64 = 2
 const LUA_RIDX_LAST = LUA_RIDX_GLOBALS
+
+/*
+** maximum number of upvalues in a closure (both C and Lua). (Value
+** must fit in a VM register.)
+*/
+const MAXUPVAL = 255

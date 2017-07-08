@@ -7,64 +7,7 @@ import "strings"
 import . "luago/api"
 import "luago/luanum"
 
-var _mtOfNil *luaTable = nil //?
-var _mtOfBool *luaTable = nil
-var _mtOfNumber *luaTable = nil
-var _mtOfString *luaTable = nil
-var _mtOfFunc *luaTable = nil
-var _mtOfThread *luaTable = nil
-
 type luaValue interface{}
-
-func getMetaTable(val luaValue) *luaTable {
-	switch x := val.(type) {
-	case nil:
-		return _mtOfNil
-	case bool:
-		return _mtOfBool
-	case int64, float64:
-		return _mtOfNumber
-	case string:
-		return _mtOfString
-	case *luaClosure, *goClosure, GoFunction:
-		return _mtOfFunc
-	case *luaTable:
-		return x.metaTable
-	case *userData:
-		return x.metaTable
-	default:
-		panic("todo!")
-	}
-}
-
-func setMetaTable(val luaValue, mt *luaTable) {
-	switch x := val.(type) {
-	case nil:
-		_mtOfNil = mt
-	case bool:
-		_mtOfBool = mt
-	case int64, float64:
-		_mtOfNumber = mt
-	case string:
-		_mtOfString = mt
-	case *luaClosure, *goClosure, GoFunction:
-		_mtOfFunc = mt
-	case *luaTable:
-		x.metaTable = mt
-	case *userData:
-		x.metaTable = mt
-	default:
-		panic("todo!")
-	}
-}
-
-func getMetaField(val luaValue, fieldName string) luaValue {
-	if mt := getMetaTable(val); mt != nil {
-		return mt.get(fieldName)
-	} else {
-		return nil
-	}
-}
 
 func typeOf(val luaValue) LuaType {
 	return fullTypeOf(val) & 0x0F
@@ -99,7 +42,7 @@ func fullTypeOf(val luaValue) LuaType {
 	}
 }
 
-func valToBoolean(val luaValue) bool {
+func castToBoolean(val luaValue) bool {
 	switch x := val.(type) {
 	case nil:
 		return false
@@ -110,8 +53,8 @@ func valToBoolean(val luaValue) bool {
 	}
 }
 
-// todo
-func valToInteger(val luaValue) (int64, bool) {
+// http://www.lua.org/manual/5.3/manual.html#3.4.3
+func castToInteger(val luaValue) (int64, bool) {
 	switch x := val.(type) {
 	case int64:
 		return x, true
@@ -128,7 +71,8 @@ func valToInteger(val luaValue) (int64, bool) {
 	return 0, false
 }
 
-func valToNumber(val luaValue) (float64, bool) {
+// http://www.lua.org/manual/5.3/manual.html#3.4.3
+func castToNumber(val luaValue) (float64, bool) {
 	switch x := val.(type) {
 	case int64:
 		return float64(x), true

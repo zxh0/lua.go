@@ -19,100 +19,111 @@ type LuaState interface {
 }
 
 type BasicAPI interface {
-	AbsIndex(idx int) int                                   // abs(idx)
-	Arith(op ArithOp)                                       // b=pop(); a=pop(); push(a op b)
-	AtPanic(panicf GoFunction) GoFunction                   //
-	Call(nArgs, nResults int)                               // args=pop(nArgs); f=pop(); f(args)
+	/* state manipulation */
+	Close()                               //
+	AtPanic(panicf GoFunction) GoFunction // set panic function
+	Version() float64                     // get version number
+	/* basic stack manipulation */
+	AbsIndex(idx int) int     // abs(idx)
+	GetTop() int              // stack.top
+	SetTop(idx int)           // stack.top = idx
+	Pop(n int)                // pop(n)
+	PushValue(idx int)        // push(r[idx])
+	Rotate(idx, n int)        // r[idx, -1] >> n
+	Insert(idx int)           // r[idx, -1] >> 1
+	Remove(idx int)           // remove(r[idx])
+	Replace(idx int)          // r[idx] = pop()
+	Copy(fromIdx, toIdx int)  // r[toIdx] = r[fromidx]
+	CheckStack(n int) bool    //
+	XMove(to LuaState, n int) // to.push(pop(n))
+	/* access functions (stack -> C) */
+	Type(idx int) LuaType              // r[idx].type
+	TypeName(tp LuaType) string        // r[idx].type.name
+	IsNumber(idx int) bool             // r[idx] ~= LuaNumber
+	IsString(idx int) bool             // r[idx] ~= LuaString
+	IsGoFunction(idx int) bool         // r[idx].type == LUA_TLCL || LUA_TGCL
+	IsInteger(idx int) bool            // r[idx].type == LUA_TINTEGER
+	IsUserData(idx int) bool           // r[idx].type == LUA_TUSERDATA
+	IsNone(idx int) bool               // r[idx].type == LUA_TNONE
+	IsNil(idx int) bool                // r[idx].type == LUA_TNIL
+	IsNoneOrNil(idx int) bool          // r[idx].type == LUA_TNONE || LUA_TNIL
+	IsBoolean(idx int) bool            // r[idx].type == LUA_TBOOLEAN
+	IsTable(idx int) bool              // r[idx].type == LUA_TTABLE
+	IsFunction(idx int) bool           // r[idx].type == LUA_TFUNCTION
+	IsThread(idx int) bool             // r[idx].type == LUA_TTHREAD
+	ToNumberX(idx int) (float64, bool) // r[idx] as LuaNumber
+	ToIntegerX(idx int) (int64, bool)  // r[idx] as LuaInteger
+	ToBoolean(idx int) bool            // r[idx] as bool
+	ToString(idx int) (string, bool)   // r[idx] as string
+	ToGoFunction(idx int) GoFunction   // r[idx] as GoFunction
+	ToUserData(idx int) UserData       // r[idx] as UserData
+	ToThread(idx int) LuaState         // r[idx] as LuaThread
+	ToPointer(idx int) interface{}     // r[idx] as interface{}
+	ToInteger(idx int) int64           // r[idx] as LuaInteger
+	ToNumber(idx int) float64          // r[idx] as LuaNumber
+	RawLen(idx int) uint               // len(r[idx])
+	/* Comparison and arithmetic functions */
+	Arith(op ArithOp)                          // b=pop(); a=pop(); push(a op b)
+	Compare(idx1, idx2 int, op CompareOp) bool // r[idx1] op r[idx2]
+	RawEqual(idx1, idx2 int) bool              // r[idx1] == r[idx2]
+	/* push functions (C -> stack) */
+	PushBoolean(b bool)                 // push(b)
+	PushGoClosure(fn GoFunction, n int) // push(f)
+	PushGoFunction(f GoFunction)        // push(f)
+	PushFString(fmt string)             // todo
+	PushGlobalTable()                   // push(global)
+	PushInteger(n int64)                // push(n)
+	PushUserData(d UserData)            // push(d)
+	PushNil()                           // push(nil)
+	PushNumber(n float64)               // push(n)
+	PushString(s string)                // push(s)
+	PushThread(ls LuaState) bool        // push(ls)
+	PushVFString()                      // todo
+	/* get functions (Lua -> stack) */
+	GetGlobal(name string) LuaType       // push(global[name])
+	GetTable(idx int) LuaType            // push(r[idx][pop()])
+	GetField(idx int, k string) LuaType  // push(r[idx][k])
+	GetI(idx int, i int64) LuaType       // push(r[idx][i])
+	RawGet(idx int) LuaType              // push(r[idx][pop()])
+	RawGetI(idx int, n int64) LuaType    // push(r[idx][i])
+	RawGetP(idx int, p UserData) LuaType // push(r[idx][p])
+	CreateTable(nArr, nRec int)          // push({})
+	GetMetaTable(idx int) bool           // push(r[idx].metaTable)?
+	GetUserValue(idx int) LuaType        // push(r[idx].userValue)
+	NewTable()                           // push({})
+	/* set functions (stack -> Lua) */
+	Register(name string, f GoFunction) // global[name] = f
+	SetGlobal(name string)              // global[name] = pop()
+	SetTable(idx int)                   // v=pop(); k=pop(); r[idx][k] = v
+	SetField(idx int, k string)         // r[idx][k] = pop()
+	SetI(idx int, n int64)              // r[idx][n] = pop()
+	SetMetaTable(idx int)               // r[idx].metatable = pop()
+	SetUserValue(idx int)               // r[idx].userValue = pop()
+	RawSet(idx int)                     // v=pop(); k=pop(); r[idx][k] = v
+	RawSetI(idx int, i int64)           // r[idx][n] = pop()
+	RawSetP(idx int, p UserData)        // r[idx][p] = pop()
+	/* 'load' and 'call' functions (load and run Lua code) */
 	CallK()                                                 //
-	CheckStack(n int) bool                                  //
-	Close()                                                 //
-	Compare(index1, index2 int, op CompareOp) bool          // r[index1] op r[index2]
-	Concat(n int)                                           // push(concat(pop(n)))
-	Copy(fromIdx, toIdx int)                                // r[toIdx] = r[fromidx]
-	CreateTable(nArr, nRec int)                             // push({})
-	Dump()                                                  //
-	Error() int                                             //
-	GC(what, data int) int                                  //
-	GetField(index int, k string) LuaType                   // push(r[index][k])
-	GetGlobal(name string) LuaType                          // push(global[name])
-	GetI(index int, i int64) LuaType                        // push(r[index][i])
-	GetMetaTable(index int) bool                            // push(r[index].metaTable)?
-	GetTable(index int) LuaType                             // push(r[index][pop()])
-	GetTop() int                                            // stack.top
-	GetUserValue(index int) LuaType                         // push(r[index].userValue)
-	Insert(index int)                                       // r[index, -1] >> 1
-	IsBoolean(index int) bool                               // r[index].type == LUA_TBOOLEAN
-	IsGoFunction(index int) bool                            // r[index].type == LUA_TLCL || LUA_TGCL
-	IsFunction(index int) bool                              // r[index].type == LUA_TFUNCTION
-	IsInteger(index int) bool                               // r[index].type == LUA_TINTEGER
-	IsNil(index int) bool                                   // r[index].type == LUA_TNIL
-	IsNone(index int) bool                                  // r[index].type == LUA_TNONE
-	IsNoneOrNil(index int) bool                             // r[index].type == LUA_TNONE || LUA_TNIL
-	IsNumber(index int) bool                                // r[index] ~= LuaNumber
-	IsString(index int) bool                                // r[index] ~= LuaString
-	IsTable(index int) bool                                 // r[index].type == LUA_TTABLE
-	IsThread(index int) bool                                // r[index].type == LUA_TTHREAD
-	IsUserData(index int) bool                              // r[index].type == LUA_TUSERDATA
-	IsYieldable() bool                                      //
-	Len(index int)                                          // push(len(r[index]))
-	Load(chunk []byte, chunkName, mode string) ThreadStatus // push(compile(chunk))
-	NewTable()                                              // push({})
-	NewThread() LuaState                                    // todo
-	Next(index int) bool                                    // key=pop(); k,v=next(r[index]); push(k,v);
+	Call(nArgs, nResults int)                               // args=pop(nArgs); f=pop(); f(args)
 	PCall(nArgs, nResults, msgh int) ThreadStatus           // call(nArgs, nResults) || push(err)
 	PCallK()                                                //
-	Pop(n int)                                              // pop(n)
-	PushBoolean(b bool)                                     // push(b)
-	PushGoClosure(fn GoFunction, n int)                     // push(f)
-	PushGoFunction(f GoFunction)                            // push(f)
-	PushFString(fmt string)                                 // todo
-	PushGlobalTable()                                       // push(global)
-	PushInteger(n int64)                                    // push(n)
-	PushUserData(d UserData)                                // push(d)
-	PushNil()                                               // push(nil)
-	PushNumber(n float64)                                   // push(n)
-	PushString(s string)                                    // push(s)
-	PushThread(ls LuaState) bool                            // push(ls)
-	PushValue(index int)                                    // push(r[index])
-	PushVFString()                                          // todo
-	RawEqual(index1, index2 int) bool                       // r[index1] == r[index2]
-	RawGet(index int) LuaType                               // push(r[index][pop()])
-	RawGetI(index int, n int64) LuaType                     // push(r[index][i])
-	RawGetP(index int, p UserData) LuaType                  // push(r[index][p])
-	RawLen(index int) uint                                  // len(r[index])
-	RawSet(index int)                                       // v=pop(); k=pop(); r[index][k] = v
-	RawSetI(index int, i int64)                             // r[index][n] = pop()
-	RawSetP(index int, p UserData)                          // r[index][p] = pop()
-	Register(name string, f GoFunction)                     // global[name] = f
-	Remove(index int)                                       // remove(r[index])
-	Replace(index int)                                      // r[index] = pop()
-	Resume(from LuaState, nArgs int)                        // todo
-	Rotate(idx, n int)                                      // r[idx, -1] >> n
-	SetField(index int, k string)                           // r[index][k] = pop()
-	SetGlobal(name string)                                  // global[name] = pop()
-	SetI(index int, n int64)                                // r[index][n] = pop()
-	SetMetaTable(index int)                                 // r[index].metatable = pop()
-	SetTable(index int)                                     // v=pop(); k=pop(); r[index][k] = v
-	SetTop(index int)                                       // stack.top = index
-	SetUserValue(index int)                                 // r[index].userValue = pop()
-	Status() ThreadStatus                                   // todo
-	StringToNumber(s string) bool                           // push(number(s))
-	ToBoolean(index int) bool                               // r[index] as bool
-	ToGoFunction(index int) GoFunction                      // r[index] as GoFunction
-	ToInteger(index int) int64                              // r[index] as LuaInteger
-	ToIntegerX(index int) (int64, bool)                     // r[index] as LuaInteger
-	ToNumber(index int) float64                             // r[index] as LuaNumber
-	ToNumberX(index int) (float64, bool)                    // r[index] as LuaNumber
-	ToPointer(index int) interface{}                        // r[index] as interface{}
-	ToString(index int) (string, bool)                      // r[index] as string
-	ToThread(index int) LuaState                            // r[index] as LuaThread
-	ToUserData(index int) UserData                          // r[index] as UserData
-	Type(index int) LuaType                                 // r[index].type
-	TypeName(tp LuaType) string                             // r[index].type.name
-	Version() float64                                       // todo
-	XMove(to LuaState, n int)                               // to.push(pop(n))
-	Yield(nResults int) int                                 // todo
-	YieldK()                                                // todo
+	Load(chunk []byte, chunkName, mode string) ThreadStatus // push(compile(chunk))
+	Dump()                                                  // todo
+	/* miscellaneous functions */
+	Error() int                   //
+	Next(idx int) bool            // key=pop(); k,v=next(r[idx]); push(k,v);
+	Concat(n int)                 // push(concat(pop(n)))
+	Len(idx int)                  // push(len(r[idx]))
+	StringToNumber(s string) bool // push(number(s))
+	/* coroutine functions */
+	NewThread() LuaState                          // todo
+	Yield(nResults int) int                       // todo
+	YieldK()                                      // todo
+	Status() ThreadStatus                         // todo
+	Resume(from LuaState, nArgs int) ThreadStatus // todo
+	IsYieldable() bool                            // todo
+	/* garbage-collection function and options */
+	GC(what, data int) int //
 }
 
 // auxiliary library
@@ -132,7 +143,7 @@ type AuxLib interface {
 	GetMetaField(obj int, e string) LuaType              //
 	GetMetaTableL(tname string) LuaType                  //
 	GetSubTable(idx int, fname string) bool              // push(r[idx][fname] || {})
-	LenL(index int) int64                                // #(r[index])
+	LenL(idx int) int64                                  // #(r[idx])
 	LoadFile(filename string) ThreadStatus               //
 	LoadFileX(filename, mode string) ThreadStatus        //
 	LoadString(s string) ThreadStatus                    //
@@ -144,7 +155,7 @@ type AuxLib interface {
 	OptString(arg int, d string) string                  // r[arg] or d
 	RequireF(modname string, openf GoFunction, glb bool) //
 	SetFuncs(l FuncReg, nup int)                         // l.each{name,func => r[-1][name]=func}
-	TypeNameL(index int) string                          //
+	TypeNameL(idx int) string                            //
 }
 
 // type LuaLightUserData UserData
@@ -155,10 +166,10 @@ type AuxLib interface {
 
 //GetAllocf()
 //GetExtraSpace()
-//IsLightUserData(index int)
+//IsLightUserData(idx int)
 //NewUserData(size uint)
 //PushLightUserData()
 //PushLiteral
 //PushLString
 //SetAllocf()
-//ToLString(index int) (string, uint)
+//ToLString(idx int) (string, uint)

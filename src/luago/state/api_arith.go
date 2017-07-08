@@ -112,7 +112,7 @@ func (self *luaState) mod(a, b luaValue) {
 func (self *luaState) unm(a luaValue) {
 	if x, ok := a.(int64); ok {
 		self.stack.push(-x)
-	} else if x, ok := valToNumber(a); ok {
+	} else if x, ok := castToNumber(a); ok {
 		self.stack.push(-x)
 	} else if result, ok := self.callMetaOp1(a, "__unm"); ok {
 		self.stack.push(result)
@@ -196,7 +196,7 @@ func (self *luaState) shr(a, b luaValue) {
 }
 
 func (self *luaState) bnot(a luaValue) {
-	if x, ok := valToInteger(a); ok {
+	if x, ok := castToInteger(a); ok {
 		self.stack.push(^x)
 	} else if result, ok := self.callMetaOp1(a, "__bnot"); ok {
 		self.stack.push(result)
@@ -217,8 +217,8 @@ func _castToInt64s(a, b luaValue) (int64, int64, bool) {
 }
 
 func _convertToInt64s(a, b luaValue) (int64, int64, bool) {
-	if x, ok := valToInteger(a); ok {
-		if y, ok := valToInteger(b); ok {
+	if x, ok := castToInteger(a); ok {
+		if y, ok := castToInteger(b); ok {
 			return x, y, true
 		}
 	}
@@ -226,8 +226,8 @@ func _convertToInt64s(a, b luaValue) (int64, int64, bool) {
 }
 
 func _convertToFloat64s(a, b luaValue) (float64, float64, bool) {
-	if x, ok := valToNumber(a); ok {
-		if y, ok := valToNumber(b); ok {
+	if x, ok := castToNumber(a); ok {
+		if y, ok := castToNumber(b); ok {
 			return x, y, true
 		}
 	}

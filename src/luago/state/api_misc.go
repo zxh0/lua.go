@@ -7,11 +7,26 @@ import "luago/luanum"
 import . "luago/api"
 
 // [-0, +0, –]
+// http://www.lua.org/manual/5.3/manual.html#lua_close
+// lua-5.3.4/src/lstate.c#lua_close
+func (self *luaState) Close() {
+	// todo
+}
+
+// [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_atpanic
+// lua-5.3.4/src/lapi.c#lua_atpanic
 func (self *luaState) AtPanic(panicf GoFunction) GoFunction {
 	oldPanicf := self.panicf
 	self.panicf = panicf
 	return oldPanicf
+}
+
+// [-0, +0, –]
+// http://www.lua.org/manual/5.3/manual.html#lua_version
+// lua-5.3.4/src/lapi.c#lua_version
+func (self *luaState) Version() float64 {
+	return LUA_VERSION_NUM
 }
 
 // [-0, +0, e]
@@ -50,12 +65,6 @@ func (self *luaState) SetUserValue(index int) {
 	// val := self.stack.pop()
 	// ud := self.stack.get(index)
 	panic("todo!")
-}
-
-// [-0, +0, –]
-// http://www.lua.org/manual/5.3/manual.html#lua_close
-func (self *luaState) Close() {
-	//panic("todo!")
 }
 
 // [-0, +0, –]
@@ -108,48 +117,4 @@ func (self *luaState) StringToNumber(s string) bool {
 		return true
 	}
 	return false
-}
-
-// [-0, +0, –]
-// http://www.lua.org/manual/5.3/manual.html#lua_type
-func (self *luaState) Type(index int) LuaType {
-	if absIdx := self.stack.absIndex(index); absIdx > 0 {
-		val := self.stack.get(index)
-		return typeOf(val)
-	} else {
-		return LUA_TNONE
-	}
-}
-
-// [-0, +0, –]
-// http://www.lua.org/manual/5.3/manual.html#lua_typename
-func (self *luaState) TypeName(tp LuaType) string {
-	switch tp {
-	case LUA_TNONE:
-		return "no value"
-	case LUA_TNIL:
-		return "nil"
-	case LUA_TBOOLEAN:
-		return "boolean"
-	case LUA_TNUMBER:
-		return "number"
-	case LUA_TSTRING:
-		return "string"
-	case LUA_TTABLE:
-		return "table"
-	case LUA_TFUNCTION:
-		return "function"
-	case LUA_TUSERDATA:
-		return "userdata"
-	case LUA_TTHREAD:
-		return "thread"
-	default:
-		panic("unknown data type!")
-	}
-}
-
-// [-0, +0, –]
-// http://www.lua.org/manual/5.3/manual.html#lua_version
-func (self *luaState) Version() float64 {
-	panic("todo!")
 }

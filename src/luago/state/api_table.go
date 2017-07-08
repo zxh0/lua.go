@@ -38,7 +38,7 @@ func (self *luaState) Next(index int) bool {
 func (self *luaState) GetMetaTable(index int) bool {
 	val := self.stack.get(index)
 
-	if mt := getMetaTable(val); mt != nil {
+	if mt := self.getMetaTable(val); mt != nil {
 		self.stack.push(mt)
 		return true
 	} else {
@@ -53,7 +53,7 @@ func (self *luaState) SetMetaTable(index int) {
 	mtVal := self.stack.pop()
 
 	if mt, ok := mtVal.(*luaTable); ok {
-		setMetaTable(val, mt)
+		self.setMetaTable(val, mt)
 	} else {
 		panic("not table: " + valToString(mtVal)) // todo
 	}
@@ -165,7 +165,7 @@ func (self *luaState) _getTable(t, k luaValue, raw bool) LuaType {
 		panic("not table!")
 	}
 
-	if mf := getMetaField(t, "__index"); mf != nil {
+	if mf := self.getMetaField(t, "__index"); mf != nil {
 		switch x := mf.(type) {
 		case *luaTable:
 			return self._getTable(x, k, true)
@@ -193,7 +193,7 @@ func (self *luaState) _setTable(t, k, v luaValue, raw bool) {
 		panic("not table!")
 	}
 
-	if mf := getMetaField(t, "__newindex"); mf != nil {
+	if mf := self.getMetaField(t, "__newindex"); mf != nil {
 		switch x := mf.(type) {
 		case *luaTable:
 			self._setTable(x, k, v, true)

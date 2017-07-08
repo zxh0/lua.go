@@ -27,7 +27,7 @@ func (self *luaState) callGoClosure(nArgs, nResults int, f *goClosure) {
 	callerStack.pop()
 
 	// create new lua stack
-	calleeStack := newLuaStack(16, 0, self)
+	calleeStack := newLuaStack(nArgs+LUA_MINSTACK, 0, self)
 	calleeStack.goCl = f
 
 	// pass args

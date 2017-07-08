@@ -47,16 +47,46 @@ func (self *luaStack) check(n int) bool {
 }
 
 func (self *luaStack) absIndex(idx int) int {
-	if idx > 0 && idx <= self.sp {
+	if idx > 0 || idx <= LUA_REGISTRYINDEX {
 		return idx
 	}
 	if idx < 0 && idx >= -self.sp {
 		return idx + self.sp + 1
 	}
-	return 0
+	return 0 // todo
 }
 
 /* registers */
+
+func (self *luaStack) _get(index int) (luaValue, bool) {
+	if index < LUA_REGISTRYINDEX { /* upvalues */
+		uvIdx := LUA_REGISTRYINDEX - index
+		if uvIdx > MAXUPVAL + 1 {
+			panic("upvalue index too large!")
+		} else if self.goCl == nil || len(self.goCl.upvals) < uvIdx {
+			return nil, false
+		} else {
+			return self.goCl.upvals[uvIdx-1], true
+		}
+	} else if index == LUA_REGISTRYINDEX {
+		return self.state.registry, true
+	} else {
+		absIdx := self.absIndex(index)
+		if absIdx <= 0 || absIdx > len(self.slots) {
+			return nil, false
+		} else {
+			return self.slots[absIdx-1], true
+		}
+	}
+}
+
+// func (self *luaStack) getOrNil(index int) luaValue {
+// 	if val, ok := self._get(index); ok {
+// 		return val
+// 	} else {
+// 		return nil
+// 	}
+// }
 
 func (self *luaStack) get(index int) luaValue {
 	if index < LUA_REGISTRYINDEX {

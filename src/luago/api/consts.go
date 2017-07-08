@@ -1,33 +1,33 @@
 package api
 
+// lua-5.3.4/src/lua.h
 /* basic types */
 const (
-	LUA_TNONE    = -1
-	LUA_TNIL     = 0
-	LUA_TBOOLEAN = 1
-	// LUA_TLIGHTUSERDATA = 2
-	LUA_TNUMBER   = 3
-	LUA_TSTRING   = 4
-	LUA_TTABLE    = 5
-	LUA_TFUNCTION = 6
-	LUA_TUSERDATA = 7
-	LUA_TTHREAD   = 8
+	LUA_TNONE          = -1
+	LUA_TNIL           = 0
+	LUA_TBOOLEAN       = 1
+	LUA_TLIGHTUSERDATA = 2
+	LUA_TNUMBER        = 3
+	LUA_TSTRING        = 4
+	LUA_TTABLE         = 5
+	LUA_TFUNCTION      = 6
+	LUA_TUSERDATA      = 7
+	LUA_TTHREAD        = 8
 )
 
+// lua-5.3.4/src/lobject.h
 /* type variants */
 const (
-	/* Variant tags for numbers */
-	LUA_TNUMFLT = LUA_TNUMBER | (0 << 4) /* float numbers */
-	LUA_TNUMINT = LUA_TNUMBER | (1 << 4) /* integer numbers */
-	/* Variant tags for strings */
-	LUA_TSHRSTR = LUA_TSTRING | (0 << 4) /* short strings */
-	LUA_TLNGSTR = LUA_TSTRING | (1 << 4) /* long strings */
-	/* Variant tags for functions */
-	LUA_TLCL = LUA_TFUNCTION | (0 << 4) /* Lua closure */
-	LUA_TLGF = LUA_TFUNCTION | (1 << 4) /* light Go function */
-	LUA_TGCL = LUA_TFUNCTION | (2 << 4) /* Go closure */
+	LUA_TNUMFLT = LUA_TNUMBER | (0 << 4)   /* float numbers */
+	LUA_TNUMINT = LUA_TNUMBER | (1 << 4)   /* integer numbers */
+	LUA_TSHRSTR = LUA_TSTRING | (0 << 4)   /* short strings */
+	LUA_TLNGSTR = LUA_TSTRING | (1 << 4)   /* long strings */
+	LUA_TLCL    = LUA_TFUNCTION | (0 << 4) /* Lua closure */
+	LUA_TLGF    = LUA_TFUNCTION | (1 << 4) /* light Go function */
+	LUA_TGCL    = LUA_TFUNCTION | (2 << 4) /* Go closure */
 )
 
+// lua-5.3.4/src/lua.h
 /* arithmetic functions */
 const (
 	LUA_OPADD  = 0  // +
@@ -46,6 +46,7 @@ const (
 	LUA_OPBNOT = 13 // ~
 )
 
+// lua-5.3.4/src/lua.h
 /* comparison functions */
 const (
 	LUA_OPEQ = 0 // ==
@@ -53,6 +54,7 @@ const (
 	LUA_OPLE = 2 // <=
 )
 
+// lua-5.3.4/src/lua.h
 /* thread status */
 const (
 	LUA_OK        = 0
