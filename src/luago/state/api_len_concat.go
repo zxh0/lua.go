@@ -6,7 +6,7 @@ import . "luago/api"
 // [-0, +1, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_len
 func (self *luaState) Len(index int) {
-	val := self.stack.get(index)
+	val := self.get(index)
 	if result, ok := self.callMetaOp1(val, "__len"); ok {
 		self.stack.push(result)
 		return
@@ -27,7 +27,7 @@ func (self *luaState) Len(index int) {
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_rawlen
 func (self *luaState) RawLen(index int) uint {
-	val := self.stack.get(index)
+	val := self.get(index)
 	switch x := val.(type) {
 	case string:
 		return uint(len(x))

@@ -6,7 +6,7 @@ import "luago/vm"
 // [-(nargs+1), +nresults, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_call
 func (self *luaState) Call(nArgs, nResults int) {
-	x := self.stack.get(-(nArgs + 1))
+	x := self.get(-(nArgs + 1))
 
 	switch f := x.(type) {
 	case GoFunction: // todo
@@ -27,7 +27,7 @@ func (self *luaState) callGoClosure(nArgs, nResults int, f *goClosure) {
 	callerStack.pop()
 
 	// create new lua stack
-	calleeStack := newLuaStack(nArgs+LUA_MINSTACK, 0, self)
+	calleeStack := newLuaStack(nArgs+LUA_MINSTACK, 0)
 	calleeStack.goCl = f
 
 	// pass args
@@ -54,7 +54,7 @@ func (self *luaState) callLuaClosure(nArgs, nResults int, f *luaClosure) {
 
 	// create new lua stack
 	nRegs := int(f.proto.MaxStackSize)
-	calleeStack := newLuaStack(nRegs+4, nRegs, self)
+	calleeStack := newLuaStack(nRegs+4, nRegs)
 	calleeStack.luaCl = f
 
 	// pass args

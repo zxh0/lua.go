@@ -7,7 +7,7 @@ import . "luago/api"
 // lua-5.3.4/src/lstate.c#lua_newthread()
 func (self *luaState) NewThread() LuaState {
 	t := &luaState{registry: self.registry}
-	t.pushLuaStack(newLuaStack(16, 0, t))
+	t.pushLuaStack(newLuaStack(16, 0))
 	self.PushThread(t)
 	return t
 }

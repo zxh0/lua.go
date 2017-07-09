@@ -21,10 +21,10 @@ func fullTypeOf(val luaValue) LuaType {
 		return LUA_TNUMFLT
 	case string:
 		return LUA_TSTRING
-	case *luaState:
-		return LUA_TTHREAD
 	case *luaTable:
 		return LUA_TTABLE
+	case *luaState:
+		return LUA_TTHREAD
 	case *userData:
 		return LUA_TUSERDATA
 	case *luaClosure:
@@ -34,7 +34,7 @@ func fullTypeOf(val luaValue) LuaType {
 	case GoFunction:
 		return LUA_TLGF
 	default:
-		panic("todo!")
+		panic("unkonwn type!")
 	}
 }
 

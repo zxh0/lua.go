@@ -9,7 +9,7 @@ func (self *luaState) AbsIndex(idx int) int {
 	if idx > 0 || _isPseudo(idx) {
 		return idx
 	}
-	return self.stack.absIndex(idx)
+	return self.absIndex(idx)
 }
 
 /* test for pseudo index */
@@ -36,7 +36,7 @@ func (self *luaState) GetTop() int {
 // lua-5.3.4/src/lapi.c#lua_settop()
 func (self *luaState) SetTop(idx int) {
 	if idx < 0 {
-		idx = self.stack.absIndex(idx)
+		idx = self.absIndex(idx)
 	}
 
 	n := self.stack.top - idx
@@ -64,7 +64,7 @@ func (self *luaState) Pop(n int) {
 // http://www.lua.org/manual/5.3/manual.html#lua_pushvalue
 // lua-5.3.4/src/lapi.c#lua_pushvalue()
 func (self *luaState) PushValue(idx int) {
-	val := self.stack.get(idx)
+	val := self.get(idx)
 	self.stack.push(val)
 }
 
@@ -72,8 +72,8 @@ func (self *luaState) PushValue(idx int) {
 // http://www.lua.org/manual/5.3/manual.html#lua_copy
 // lua-5.3.4/src/lapi.c#lua_copy()
 func (self *luaState) Copy(fromIdx, toIdx int) {
-	val := self.stack.get(fromIdx)
-	self.stack.set(toIdx, val)
+	val := self.get(fromIdx)
+	self.set(toIdx, val)
 }
 
 // [-1, +1, –]
@@ -105,7 +105,7 @@ func (self *luaState) Replace(idx int) {
 func (self *luaState) Rotate(idx, n int) {
 	stack := self.stack
 	t := stack.top - 1        /* end of stack segment being rotated */
-	p := stack.absIndex(idx) /* start of segment */
+	p := self.absIndex(idx) /* start of segment */
 	p -= 1
 	var m int /* end of prefix */
 	if n >= 0 {
