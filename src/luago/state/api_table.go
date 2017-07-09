@@ -18,7 +18,7 @@ func (self *luaState) NewTable() {
 // [-1, +(2|0), e]
 // http://www.lua.org/manual/5.3/manual.html#lua_next
 func (self *luaState) Next(index int) bool {
-	t := self.get(index)
+	t := self.stack.get(index)
 	if tbl, ok := t.(*luaTable); ok {
 		key := self.stack.pop()
 		nextKey, nextVal := tbl.next(key)
@@ -36,7 +36,7 @@ func (self *luaState) Next(index int) bool {
 // [-0, +(0|1), –]
 // http://www.lua.org/manual/5.3/manual.html#lua_getmetatable
 func (self *luaState) GetMetaTable(index int) bool {
-	val := self.get(index)
+	val := self.stack.get(index)
 
 	if mt := self.getMetaTable(val); mt != nil {
 		self.stack.push(mt)
@@ -49,7 +49,7 @@ func (self *luaState) GetMetaTable(index int) bool {
 // [-1, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_setmetatable
 func (self *luaState) SetMetaTable(index int) {
-	val := self.get(index)
+	val := self.stack.get(index)
 	mtVal := self.stack.pop()
 
 	if mt, ok := mtVal.(*luaTable); ok {
@@ -62,7 +62,7 @@ func (self *luaState) SetMetaTable(index int) {
 // [-1, +1, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_gettable
 func (self *luaState) GetTable(index int) LuaType {
-	t := self.get(index)
+	t := self.stack.get(index)
 	k := self.stack.pop()
 	return self._getTable(t, k, false)
 }
@@ -70,7 +70,7 @@ func (self *luaState) GetTable(index int) LuaType {
 // [-2, +0, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_settable
 func (self *luaState) SetTable(index int) {
-	t := self.get(index)
+	t := self.stack.get(index)
 	v := self.stack.pop()
 	k := self.stack.pop()
 	self._setTable(t, k, v, false)
@@ -79,7 +79,7 @@ func (self *luaState) SetTable(index int) {
 // [-1, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_rawget
 func (self *luaState) RawGet(index int) LuaType {
-	t := self.get(index)
+	t := self.stack.get(index)
 	k := self.stack.pop()
 	return self._getTable(t, k, true)
 }
@@ -87,7 +87,7 @@ func (self *luaState) RawGet(index int) LuaType {
 // [-2, +0, m]
 // http://www.lua.org/manual/5.3/manual.html#lua_rawset
 func (self *luaState) RawSet(index int) {
-	t := self.get(index)
+	t := self.stack.get(index)
 	v := self.stack.pop()
 	k := self.stack.pop()
 	self._setTable(t, k, v, true)
@@ -96,14 +96,14 @@ func (self *luaState) RawSet(index int) {
 // [-0, +1, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_geti
 func (self *luaState) GetI(index int, i int64) LuaType {
-	t := self.get(index)
+	t := self.stack.get(index)
 	return self._getTable(t, i, false)
 }
 
 // [-1, +0, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_seti
 func (self *luaState) SetI(index int, n int64) {
-	t := self.get(index)
+	t := self.stack.get(index)
 	v := self.stack.pop()
 	self._setTable(t, n, v, false)
 }
@@ -111,14 +111,14 @@ func (self *luaState) SetI(index int, n int64) {
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_rawgeti
 func (self *luaState) RawGetI(index int, n int64) LuaType {
-	t := self.get(index)
+	t := self.stack.get(index)
 	return self._getTable(t, n, true)
 }
 
 // [-1, +0, m]
 // http://www.lua.org/manual/5.3/manual.html#lua_rawseti
 func (self *luaState) RawSetI(index int, i int64) {
-	t := self.get(index)
+	t := self.stack.get(index)
 	v := self.stack.pop()
 	self._setTable(t, i, v, true)
 }
@@ -126,14 +126,14 @@ func (self *luaState) RawSetI(index int, i int64) {
 // [-0, +1, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_getfield
 func (self *luaState) GetField(index int, k string) LuaType {
-	t := self.get(index)
+	t := self.stack.get(index)
 	return self._getTable(t, k, false)
 }
 
 // [-1, +0, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_setfield
 func (self *luaState) SetField(index int, k string) {
-	t := self.get(index)
+	t := self.stack.get(index)
 	v := self.stack.pop()
 	self._setTable(t, k, v, false)
 }
@@ -141,14 +141,14 @@ func (self *luaState) SetField(index int, k string) {
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_rawgetp
 func (self *luaState) RawGetP(index int, p UserData) LuaType {
-	t := self.get(index)
+	t := self.stack.get(index)
 	return self._getTable(t, p, true)
 }
 
 // [-1, +0, m]
 // http://www.lua.org/manual/5.3/manual.html#lua_rawsetp
 func (self *luaState) RawSetP(index int, p UserData) {
-	t := self.get(index)
+	t := self.stack.get(index)
 	v := self.stack.pop()
 	self._setTable(t, p, v, true)
 }
@@ -174,7 +174,7 @@ func (self *luaState) _getTable(t, k luaValue, raw bool) LuaType {
 			self.stack.push(t)
 			self.stack.push(k)
 			self.Call(2, 1)
-			v := self.get(-1)
+			v := self.stack.get(-1)
 			return typeOf(v)
 		}
 	}

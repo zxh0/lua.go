@@ -159,7 +159,7 @@ func (self *luaState) GetSubTable(idx int, fname string) bool {
 		return true /* table already there */
 	}
 	self.Pop(1) /* remove previous result */
-	idx = self.AbsIndex(idx)
+	idx = self.stack.absIndex(idx)
 	self.NewTable()
 	self.PushValue(-1)        /* copy to be left at top */
 	self.SetField(idx, fname) /* assign new table to field */

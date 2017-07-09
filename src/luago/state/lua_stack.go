@@ -1,21 +1,26 @@
 package state
 
 import "fmt"
+import . "luago/api"
 
 type luaStack struct {
-	prev  *luaStack
-	luaCl *luaClosure // todo: move to luaState?
-	goCl  *goClosure  // todo: move to luaState?
-	xArgs []luaValue  // extraArgs
-	slots []luaValue  // registers+stack
-	top   int         // stack pointer
-	pc    int         // todo: move to somewhere?
+	/* linked list */
+	prev *luaStack
+	/* call info */
+	state *luaState
+	luaCl *luaClosure
+	goCl  *goClosure
+	xArgs []luaValue // extraArgs
+	pc    int
+	/* virtual stack */
+	slots []luaValue
+	top   int
 }
 
-func newLuaStack(nSlots, nRegs int) *luaStack {
+func newLuaStack(size int, state *luaState) *luaStack {
 	return &luaStack{
-		slots: make([]luaValue, nSlots),
-		top:   nRegs,
+		slots: make([]luaValue, size),
+		state: state,
 	}
 }
 
@@ -34,7 +39,7 @@ func (self *luaStack) check(n int) bool {
 
 func (self *luaStack) push(val luaValue) {
 	if self.top == len(self.slots) {
-		panic(fmt.Sprintf("stack overflow! top=%d", self.top))
+		panic("stack overflow!")
 	}
 	self.slots[self.top] = val
 	self.top++
@@ -42,7 +47,7 @@ func (self *luaStack) push(val luaValue) {
 
 func (self *luaStack) pop() luaValue {
 	if self.top < 1 {
-		panic(fmt.Sprintf("stack underflow! top=%d", self.top))
+		panic("stack underflow!")
 	}
 	self.top--
 	val := self.slots[self.top]
@@ -57,11 +62,11 @@ func (self *luaStack) pushN(vals []luaValue) {
 }
 
 func (self *luaStack) popN(n int) []luaValue {
-	if self.top < n {
-		panic(fmt.Sprintf("stack underflow! n=%d", n))
+	vals := make([]luaValue, n)
+	for i := n - 1; i >= 0; i-- {
+		vals[i] = self.pop()
 	}
-	self.top -= n
-	return self.slots[self.top : self.top+n]
+	return vals
 }
 
 func (self *luaStack) reverse(from, to int) {
@@ -70,5 +75,68 @@ func (self *luaStack) reverse(from, to int) {
 		slots[from], slots[to] = slots[to], slots[from]
 		from++
 		to--
+	}
+}
+
+func (self *luaStack) absIndex(idx int) int {
+	// zero or positive or pseudo
+	if idx >= 0 || idx <= LUA_REGISTRYINDEX {
+		return idx
+	}
+	// negative
+	return idx + self.top + 1
+}
+
+// func (self *luaStack) _get(index int) (luaValue, bool) {
+// 	if index < LUA_REGISTRYINDEX { /* upvalues */
+// 		uvIdx := LUA_REGISTRYINDEX - index
+// 		if uvIdx > MAXUPVAL + 1 {
+// 			panic("upvalue index too large!")
+// 		} else if self.goCl == nil || len(self.goCl.upvals) < uvIdx {
+// 			return nil, false
+// 		} else {
+// 			return self.goCl.upvals[uvIdx-1], true
+// 		}
+// 	} else if index == LUA_REGISTRYINDEX {
+// 		return self.state.registry, true
+// 	} else {
+// 		absIdx := self.absIndex(index)
+// 		if absIdx <= 0 || absIdx > len(self.slots) {
+// 			return nil, false
+// 		} else {
+// 			return self.slots[absIdx-1], true
+// 		}
+// 	}
+// }
+
+// func (self *luaStack) getOrNil(index int) luaValue {
+// 	if val, ok := self._get(index); ok {
+// 		return val
+// 	} else {
+// 		return nil
+// 	}
+// }
+
+// todo: move to luaState
+func (self *luaStack) get(index int) luaValue {
+	if index < LUA_REGISTRYINDEX {
+		uvIdx := LUA_REGISTRYINDEX - index
+		return self.goCl.upvals[uvIdx-1]
+	}
+	if index == LUA_REGISTRYINDEX {
+		return self.state.registry
+	}
+	if absIdx := self.absIndex(index); absIdx > 0 {
+		return self.slots[absIdx-1]
+	}
+	panic(fmt.Sprintf("bad index: %d", index))
+}
+
+func (self *luaStack) set(index int, val luaValue) {
+	// todo: LUA_REGISTRYINDEX?
+	if absIdx := self.absIndex(index); absIdx > 0 {
+		self.slots[absIdx-1] = val
+	} else {
+		panic(fmt.Sprintf("bad index: %d", index))
 	}
 }

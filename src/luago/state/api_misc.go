@@ -63,7 +63,7 @@ func (self *luaState) GetUserValue(index int) LuaType {
 // http://www.lua.org/manual/5.3/manual.html#lua_setuservalue
 func (self *luaState) SetUserValue(index int) {
 	// val := self.stack.pop()
-	// ud := self.get(index)
+	// ud := self.stack.get(index)
 	panic("todo!")
 }
 
