@@ -1,6 +1,5 @@
 package state
 
-import "fmt"
 import . "luago/api"
 
 type luaStack struct {
@@ -87,56 +86,46 @@ func (self *luaStack) absIndex(idx int) int {
 	return idx + self.top + 1
 }
 
-// func (self *luaStack) _get(index int) (luaValue, bool) {
-// 	if index < LUA_REGISTRYINDEX { /* upvalues */
-// 		uvIdx := LUA_REGISTRYINDEX - index
-// 		if uvIdx > MAXUPVAL + 1 {
-// 			panic("upvalue index too large!")
-// 		} else if self.goCl == nil || len(self.goCl.upvals) < uvIdx {
-// 			return nil, false
-// 		} else {
-// 			return self.goCl.upvals[uvIdx-1], true
-// 		}
-// 	} else if index == LUA_REGISTRYINDEX {
-// 		return self.state.registry, true
-// 	} else {
-// 		absIdx := self.absIndex(index)
-// 		if absIdx <= 0 || absIdx > len(self.slots) {
-// 			return nil, false
-// 		} else {
-// 			return self.slots[absIdx-1], true
-// 		}
-// 	}
-// }
-
-// func (self *luaStack) getOrNil(index int) luaValue {
-// 	if val, ok := self._get(index); ok {
-// 		return val
-// 	} else {
-// 		return nil
-// 	}
-// }
-
-// todo: move to luaState
-func (self *luaStack) get(index int) luaValue {
-	if index < LUA_REGISTRYINDEX {
-		uvIdx := LUA_REGISTRYINDEX - index
-		return self.goCl.upvals[uvIdx-1]
+func (self *luaStack) isValid(idx int) bool {
+	if idx < LUA_REGISTRYINDEX { /* upvalues */
+		uvIdx := LUA_REGISTRYINDEX - idx
+		return self.goCl != nil && uvIdx <= len(self.goCl.upvals)
 	}
-	if index == LUA_REGISTRYINDEX {
-		return self.state.registry
+	if idx == LUA_REGISTRYINDEX {
+		return true
 	}
-	if absIdx := self.absIndex(index); absIdx > 0 {
-		return self.slots[absIdx-1]
-	}
-	panic(fmt.Sprintf("bad index: %d", index))
+	absIdx := self.absIndex(idx)
+	return absIdx > 0 || absIdx <= self.top
 }
 
-func (self *luaStack) set(index int, val luaValue) {
+func (self *luaStack) get(idx int) luaValue {
+	if idx < LUA_REGISTRYINDEX { /* upvalues */
+		uvIdx := LUA_REGISTRYINDEX - idx
+		//if uvIdx > MAXUPVAL + 1 {
+		//	panic("upvalue index too large!")
+		//}
+		if self.goCl == nil || len(self.goCl.upvals) < uvIdx {
+			return nil
+		}
+		return self.goCl.upvals[uvIdx-1]
+	}
+
+	if idx == LUA_REGISTRYINDEX {
+		return self.state.registry
+	}
+
+	absIdx := self.absIndex(idx)
+	if absIdx <= 0 || absIdx > self.top {
+		return nil
+	}
+	return self.slots[absIdx-1]
+}
+
+func (self *luaStack) set(idx int, val luaValue) {
 	// todo: LUA_REGISTRYINDEX?
-	if absIdx := self.absIndex(index); absIdx > 0 {
+	if absIdx := self.absIndex(idx); absIdx > 0 {
 		self.slots[absIdx-1] = val
 	} else {
-		panic(fmt.Sprintf("bad index: %d", index))
+		panic("todo!")
 	}
 }

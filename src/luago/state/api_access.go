@@ -7,7 +7,7 @@ import . "luago/api"
 // http://www.lua.org/manual/5.3/manual.html#lua_type
 // lua-5.3.4/src/lapi.c#lua_type()
 func (self *luaState) Type(idx int) LuaType {
-	if absIdx := self.stack.absIndex(idx); absIdx > 0 {
+	if self.stack.isValid(idx) {
 		val := self.stack.get(idx)
 		return typeOf(val)
 	} else {
@@ -233,5 +233,4 @@ func (self *luaState) ToUserData(idx int) UserData {
 // http://www.lua.org/manual/5.3/manual.html#lua_topointer
 func (self *luaState) ToPointer(idx int) interface{} {
 	return self.stack.get(idx)
-
 }

@@ -6,15 +6,7 @@ import . "luago/api"
 // http://www.lua.org/manual/5.3/manual.html#lua_absindex
 // lua-5.3.4/src/lapi.c#lua_absindex()
 func (self *luaState) AbsIndex(idx int) int {
-	if idx > 0 || _isPseudo(idx) {
-		return idx
-	}
 	return self.stack.absIndex(idx)
-}
-
-/* test for pseudo index */
-func _isPseudo(i int) bool {
-	return i <= LUA_REGISTRYINDEX
 }
 
 // [-0, +0, –]
@@ -104,7 +96,7 @@ func (self *luaState) Replace(idx int) {
 // lua-5.3.4/src/lapi.c#lua_rotate()
 func (self *luaState) Rotate(idx, n int) {
 	stack := self.stack
-	t := stack.top - 1      /* end of stack segment being rotated */
+	t := stack.top - 1            /* end of stack segment being rotated */
 	p := self.stack.absIndex(idx) /* start of segment */
 	p -= 1
 	var m int /* end of prefix */

@@ -47,5 +47,5 @@ const LUA_RIDX_LAST = LUA_RIDX_GLOBALS
 /*
 ** maximum number of upvalues in a closure (both C and Lua). (Value
 ** must fit in a VM register.)
-*/
+ */
 const MAXUPVAL = 255

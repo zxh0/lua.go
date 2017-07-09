@@ -1,7 +1,34 @@
 package state
 
 import . "luago/api"
+import "luago/binchunk"
+import "luago/compiler"
 import "luago/vm"
+
+// [-0, +1, –]
+// http://www.lua.org/manual/5.3/manual.html#lua_load
+func (self *luaState) Load(chunk []byte, chunkName, mode string) ThreadStatus {
+	var proto *binchunk.Prototype
+	if binchunk.IsBinaryChunk(chunk) {
+		proto = binchunk.Undump(chunk)
+	} else {
+		proto = compiler.Compile(chunkName, string(chunk))
+	}
+
+	cl := newLuaClosure(proto)
+	if len(proto.Upvalues) > 0 { // todo
+		env := self.registry.get(LUA_RIDX_GLOBALS)
+		cl.upvals[0] = &env
+	}
+	self.stack.push(cl)
+	return LUA_OK
+}
+
+// [-0, +0, –]
+// http://www.lua.org/manual/5.3/manual.html#lua_dump
+func (self *luaState) Dump() {
+	panic("todo!")
+}
 
 // [-(nargs+1), +nresults, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_call
@@ -27,7 +54,7 @@ func (self *luaState) callGoClosure(nArgs, nResults int, f *goClosure) {
 	callerStack.pop()
 
 	// create new lua stack
-	calleeStack := newLuaStack(nArgs + LUA_MINSTACK, self)
+	calleeStack := newLuaStack(nArgs+LUA_MINSTACK, self)
 	calleeStack.goCl = f
 
 	// pass args
@@ -54,7 +81,7 @@ func (self *luaState) callLuaClosure(nArgs, nResults int, f *luaClosure) {
 
 	// create new lua stack
 	nRegs := int(f.proto.MaxStackSize)
-	calleeStack := newLuaStack(nRegs + LUA_MINSTACK, self)
+	calleeStack := newLuaStack(nRegs+LUA_MINSTACK, self)
 	calleeStack.top = nRegs // todo
 	calleeStack.luaCl = f
 
