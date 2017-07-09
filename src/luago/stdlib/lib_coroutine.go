@@ -35,8 +35,7 @@ func coResume(ls LuaState) int {
 	co := ls.ToThread(1)
 	ls.ArgCheck(co != nil, 1, "thread expected")
 
-	r := _auxResume(ls, co, ls.GetTop()-1)
-	if r < 0 {
+	if r := _auxResume(ls, co, ls.GetTop()-1); r < 0 {
 		ls.PushBoolean(false)
 		ls.Insert(-2)
 		return 2 /* return false + error message */

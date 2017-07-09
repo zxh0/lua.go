@@ -17,6 +17,7 @@ type luaState struct {
 	callDepth int
 	/* coroutine */
 	status ThreadStatus
+	ch     chan int
 }
 
 // todo: rename to New()?

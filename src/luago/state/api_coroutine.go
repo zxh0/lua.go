@@ -22,7 +22,21 @@ func (self *luaState) Status() ThreadStatus {
 // [-?, +?, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_resume
 func (self *luaState) Resume(from LuaState, nArgs int) ThreadStatus {
-	panic("todo!")
+	lsFrom := from.(*luaState)
+	if lsFrom.ch == nil {
+		lsFrom.ch = make(chan int)
+	}
+
+	if self.ch == nil {
+		self.ch = make(chan int)
+		go func() {
+			self.Call(nArgs, 0)
+			lsFrom.ch <- 1
+		}()
+	}
+
+	<-lsFrom.ch
+	return LUA_OK
 }
 
 // [-?, +?, e]
