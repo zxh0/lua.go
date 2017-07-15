@@ -56,12 +56,12 @@ func (self *luaState) GetConst(index int) {
 	self.stack.push(c)
 }
 
-func (self *luaState) GetUpvalue(index int) {
+func (self *luaState) GetUpvalue2(index int) {
 	upval := self.stack.luaCl.upvals[index]
 	self.stack.push(*upval)
 }
 
-func (self *luaState) SetUpvalue(index int) {
+func (self *luaState) SetUpvalue2(index int) {
 	upval := self.stack.luaCl.upvals[index]
 	*upval = self.stack.pop()
 }

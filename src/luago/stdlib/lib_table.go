@@ -22,7 +22,7 @@ func OpenTableLib(ls LuaState) int {
 // table.insert (list, [pos,] value)
 // http://www.lua.org/manual/5.3/manual.html#pdf-table.insert
 func tabInsert(ls LuaState) int {
-	tabLen := ls.LenL(1)
+	tabLen := ls.Len2(1)
 
 	switch ls.GetTop() {
 	case 2:
@@ -53,7 +53,7 @@ func tabInsert(ls LuaState) int {
 // table.remove (list [, pos])
 // http://www.lua.org/manual/5.3/manual.html#pdf-table.remove
 func tabRemove(ls LuaState) int {
-	tabLen := ls.LenL(1)
+	tabLen := ls.Len2(1)
 	pos := ls.OptInteger(2, tabLen)
 
 	if pos < 0 || pos == 0 && tabLen > 0 || pos > tabLen+1 {
@@ -91,7 +91,7 @@ func tabSort(ls LuaState) int {
 // table.concat (list [, sep [, i [, j]]])
 // http://www.lua.org/manual/5.3/manual.html#pdf-table.concat
 func tabConcat(ls LuaState) int {
-	tabLen := ls.LenL(1)
+	tabLen := ls.Len2(1)
 
 	sep := ls.OptString(2, "")
 	i := ls.OptInteger(3, 1)
@@ -135,7 +135,7 @@ func tabPack(ls LuaState) int {
 // http://www.lua.org/manual/5.3/manual.html#pdf-table.unpack
 func tabUnpack(ls LuaState) int {
 	i := ls.OptInteger(2, 1)
-	e := ls.OptInteger(3, ls.LenL(1))
+	e := ls.OptInteger(3, ls.Len2(1))
 	if i > e { /* empty range */
 		return 0
 	}
@@ -158,7 +158,7 @@ type wrapper struct {
 }
 
 func (self wrapper) Len() int {
-	return int(self.ls.LenL(1))
+	return int(self.ls.Len2(1))
 }
 
 func (self wrapper) Less(i, j int) bool {

@@ -6,8 +6,8 @@ import "luago/stdlib"
 
 // [-0, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#luaL_error
-func (self *luaState) ErrorL(fmt string) {
-	panic("todo: ErrorL!")
+func (self *luaState) Error2(fmt string) {
+	panic("todo: Error2!")
 }
 
 // [-0, +0, v]
@@ -34,12 +34,12 @@ func (self *luaState) CheckVersion() {
 // [-0, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#luaL_checkstack
 // lua-5.3.4/src/lauxlib.c#luaL_checkstack()
-func (self *luaState) CheckStackL(sz int, msg string) {
+func (self *luaState) CheckStack2(sz int, msg string) {
 	if !self.CheckStack(sz) {
 		if msg != "" {
-			self.ErrorL("stack overflow (" + msg + ")")
+			self.Error2("stack overflow (" + msg + ")")
 		} else {
-			self.ErrorL("stack overflow")
+			self.Error2("stack overflow")
 		}
 	}
 }
@@ -134,7 +134,7 @@ func (self *luaState) OptString(arg int, def string) string {
 
 // [-0, +0, e]
 // http://www.lua.org/manual/5.3/manual.html#luaL_len
-func (self *luaState) LenL(index int) int64 {
+func (self *luaState) Len2(index int) int64 {
 	self.Len(index)
 	if i, ok := self.ToIntegerX(-1); ok {
 		self.Pop(1)
@@ -263,7 +263,7 @@ func (self *luaState) RequireF(modname string, openf GoFunction, glb bool) {
 // [-nup, +0, m]
 // http://www.lua.org/manual/5.3/manual.html#luaL_setfuncs
 func (self *luaState) SetFuncs(l FuncReg, nup int) {
-	self.CheckStackL(nup, "too many upvalues")
+	self.CheckStack2(nup, "too many upvalues")
 	for name, fun := range l { /* fill the table with given functions */
 		for i := 0; i < nup; i++ { /* copy upvalues to the top */
 			self.PushValue(-nup)
@@ -275,7 +275,7 @@ func (self *luaState) SetFuncs(l FuncReg, nup int) {
 	self.Pop(nup) /* remove upvalues */
 }
 
-func (self *luaState) TypeNameL(index int) string {
+func (self *luaState) TypeName2(index int) string {
 	panic("todo!")
 }
 
@@ -300,7 +300,7 @@ func (self *luaState) tagError(arg int, tag LuaType) {
 // 	//} else if self.Type(arg) == LUA_TLIGHTUSERDATA {
 // 	//	typearg = "light userdata" /* special name for messages */
 // 	} else {
-// 		typearg = self.TypeNameL(arg) /* standard name */
+// 		typearg = self.TypeName2(arg) /* standard name */
 // 	}
 // 	msg := self.PushFString("%s expected, got %s", tname, typearg)
 // 	return self.ArgError(arg, msg)

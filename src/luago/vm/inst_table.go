@@ -9,7 +9,7 @@ func newTable(i Instruction, vm LuaVM) {
 
 	vm.CheckStack(1)
 	vm.CreateTable(FB2INT(b), FB2INT(c)) // ~/{}
-	vm.Replace(a)        // ~
+	vm.Replace(a)                        // ~
 }
 
 // R(A) := R(B)[RK(C)]

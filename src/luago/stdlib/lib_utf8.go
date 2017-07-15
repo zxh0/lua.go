@@ -51,7 +51,7 @@ func utfCodePoint(ls LuaState) int {
 	}
 
 	codePoints := decodeUtf8(subStr(s, int(i), int(j)))
-	ls.CheckStackL(len(codePoints), "string slice too long")
+	ls.CheckStack2(len(codePoints), "string slice too long")
 	for _, cp := range codePoints {
 		ls.PushInteger(int64(cp))
 	}
