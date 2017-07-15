@@ -33,6 +33,8 @@ func valToString(val luaValue) string {
 		return fmt.Sprintf("%q", val)
 	case *luaTable:
 		return fmt.Sprintf("{@%p}", val)
+	case *luaState:
+		return "thread"
 	case *luaClosure:
 		return luaFuncToString(x)
 	case *goClosure:

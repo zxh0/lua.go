@@ -48,8 +48,9 @@ func coResume(ls LuaState) int {
 
 // coroutine.yield (···)
 // http://www.lua.org/manual/5.3/manual.html#pdf-coroutine.yield
+// lua-5.3.4/src/lcorolib.c#luaB_yield()
 func coYield(ls LuaState) int {
-	panic("todo: coYield!")
+	return ls.Yield(ls.GetTop())
 }
 
 // coroutine.status (co)

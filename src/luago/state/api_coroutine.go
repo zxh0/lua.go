@@ -16,33 +16,42 @@ func (self *luaState) NewThread() LuaState {
 // http://www.lua.org/manual/5.3/manual.html#lua_status
 // lua-5.3.4/src/lapi.c#lua_status()
 func (self *luaState) Status() ThreadStatus {
-	return self.status
+	return self.coStatus
 }
 
 // [-?, +?, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_resume
 func (self *luaState) Resume(from LuaState, nArgs int) ThreadStatus {
 	lsFrom := from.(*luaState)
-	if lsFrom.ch == nil {
-		lsFrom.ch = make(chan int)
+	if lsFrom.coChan == nil {
+		lsFrom.coChan = make(chan int)
 	}
 
-	if self.ch == nil {
-		self.ch = make(chan int)
+	if self.coChan == nil {
+		// start coroutine
+		self.coChan = make(chan int)
+		self.coCaller = lsFrom
 		go func() {
-			self.Call(nArgs, 0)
-			lsFrom.ch <- 1
+			self.Call(nArgs, -1)
+			lsFrom.coChan <- 1
 		}()
+	} else {
+		// resume coroutine
+		self.coStatus = LUA_OK
+		self.coChan <- 1
 	}
 
-	<-lsFrom.ch
+	<-lsFrom.coChan // wait coroutine to finish or yield
 	return LUA_OK
 }
 
 // [-?, +?, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_yield
 func (self *luaState) Yield(nResults int) int {
-	panic("todo!")
+	self.coStatus = LUA_YIELD
+	self.coCaller.coChan <- 1
+	<-self.coChan
+	return self.GetTop()
 }
 
 // [-?, +?, e]
