@@ -57,8 +57,8 @@ func (self *luaState) StringToNumber(s string) bool {
 
 // [-1, +(2|0), e]
 // http://www.lua.org/manual/5.3/manual.html#lua_next
-func (self *luaState) Next(index int) bool {
-	t := self.stack.get(index)
+func (self *luaState) Next(idx int) bool {
+	t := self.stack.get(idx)
 	if tbl, ok := t.(*luaTable); ok {
 		key := self.stack.pop()
 		nextKey, nextVal := tbl.next(key)
@@ -75,8 +75,8 @@ func (self *luaState) Next(index int) bool {
 
 // [-0, +1, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_len
-func (self *luaState) Len(index int) {
-	val := self.stack.get(index)
+func (self *luaState) Len(idx int) {
+	val := self.stack.get(idx)
 	if result, ok := self.callMetaOp1(val, "__len"); ok {
 		self.stack.push(result)
 		return
@@ -91,20 +91,6 @@ func (self *luaState) Len(index int) {
 		self.stack.push(length)
 	default:
 		panic("todo: len!")
-	}
-}
-
-// [-0, +0, –]
-// http://www.lua.org/manual/5.3/manual.html#lua_rawlen
-func (self *luaState) RawLen(index int) uint {
-	val := self.stack.get(index)
-	switch x := val.(type) {
-	case string:
-		return uint(len(x))
-	case *luaTable:
-		return uint(x.len())
-	default:
-		return 0
 	}
 }
 

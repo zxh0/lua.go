@@ -5,22 +5,22 @@ import . "luago/api"
 
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_rawequal
-func (self *luaState) RawEqual(index1, index2 int) bool {
-	if self.stack.absIndex(index1) == 0 ||
-		self.stack.absIndex(index2) == 0 {
+func (self *luaState) RawEqual(idx1, idx2 int) bool {
+	if self.stack.absIndex(idx1) == 0 ||
+		self.stack.absIndex(idx2) == 0 {
 		return false
 	}
 
-	val1 := self.stack.get(index1)
-	val2 := self.stack.get(index2)
+	val1 := self.stack.get(idx1)
+	val2 := self.stack.get(idx2)
 	return self.eq(val1, val2, true)
 }
 
 // [-0, +0, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_compare
-func (self *luaState) Compare(index1, index2 int, op CompareOp) bool {
-	val1 := self.stack.get(index1)
-	val2 := self.stack.get(index2)
+func (self *luaState) Compare(idx1, idx2 int, op CompareOp) bool {
+	val1 := self.stack.get(idx1)
+	val2 := self.stack.get(idx2)
 	switch op {
 	case LUA_OPEQ:
 		return self.eq(val1, val2, false)

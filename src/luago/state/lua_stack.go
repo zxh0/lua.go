@@ -68,15 +68,6 @@ func (self *luaStack) popN(n int) []luaValue {
 	return vals
 }
 
-func (self *luaStack) reverse(from, to int) {
-	slots := self.slots
-	for from < to {
-		slots[from], slots[to] = slots[to], slots[from]
-		from++
-		to--
-	}
-}
-
 func (self *luaStack) absIndex(idx int) int {
 	// zero or positive or pseudo
 	if idx >= 0 || idx <= LUA_REGISTRYINDEX {
@@ -115,17 +106,27 @@ func (self *luaStack) get(idx int) luaValue {
 	}
 
 	absIdx := self.absIndex(idx)
-	if absIdx <= 0 || absIdx > self.top {
-		return nil
+	if absIdx > 0 && absIdx <= self.top {
+		return self.slots[absIdx-1]
 	}
-	return self.slots[absIdx-1]
+	return nil
 }
 
 func (self *luaStack) set(idx int, val luaValue) {
 	// todo: LUA_REGISTRYINDEX?
-	if absIdx := self.absIndex(idx); absIdx > 0 {
+	absIdx := self.absIndex(idx)
+	if absIdx > 0 && absIdx <= self.top {
 		self.slots[absIdx-1] = val
-	} else {
-		panic("todo!")
+		return
+	}
+	panic("todo!")
+}
+
+func (self *luaStack) reverse(from, to int) {
+	slots := self.slots
+	for from < to {
+		slots[from], slots[to] = slots[to], slots[from]
+		from++
+		to--
 	}
 }

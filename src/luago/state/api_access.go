@@ -1,7 +1,21 @@
 package state
 
-import "strconv"
+import "fmt"
 import . "luago/api"
+
+// [-0, +0, –]
+// http://www.lua.org/manual/5.3/manual.html#lua_rawlen
+func (self *luaState) RawLen(idx int) uint {
+	val := self.stack.get(idx)
+	switch x := val.(type) {
+	case string:
+		return uint(len(x))
+	case *luaTable:
+		return uint(x.len())
+	default:
+		return 0
+	}
+}
 
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_type
@@ -171,26 +185,25 @@ func (self *luaState) ToBoolean(idx int) bool {
 // [-0, +0, m]
 // http://www.lua.org/manual/5.3/manual.html#lua_tostring
 // http://www.lua.org/manual/5.3/manual.html#lua_tolstring
+// lua-5.3.4/src/lua.h#lua_tostring()
+// lua-5.3.4/src/lapi.c#lua_tolstring()
 func (self *luaState) ToString(idx int) (string, bool) {
 	val := self.stack.get(idx)
 
-	s := ""
 	switch x := val.(type) {
-	case int64:
-		s = strconv.FormatInt(x, 10) // todo
-	case float64:
-		s = strconv.FormatFloat(x, 'f', -1, 64) // todo
 	case string:
 		return x, true
+	case int64:
+		s := fmt.Sprintf("%d", x) // todo
+		self.stack.set(idx, s)
+		return s, true
+	case float64:
+		s := fmt.Sprintf("%g", x) // todo
+		self.stack.set(idx, s)
+		return s, true
 	default:
 		return "", false
 	}
-
-	// val is a number
-	self.CheckStack(1)
-	self.PushString(s)
-	self.Replace(idx)
-	return s, true
 }
 
 // [-0, +0, –]

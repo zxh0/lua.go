@@ -6,7 +6,7 @@ import "luago/state"
 
 func main() {
 	if len(os.Args) > 1 {
-		ls := state.NewLuaState()
+		ls := state.New()
 		ls.OpenLibs()
 		if ls.LoadFile(os.Args[1]) == LUA_OK {
 			ls.PCall(0, LUA_MULTRET, -1)
@@ -18,7 +18,7 @@ func main() {
 // 	argv := os.Args
 // 	argc := LuaInteger(len(argv))
 
-// 	ls := NewLuaState()         /* create state */
+// 	ls := New()         /* create state */
 // 	ls.PushGoFunction(pmain)    /* to call 'pmain' in protected mode */
 // 	ls.PushInteger(argc)        /* 1st argument */
 // 	ls.PushUserData(argv)       /* 2nd argument */

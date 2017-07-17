@@ -22,7 +22,7 @@ type luaState struct {
 }
 
 // todo: rename to New()?
-func NewLuaState() LuaState {
+func New() LuaState {
 	registry := newLuaTable(8, 0)
 	registry.put(LUA_RIDX_MAINTHREAD, nil) // todo
 	registry.put(LUA_RIDX_GLOBALS, newLuaTable(8, 0))

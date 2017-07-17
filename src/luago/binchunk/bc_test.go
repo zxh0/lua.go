@@ -71,15 +71,15 @@ var fibonacciLuacOutWithoutDebug = `
 var fibonacciFullList = `
 main <test\fibonacci.lua:0,0> (9 instructions)
 0+ params, 3 slots, 1 upvalue, 1 local, 4 constants, 1 function
-	1	[7]	CLOSURE 	0 0
-	2	[1]	SETTABUP	0 -1 0	; _ENV "fibonacci"
-	3	[9]	GETTABUP	0 0 -2	; _ENV "fibonacci"
-	4	[9]	LOADK   	1 -3	; 16
-	5	[9]	CALL    	0 2 2
-	6	[10]	GETTABUP	1 0 -4	; _ENV "print"
-	7	[10]	MOVE    	2 0
-	8	[10]	CALL    	1 2 1
-	9	[10]	RETURN  	0 1
+	1	[7]	CLOSURE  	0 0
+	2	[1]	SETTABUP 	0 -1 0	; _ENV "fibonacci"
+	3	[9]	GETTABUP 	0 0 -2	; _ENV "fibonacci"
+	4	[9]	LOADK    	1 -3	; 16
+	5	[9]	CALL     	0 2 2
+	6	[10]	GETTABUP 	1 0 -4	; _ENV "print"
+	7	[10]	MOVE     	2 0
+	8	[10]	CALL     	1 2 1
+	9	[10]	RETURN   	0 1
 constants (4):
 	1	"fibonacci"
 	2	"fibonacci"
@@ -92,19 +92,19 @@ upvalues (1):
 
 function <test\fibonacci.lua:1,7> (13 instructions)
 1 param, 4 slots, 1 upvalue, 1 local, 3 constants, 0 functions
-	1	[2]	LT      	0 0 -1	; - 2
-	2	[2]	JMP     	0 2	; to 5
-	3	[3]	RETURN  	0 2
-	4	[3]	JMP     	0 8	; to 13
-	5	[5]	GETTABUP	1 0 -2	; _ENV "fibonacci"
-	6	[5]	SUB     	2 0 -3	; - 1
-	7	[5]	CALL    	1 2 2
-	8	[5]	GETTABUP	2 0 -2	; _ENV "fibonacci"
-	9	[5]	SUB     	3 0 -1	; - 2
-	10	[5]	CALL    	2 2 2
-	11	[5]	ADD     	1 1 2
-	12	[5]	RETURN  	1 2
-	13	[7]	RETURN  	0 1
+	1	[2]	LT       	0 0 -1	; - 2
+	2	[2]	JMP      	0 2	; to 5
+	3	[3]	RETURN   	0 2
+	4	[3]	JMP      	0 8	; to 13
+	5	[5]	GETTABUP 	1 0 -2	; _ENV "fibonacci"
+	6	[5]	SUB      	2 0 -3	; - 1
+	7	[5]	CALL     	1 2 2
+	8	[5]	GETTABUP 	2 0 -2	; _ENV "fibonacci"
+	9	[5]	SUB      	3 0 -1	; - 2
+	10	[5]	CALL     	2 2 2
+	11	[5]	ADD      	1 1 2
+	12	[5]	RETURN   	1 2
+	13	[7]	RETURN   	0 1
 constants (3):
 	1	2
 	2	"fibonacci"

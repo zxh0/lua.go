@@ -2,7 +2,7 @@ package binchunk
 
 import "encoding/binary"
 import "math"
-import "luago/api"
+import . "luago/api"
 
 type reader struct {
 	data []byte
@@ -56,7 +56,7 @@ func (self *reader) readHeader() {
 	if string(self.readBytes(4)) != LUA_SIGNATURE {
 		panic("not a precompiled chunk")
 	}
-	if self.readByte() != LUA_VERSION {
+	if self.readByte() != LUAC_VERSION {
 		panic("version mismatch!")
 	}
 	if self.readByte() != LUAC_FORMAT {
@@ -127,16 +127,16 @@ func (self *reader) readConstants() []interface{} {
 }
 
 func (self *reader) readConstant() interface{} {
-	switch api.LuaType(self.readByte()) {
-	case api.LUA_TNIL:
+	switch LuaType(self.readByte()) {
+	case LUA_TNIL:
 		return nil
-	case api.LUA_TBOOLEAN:
+	case LUA_TBOOLEAN:
 		return self.readByte() != 0
-	case api.LUA_TNUMINT:
+	case LUA_TNUMINT:
 		return self.readLuaInteger()
-	case api.LUA_TNUMFLT:
+	case LUA_TNUMFLT:
 		return self.readLuaNumber()
-	case api.LUA_TSHRSTR, api.LUA_TLNGSTR:
+	case LUA_TSHRSTR, LUA_TLNGSTR:
 		return self.readString()
 	default:
 		panic("corrupted!") // todo

@@ -7,7 +7,7 @@ const LUA_INTEGER_SIZE = 8
 const LUA_NUMBER_SIZE = 8
 
 const LUA_SIGNATURE = "\x1bLua"
-const LUA_VERSION byte = 0x53
+const LUAC_VERSION byte = 0x53
 const LUAC_FORMAT byte = 0
 const LUAC_DATA = "\x19\x93\r\n\x1a\n"
 const LUAC_INT int64 = 0x5678
