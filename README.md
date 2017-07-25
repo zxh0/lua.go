@@ -28,3 +28,4 @@ bin/lua test/Pil4/ch01/hello_world.lua
 * [Linear Scan Register Allocation](http://www.cs.ucla.edu/~palsberg/course/cs132/linearscan.pdf)
 * [Programming in Lua](https://www.lua.org/pil/)
 * https://www.0value.com/implementing-lua-coroutines-in-go
+* [Optimizing Lua VM Bytecode using Global Dataflow Analysis](https://nymphium.github.io/pdf/opeth_report.pdf)
