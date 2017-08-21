@@ -1,13 +1,11 @@
-package api
-
-// todo: move
+package luanum
 
 /*
 ** converts an integer to a "floating point byte", represented as
 ** (eeeeexxx), where the real value is (1xxx) * 2^(eeeee - 1) if
 ** eeeee != 0 and (xxx) otherwise.
  */
-func INT2FB(x int) int {
+func Int2fb(x int) int {
 	e := 0 /* exponent */
 	if x < 8 {
 		return x
@@ -24,7 +22,7 @@ func INT2FB(x int) int {
 }
 
 /* converts back */
-func FB2INT(x int) int {
+func Fb2int(x int) int {
 	if x < 8 {
 		return x
 	} else {

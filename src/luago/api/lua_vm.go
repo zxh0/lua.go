@@ -3,7 +3,7 @@ package api
 type LuaVM interface {
 	LuaState
 	AddPC(n int)         // pc += n
-	GetBottom() int      // stack.bottom
+	MaxStackSize() int   // proto.MaxStackSize
 	LoadProto(idx int)   // push(proto[idx] as LuaFunction)
 	LoadVararg(n int)    // push(vararg[0], ..., vararg[n-1])
 	GetRK(rk int)        // rk > 0xFF ? GetConst(rk & 0xFF) : PushValue(rk + 1)

@@ -4,7 +4,7 @@ import "math"
 import "strings"
 import "strconv"
 
-func CastToInteger(x float64) (int64, bool) {
+func FloatToInteger(x float64) (int64, bool) {
 	i, f := math.Modf(x)
 	if f != 0 {
 		return 0, false

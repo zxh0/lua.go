@@ -27,11 +27,9 @@ func (self *luaState) GetTop() int {
 // http://www.lua.org/manual/5.3/manual.html#lua_settop
 // lua-5.3.4/src/lapi.c#lua_settop()
 func (self *luaState) SetTop(idx int) {
-	if idx < 0 {
-		idx = self.stack.absIndex(idx)
-	}
+	absIdx := self.stack.absIndex(idx)
+	n := self.stack.top - absIdx
 
-	n := self.stack.top - idx
 	if n > 0 {
 		for i := 0; i < n; i++ {
 			self.stack.pop()
@@ -95,19 +93,17 @@ func (self *luaState) Replace(idx int) {
 // http://www.lua.org/manual/5.3/manual.html#lua_rotate
 // lua-5.3.4/src/lapi.c#lua_rotate()
 func (self *luaState) Rotate(idx, n int) {
-	stack := self.stack
-	t := stack.top - 1            /* end of stack segment being rotated */
-	p := self.stack.absIndex(idx) /* start of segment */
-	p -= 1
-	var m int /* end of prefix */
+	t := self.stack.top - 1           /* end of stack segment being rotated */
+	p := self.stack.absIndex(idx) - 1 /* start of segment */
+	var m int                         /* end of prefix */
 	if n >= 0 {
 		m = t - n
 	} else {
 		m = p - n - 1
 	}
-	stack.reverse(p, m)   /* reverse the prefix with length 'n' */
-	stack.reverse(m+1, t) /* reverse the suffix */
-	stack.reverse(p, t)   /* reverse the entire segment */
+	self.stack.reverse(p, m)   /* reverse the prefix with length 'n' */
+	self.stack.reverse(m+1, t) /* reverse the suffix */
+	self.stack.reverse(p, t)   /* reverse the entire segment */
 }
 
 // [-?, +?, –]

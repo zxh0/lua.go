@@ -65,7 +65,7 @@ func _pushFuncAndArgs(a, b int, vm LuaVM) (nArgs int) {
 
 		nArgs = lastArgIdx - a
 		top := vm.GetTop()
-		btm := vm.GetBottom()
+		btm := vm.MaxStackSize()
 
 		if lastArgIdx <= btm {
 			vm.CheckStack(lastArgIdx - a + 1)
@@ -94,7 +94,7 @@ func _moveResults(a, c int, vm LuaVM) {
 		}
 	} else {
 		top := vm.GetTop()
-		btm := vm.GetBottom()
+		btm := vm.MaxStackSize()
 		nRets := top - btm
 		if nRets > 0 {
 			vm.Rotate(a, a-btm-1)
@@ -127,7 +127,7 @@ func _return(i Instruction, vm LuaVM) {
 		vm.Pop(1)
 
 		top := vm.GetTop()
-		btm := vm.GetBottom()
+		btm := vm.MaxStackSize()
 
 		if lastRetIdx <= btm {
 			vm.CheckStack(btm - lastRetIdx + 1)

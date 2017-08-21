@@ -19,6 +19,12 @@ int main(void) {
   fprintf(stderr, "%d\n", lua_isboolean(L, -100)); // 0
   fprintf(stderr, "%d\n", lua_type(L, 100));       // -1
   fprintf(stderr, "%d\n", lua_type(L, -100));      // 0
+
+  fprintf(stderr, "%lld\n", lua_tointeger(L, 999)); // 0
+  fprintf(stderr, "%d\n", lua_isinteger(L, 999)); // 0
+
+  lua_pushvalue(L, 999);
+  fprintf(stderr, "%d\n", lua_type(L, -1)); // 0
   lua_close(L);
   return 0; 
 }

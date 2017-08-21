@@ -151,7 +151,7 @@ func (self *luaState) IsThread(idx int) bool {
 // http://www.lua.org/manual/5.3/manual.html#lua_tonumberx
 func (self *luaState) ToNumberX(idx int) (float64, bool) {
 	val := self.stack.get(idx)
-	return castToNumber(val)
+	return convertToNumber(val)
 }
 
 // [-0, +0, –]
@@ -165,7 +165,7 @@ func (self *luaState) ToNumber(idx int) float64 {
 // http://www.lua.org/manual/5.3/manual.html#lua_tointegerx
 func (self *luaState) ToIntegerX(idx int) (int64, bool) {
 	val := self.stack.get(idx)
-	return castToInteger(val)
+	return convertToInteger(val)
 }
 
 // [-0, +0, –]
@@ -179,7 +179,7 @@ func (self *luaState) ToInteger(idx int) int64 {
 // http://www.lua.org/manual/5.3/manual.html#lua_toboolean
 func (self *luaState) ToBoolean(idx int) bool {
 	val := self.stack.get(idx)
-	return castToBoolean(val)
+	return convertToBoolean(val)
 }
 
 // [-0, +0, m]

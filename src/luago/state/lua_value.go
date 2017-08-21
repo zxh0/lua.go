@@ -38,7 +38,7 @@ func fullTypeOf(val luaValue) LuaType {
 	}
 }
 
-func castToBoolean(val luaValue) bool {
+func convertToBoolean(val luaValue) bool {
 	switch x := val.(type) {
 	case nil:
 		return false
@@ -50,25 +50,7 @@ func castToBoolean(val luaValue) bool {
 }
 
 // http://www.lua.org/manual/5.3/manual.html#3.4.3
-func castToInteger(val luaValue) (int64, bool) {
-	switch x := val.(type) {
-	case int64:
-		return x, true
-	case float64:
-		return luanum.CastToInteger(x)
-	case string:
-		if i, ok := luanum.ParseInteger(x, 10); ok {
-			return i, true
-		}
-		if f, ok := luanum.ParseFloat(x); ok {
-			return luanum.CastToInteger(f)
-		}
-	}
-	return 0, false
-}
-
-// http://www.lua.org/manual/5.3/manual.html#3.4.3
-func castToNumber(val luaValue) (float64, bool) {
+func convertToNumber(val luaValue) (float64, bool) {
 	switch x := val.(type) {
 	case int64:
 		return float64(x), true
@@ -76,6 +58,31 @@ func castToNumber(val luaValue) (float64, bool) {
 		return x, true
 	case string:
 		return luanum.ParseFloat(x)
+	default:
+		return 0, false
+	}	
+}
+
+// http://www.lua.org/manual/5.3/manual.html#3.4.3
+func convertToInteger(val luaValue) (int64, bool) {
+	switch x := val.(type) {
+	case int64:
+		return x, true
+	case float64:
+		return luanum.FloatToInteger(x)
+	case string:
+		return _stringToInteger(x)
+	default:
+		return 0, false
+	}
+}
+
+func _stringToInteger(s string) (int64, bool) {
+	if i, ok := luanum.ParseInteger(s, 10); ok {
+		return i, true
+	}
+	if f, ok := luanum.ParseFloat(s); ok {
+		return luanum.FloatToInteger(f)
 	}
 	return 0, false
 }

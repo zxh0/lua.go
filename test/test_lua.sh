@@ -4,7 +4,7 @@ echo "compile lua.go ..."
 export GOPATH=`cd ..; pwd`
 go install luago/standalone/lua
 
-lua=lua5.3
+lua53=lua
 luago=`pwd`/../bin/lua
 filename=$1
 
@@ -17,13 +17,13 @@ fi
 test_file() { # $1:dir $2:file
   printf "[test] $1/$2"
 
-  lua_output=$2".output"
+  lua53_output=$2".output"
   luago_output=$2"go.output"
 
-  $lua $2 > $lua_output 2>&1
+  $lua53 $2 > $lua53_output 2>&1
   $luago $2 > $luago_output 2>&1
 
-  x=`diff -B  $lua_output $luago_output`
+  x=`diff -B  $lua53_output $luago_output`
   if [ ! -z "$x" ]; then
     echo " !!!"
   else

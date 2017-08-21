@@ -5,7 +5,7 @@ func (self *luaState) AddPC(n int) {
 }
 
 // todo
-func (self *luaState) GetBottom() int {
+func (self *luaState) MaxStackSize() int {
 	return int(self.stack.luaCl.proto.MaxStackSize)
 }
 

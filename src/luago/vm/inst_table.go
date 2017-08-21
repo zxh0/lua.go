@@ -1,6 +1,7 @@
 package vm
 
 import . "luago/api"
+import "luago/luanum"
 
 // R(A) := {} (size = B,C)
 func newTable(i Instruction, vm LuaVM) {
@@ -8,8 +9,8 @@ func newTable(i Instruction, vm LuaVM) {
 	a += 1
 
 	vm.CheckStack(1)
-	vm.CreateTable(FB2INT(b), FB2INT(c)) // ~/{}
-	vm.Replace(a)                        // ~
+	vm.CreateTable(luanum.Fb2int(b), luanum.Fb2int(c)) // ~/{}
+	vm.Replace(a)                                      // ~
 }
 
 // R(A) := R(B)[RK(C)]
@@ -61,6 +62,6 @@ func setList(i Instruction, vm LuaVM) {
 
 	// clear stack
 	if bIsZero {
-		vm.Pop(vm.GetTop() - vm.GetBottom())
+		vm.Pop(vm.GetTop() - vm.MaxStackSize())
 	}
 }

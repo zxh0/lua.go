@@ -4,7 +4,7 @@ echo "compile luac.go ..."
 export GOPATH=`cd ..; pwd`
 go install luago/standalone/luac
 
-luac=luac5.3
+luac53=luac
 luacgo=`pwd`/../bin/luac
 filename=$1
 
@@ -17,20 +17,20 @@ fi
 test_file() { # $1:dir $2:file
   printf "[test] $1/$2"
 
-  luacll=$2"c.ll.txt"
+  luac53ll=$2"c.ll.txt"
   luacgoll=$2"goc.ll.txt"
 
   # luac -l -l x.lua > x.luac.ll.txt
-  $luac -l -l $2 > $luacll
-  sed -i.bak -E 's/ (at|for) 0x[0-9a-f]+//g' $luacll
-  sed -i.bak -E 's/( |	); 0x[0-9a-f]+//g' $luacll
+  $luac53 -l -l $2 > $luac53ll
+  sed -i.bak -E 's/ (at|for) 0x[0-9a-f]+//g' $luac53ll
+  sed -i.bak -E 's/( |	); 0x[0-9a-f]+//g' $luac53ll
   rm luac.out
   rm *.bak
 
   # luacgo -ll x.lua > x.luacgo.ll.txt
   $luacgo -ll $2 > $luacgoll
 
-  x=`diff -B  $luacll $luacgoll`
+  x=`diff -B  $luac53ll $luacgoll`
   if [ ! -z "$x" ]; then
     echo " !!!"
   else

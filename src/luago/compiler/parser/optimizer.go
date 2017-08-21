@@ -58,11 +58,11 @@ func optimizeArithBinaryOp(exp *BinopExp) Exp {
 				return &IntegerExp{exp.Line, x.Val * y.Val}
 			case TOKEN_OP_IDIV:
 				if y.Val != 0 {
-					return &IntegerExp{exp.Line, x.Val / y.Val}
+					return &IntegerExp{exp.Line, luanum.IFloorDiv(x.Val, y.Val)}
 				}
 			case TOKEN_OP_MOD:
 				if y.Val != 0 {
-					return &IntegerExp{exp.Line, x.Val % y.Val}
+					return &IntegerExp{exp.Line, luanum.IMod(x.Val, y.Val)}
 				}
 			}
 		}
@@ -76,13 +76,17 @@ func optimizeArithBinaryOp(exp *BinopExp) Exp {
 				return &FloatExp{exp.Line, f - g}
 			case TOKEN_OP_MUL:
 				return &FloatExp{exp.Line, f * g}
-			case TOKEN_OP_IDIV, TOKEN_OP_DIV: // ?
+			case TOKEN_OP_DIV:
 				if g != 0 {
 					return &FloatExp{exp.Line, f / g}
 				}
+			case TOKEN_OP_IDIV:
+				if g != 0 {
+					return &FloatExp{exp.Line, luanum.FFloorDiv(f, g)}
+				}
 			case TOKEN_OP_MOD:
 				if g != 0 {
-					return &FloatExp{exp.Line, math.Mod(f, g)}
+					return &FloatExp{exp.Line, luanum.FMod(f, g)}
 				}
 			case TOKEN_OP_POW:
 				return &FloatExp{exp.Line, math.Pow(f, g)}
@@ -145,7 +149,7 @@ func optimizeBnot(exp *UnopExp) Exp {
 		x.Val = ^x.Val
 		return x
 	case *FloatExp:
-		if i, ok := luanum.CastToInteger(x.Val); ok {
+		if i, ok := luanum.FloatToInteger(x.Val); ok {
 			return &IntegerExp{x.Line, ^i}
 		}
 	}
@@ -175,7 +179,7 @@ func castToInt(exp Exp) (int64, bool) {
 	case *IntegerExp:
 		return x.Val, true
 	case *FloatExp:
-		return luanum.CastToInteger(x.Val)
+		return luanum.FloatToInteger(x.Val)
 	default:
 		return 0, false
 	}

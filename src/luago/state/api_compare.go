@@ -76,7 +76,7 @@ func (self *luaState) eq(val1, val2 luaValue, raw bool) bool {
 			if x == y {
 				return true
 			} else if result, ok := self.callMetaOp2(x, y, "__eq"); ok {
-				return castToBoolean(result)
+				return convertToBoolean(result)
 			} else {
 				return false
 			}
@@ -113,7 +113,7 @@ func (self *luaState) lt(val1, val2 luaValue) bool {
 		return ok && x < y
 	default:
 		if result, ok := self.callMetaOp2(val1, val2, "__lt"); ok {
-			return castToBoolean(result)
+			return convertToBoolean(result)
 		} else {
 			panic("todo: __lt!")
 		}
@@ -145,9 +145,9 @@ func (self *luaState) le(val1, val2 luaValue) bool {
 		return ok && x <= y
 	default:
 		if result, ok := self.callMetaOp2(val1, val2, "__le"); ok {
-			return castToBoolean(result)
+			return convertToBoolean(result)
 		} else if result, ok := self.callMetaOp2(val2, val1, "__lt"); ok {
-			return !castToBoolean(result)
+			return !convertToBoolean(result)
 		} else {
 			panic("todo: __le!")
 		}

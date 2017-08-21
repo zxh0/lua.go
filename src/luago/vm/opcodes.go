@@ -15,14 +15,6 @@ const (
 )
 
 /* OpArgMask */
-/*
- * masks for instruction properties. The format is:
- * bits 0-1: op mode
- * bits 2-3: C arg mode
- * bits 4-5: B arg mode
- * bit 6: instruction set register A
- * bit 7: operator is a test (next instruction must be a jump)
- */
 const (
 	OpArgN = iota /* argument is not used */
 	OpArgU        /* argument is used */
@@ -82,11 +74,11 @@ const (
 )
 
 type opcode struct {
-	testFlag byte // todo: bool
-	setAFlag byte // todo: bool
-	argBMode byte
-	argCMode byte
-	opMode   byte
+	testFlag byte // operator is a test (next instruction must be a jump)
+	setAFlag byte // instruction set register A
+	argBMode byte // B arg mode
+	argCMode byte // C arg mode
+	opMode   byte // op mode
 	name     string
 	action   func(i Instruction, vm api.LuaVM)
 }

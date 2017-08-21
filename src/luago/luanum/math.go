@@ -43,6 +43,5 @@ func IFloorDiv(x, y int64) int64 {
 }
 
 func FFloorDiv(x, y float64) float64 {
-	// todo
-	return x / y
+	return math.Floor(x / y)
 }
