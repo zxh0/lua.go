@@ -2,6 +2,16 @@ package vm
 
 import . "luago/api"
 
+// R(A) := closure(KPROTO[Bx])
+func closure(i Instruction, vm LuaVM) {
+	a, bx := i.ABx()
+	a += 1
+
+	//vm.CheckStack(1)
+	vm.LoadProto(bx) // ~/closure
+	vm.Replace(a)    // ~
+}
+
 // R(A), R(A+1), ..., R(A+B-2) = vararg
 func vararg(i Instruction, vm LuaVM) {
 	a, b, _ := i.ABC()
@@ -11,7 +21,7 @@ func vararg(i Instruction, vm LuaVM) {
 		panic("b < 0!")
 	} else if b != 1 { // b==0 or b>1
 		vm.LoadVararg(b - 1)
-		_moveResults(a, b, vm)
+		_popResults(a, b, vm)
 	}
 }
 
@@ -22,18 +32,7 @@ func tForCall(i Instruction, vm LuaVM) {
 
 	_pushFuncAndArgs(a, 3, vm)
 	vm.Call(2, c)
-	_moveResults(a+3, c+1, vm)
-}
-
-// R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1))
-func call(i Instruction, vm LuaVM) {
-	a, b, c := i.ABC()
-	a += 1
-
-	// println(":::"+ vm.StackToString())
-	nArgs := _pushFuncAndArgs(a, b, vm)
-	vm.Call(nArgs, c-1)
-	_moveResults(a, c, vm)
+	_popResults(a+3, c+1, vm)
 }
 
 // return R(A)(R(A+1), ... ,R(A+B-1))
@@ -45,7 +44,18 @@ func tailCall(i Instruction, vm LuaVM) {
 	c := 0
 	nArgs := _pushFuncAndArgs(a, b, vm)
 	vm.Call(nArgs, c-1)
-	_moveResults(a, c, vm)
+	_popResults(a, c, vm)
+}
+
+// R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1))
+func call(i Instruction, vm LuaVM) {
+	a, b, c := i.ABC()
+	a += 1
+
+	// println(":::"+ vm.StackToString())
+	nArgs := _pushFuncAndArgs(a, b, vm)
+	vm.Call(nArgs, c-1)
+	_popResults(a, c, vm)
 }
 
 func _pushFuncAndArgs(a, b int, vm LuaVM) (nArgs int) {
@@ -64,28 +74,25 @@ func _pushFuncAndArgs(a, b int, vm LuaVM) (nArgs int) {
 		vm.Pop(1)
 
 		nArgs = lastArgIdx - a
-		top := vm.GetTop()
-		btm := vm.MaxStackSize()
+		nRegs := vm.MaxStackSize()
 
-		if lastArgIdx <= btm {
-			vm.CheckStack(lastArgIdx - a + 1)
+		if lastArgIdx <= nRegs {
+			vm.CheckStack(nArgs + 1)
 			for i := a; i <= lastArgIdx; i++ {
 				vm.PushValue(i)
 			}
 		} else {
-			vm.CheckStack(btm - a + 1)
-			for i := a; i <= btm; i++ {
-				vm.PushValue(i)
-			}
-			if top > btm {
-				vm.Rotate(btm+1, btm-top)
+			vm.CheckStack(nRegs - a + 1)
+			vm.SetTop(nRegs + nArgs + 1)
+			for i := lastArgIdx; i >= a; i-- {
+				vm.Copy(i, nRegs-a+1+i)
 			}
 		}
 	}
 	return
 }
 
-func _moveResults(a, c int, vm LuaVM) {
+func _popResults(a, c int, vm LuaVM) {
 	if c == 1 {
 		// no results
 	} else if c > 1 {
@@ -93,15 +100,17 @@ func _moveResults(a, c int, vm LuaVM) {
 			vm.Replace(i)
 		}
 	} else {
-		top := vm.GetTop()
-		btm := vm.MaxStackSize()
-		nRets := top - btm
+		nRegs := vm.MaxStackSize()
+		nRets := vm.GetTop() - nRegs
 		if nRets > 0 {
-			vm.Rotate(a, a-btm-1)
-			if btm+1-a >= nRets {
+			//vm.Rotate(a, a-nRegs-1)
+			for i := 0; i < nRets; i++ {
+				vm.Copy(nRegs+1+i, a+i)
+			}
+			if nRegs-a+1 >= nRets {
 				vm.Pop(nRets)
 			} else {
-				vm.Pop(btm + 1 - a)
+				vm.Pop(nRegs - a + 1)
 			}
 		}
 		vm.PushInteger(int64(a + nRets - 1))
@@ -122,25 +131,22 @@ func _return(i Instruction, vm LuaVM) {
 			vm.PushValue(i)
 		}
 	} else {
-		// todo: panic("todo: return & b == 0!")
 		lastRetIdx := int(vm.ToInteger(-1))
 		vm.Pop(1)
 
-		top := vm.GetTop()
-		btm := vm.MaxStackSize()
+		nRets := lastRetIdx - a + 1
+		nRegs := vm.MaxStackSize()
 
-		if lastRetIdx <= btm {
-			vm.CheckStack(btm - lastRetIdx + 1)
+		if lastRetIdx <= nRegs {
+			vm.CheckStack(nRets)
 			for i := a; i <= lastRetIdx; i++ {
 				vm.PushValue(i)
 			}
 		} else {
-			vm.CheckStack(btm - a + 1)
-			for i := a; i <= btm; i++ {
-				vm.PushValue(i)
-			}
-			if top > btm {
-				vm.Rotate(btm+1, btm-top)
+			vm.CheckStack(nRegs - a + 1)
+			vm.SetTop(nRegs + nRets)
+			for i := lastRetIdx; i >= a; i-- {
+				vm.Copy(i, nRegs-a+1+i)
 			}
 		}
 	}

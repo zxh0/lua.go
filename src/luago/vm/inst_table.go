@@ -8,7 +8,7 @@ func newTable(i Instruction, vm LuaVM) {
 	a, b, c := i.ABC()
 	a += 1
 
-	vm.CheckStack(1)
+	//vm.CheckStack(1)
 	vm.CreateTable(luanum.Fb2int(b), luanum.Fb2int(c)) // ~/{}
 	vm.Replace(a)                                      // ~
 }
@@ -19,7 +19,7 @@ func getTable(i Instruction, vm LuaVM) {
 	a += 1
 	b += 1
 
-	vm.CheckStack(1)
+	//vm.CheckStack(1)
 	vm.GetRK(c)    // ~/rk[c]
 	vm.GetTable(b) // ~/r[b][rk[c]]
 	vm.Replace(a)  // ~
@@ -30,7 +30,7 @@ func setTable(i Instruction, vm LuaVM) {
 	a, b, c := i.ABC()
 	a += 1
 
-	vm.CheckStack(2)
+	//vm.CheckStack(2)
 	vm.GetRK(b)    // ~/rk[b]
 	vm.GetRK(c)    // ~/rk[b]/rk[c]
 	vm.SetTable(a) // ~

@@ -7,14 +7,14 @@ func loadK(i Instruction, vm LuaVM) {
 	a, bx := i.ABx()
 	a += 1
 
-	vm.CheckStack(1)
+	//vm.CheckStack(1)
 	vm.GetConst(bx) // ~/k[bx]
 	vm.Replace(a)   // ~
 }
 
 // R(A) := Kst(extra arg)
 func loadKx(i Instruction, vm LuaVM) {
-	vm.CheckStack(1)
+	//vm.CheckStack(1)
 	if i.Opcode() == OP_LOADKX {
 		a, _, _ := i.ABC()
 		vm.PushInteger(int64(a)) // ~/a
@@ -34,7 +34,7 @@ func loadNil(i Instruction, vm LuaVM) {
 	a, b, _ := i.ABC()
 	a += 1
 
-	vm.CheckStack(1)
+	//vm.CheckStack(1)
 	vm.PushNil() // ~/nil
 	for r := a; r <= a+b; r++ {
 		vm.Copy(-1, r)
@@ -47,7 +47,7 @@ func loadBool(i Instruction, vm LuaVM) {
 	a, b, c := i.ABC()
 	a += 1
 
-	vm.CheckStack(1)
+	//vm.CheckStack(1)
 	vm.PushBoolean(b != 0) // ~/b
 	vm.Replace(a)          // ~
 

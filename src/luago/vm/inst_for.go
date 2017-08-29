@@ -7,7 +7,7 @@ func forPrep(i Instruction, vm LuaVM) {
 	a, sBx := i.AsBx()
 	a += 1
 
-	vm.CheckStack(2)
+	//vm.CheckStack(2)
 	vm.PushValue(a)     // ~/r[a]
 	vm.PushValue(a + 2) // ~/r[a]/r[a+2]
 	vm.Arith(LUA_OPSUB) // ~/r[a]-r[a+2]
@@ -24,7 +24,7 @@ func forLoop(i Instruction, vm LuaVM) {
 	a += 1
 
 	// R(A)+=R(A+2);
-	vm.CheckStack(2)
+	//vm.CheckStack(2)
 	vm.PushValue(a + 2) // ~/r[a+2]
 	vm.PushValue(a)     // ~/r[a+2]/r[a]
 	vm.Arith(LUA_OPADD) // ~/r[a]+r[a+2]

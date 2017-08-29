@@ -33,86 +33,75 @@ func (self *luaState) Dump() {
 // [-(nargs+1), +nresults, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_call
 func (self *luaState) Call(nArgs, nResults int) {
-	x := self.stack.get(-(nArgs + 1))
+	val := self.stack.get(-(nArgs + 1))
 
-	switch f := x.(type) {
-	case GoFunction: // todo
-		self.callGoClosure(nArgs, nResults, &goClosure{goFunc: f})
-	case *goClosure:
-		self.callGoClosure(nArgs, nResults, f)
+	switch x := val.(type) {
 	case *luaClosure:
-		self.callLuaClosure(nArgs, nResults, f)
+		self.callLuaClosure(nArgs, nResults, x)
+	case *goClosure:
+		self.callGoClosure(nArgs, nResults, x)
+	case GoFunction: // todo
+		self.callGoClosure(nArgs, nResults, &goClosure{goFunc: x})
 	default:
 		panic("not a function!")
 	}
 }
 
-func (self *luaState) callGoClosure(nArgs, nResults int, f *goClosure) {
-	// pop args & func
-	callerStack := self.stack
-	args := callerStack.popN(nArgs)
-	callerStack.pop()
-
+func (self *luaState) callGoClosure(nArgs, nResults int, c *goClosure) {
 	// create new lua stack
 	calleeStack := newLuaStack(nArgs+LUA_MINSTACK, self)
-	calleeStack.goCl = f
+	calleeStack.goCl = c
 
-	// pass args
-	calleeStack.check(nArgs)
-	calleeStack.pushN(args)
+	// pass args, pop func
+	callerStack := self.stack
+	if nArgs > 0 {
+		args := callerStack.popN(nArgs)
+		calleeStack.pushN(args)
+	}
+	callerStack.pop()
 
 	// call func
 	self.pushLuaStack(calleeStack)
-	r := f.goFunc(self)
+	r := c.goFunc(self)
 	self.popLuaStack()
 
 	// return results
 	if nResults != 0 {
 		results := calleeStack.popN(r)
-		_pushResults(nResults, results, callerStack)
+		_getResults(callerStack, results, nResults)
 	}
 }
 
-func (self *luaState) callLuaClosure(nArgs, nResults int, f *luaClosure) {
-	// pop args & func
-	callerStack := self.stack
-	args := callerStack.popN(nArgs)
-	callerStack.pop()
-
+func (self *luaState) callLuaClosure(nArgs, nResults int, c *luaClosure) {
 	// create new lua stack
-	nRegs := int(f.proto.MaxStackSize)
+	nRegs := int(c.proto.MaxStackSize)
 	calleeStack := newLuaStack(nRegs+LUA_MINSTACK, self)
-	calleeStack.top = nRegs // todo
-	calleeStack.luaCl = f
+	calleeStack.top = nRegs
+	calleeStack.luaCl = c
 
-	// pass args
-	nParams := int(f.proto.NumParams)
-	for i, arg := range args {
-		if i < nParams {
-			calleeStack.slots[i] = arg
-		}
+	// pass args, pop func
+	callerStack := self.stack
+	if nArgs > 0 {
+		args := callerStack.popN(nArgs)
+		_passArgs(calleeStack, args, c)
 	}
-	if f.proto.IsVararg == 1 { // TODO
-		if nArgs > nParams {
-			calleeStack.xArgs = args[nParams:]
-		}
-	}
+	callerStack.pop()
 
 	// call func
 	self.pushLuaStack(calleeStack)
-	self.runLuaClosure(f)
+	self.runLuaClosure(c)
 	self.popLuaStack()
 
 	// return results
 	if nResults != 0 {
-		results := calleeStack.popN(calleeStack.top - nRegs) // todo
-		_pushResults(nResults, results, callerStack)
+		results := calleeStack.popN(calleeStack.top - nRegs)
+		_getResults(callerStack, results, nResults)
 	}
 }
 
-func (self *luaState) runLuaClosure(f *luaClosure) {
-	// fmt.Printf("call %s\n", f.toString())
-	code := f.proto.Code
+func (self *luaState) runLuaClosure(c *luaClosure) {
+	// fmt.Printf("call %s\n", c.toString())
+	code := c.proto.Code
 	for {
 		pc := self.stack.pc
 		inst := vm.Instruction(code[pc])
@@ -130,19 +119,27 @@ func (self *luaState) runLuaClosure(f *luaClosure) {
 	}
 }
 
-func _pushResults(nResults int, results []luaValue, stack *luaStack) {
-	if nResults > 0 && nResults < len(results) {
-		results = results[0:nResults]
+func _passArgs(calleeStack *luaStack, args []luaValue, c *luaClosure) {
+	nParams := int(c.proto.NumParams)
+	for i, arg := range args {
+		if i < nParams {
+			calleeStack.slots[i] = arg
+		}
 	}
-	if nResults > 0 {
-		stack.check(nResults)
-	} else {
-		stack.check(len(results))
+	if len(args) > nParams && c.proto.IsVararg == 1 {
+		calleeStack.xArgs = args[nParams:]
 	}
-	stack.pushN(results)
-	if nResults > len(results) {
+}
+
+func _getResults(callerStack *luaStack, results []luaValue, nResults int) {
+	if nResults < 0 || nResults == len(results) {
+		callerStack.pushN(results)
+	} else if nResults < len(results) {
+		callerStack.pushN(results[0:nResults])
+	} else { // nResults > len(results)
+		callerStack.pushN(results)
 		for i := len(results); i < nResults; i++ {
-			stack.push(nil)
+			callerStack.push(nil)
 		}
 	}
 }

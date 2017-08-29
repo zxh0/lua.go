@@ -60,7 +60,7 @@ func convertToNumber(val luaValue) (float64, bool) {
 		return luanum.ParseFloat(x)
 	default:
 		return 0, false
-	}	
+	}
 }
 
 // http://www.lua.org/manual/5.3/manual.html#3.4.3

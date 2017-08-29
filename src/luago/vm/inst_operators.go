@@ -24,7 +24,7 @@ func _binaryArith(i Instruction, vm LuaVM, op ArithOp) {
 	a, b, c := i.ABC()
 	a += 1
 
-	vm.CheckStack(2)
+	//vm.CheckStack(2)
 	vm.GetRK(b)   // ~/rk[b]
 	vm.GetRK(c)   // ~/rk[b]/rk[c]
 	vm.Arith(op)  // ~/result
@@ -37,7 +37,7 @@ func _unaryArith(i Instruction, vm LuaVM, op ArithOp) {
 	a += 1
 	b += 1
 
-	vm.CheckStack(1)
+	//vm.CheckStack(1)
 	vm.PushValue(b) // ~/r[b]
 	vm.Arith(op)    // ~/result
 	vm.Replace(a)   // ~
@@ -53,7 +53,7 @@ func le(i Instruction, vm LuaVM) { _compare(i, vm, LUA_OPLE) } // <=
 func _compare(i Instruction, vm LuaVM, op CompareOp) {
 	a, b, c := i.ABC()
 
-	vm.CheckStack(2)
+	//vm.CheckStack(2)
 	vm.GetRK(b) // ~/rk[b]
 	vm.GetRK(c) // ~/rk[b]/rk[c]
 	if vm.Compare(-2, -1, op) != (a != 0) {
@@ -70,7 +70,7 @@ func not(i Instruction, vm LuaVM) {
 	a += 1
 	b += 1
 
-	vm.CheckStack(1)
+	//vm.CheckStack(1)
 	vm.PushBoolean(!vm.ToBoolean(b)) // ~/!r[b]
 	vm.Replace(a)                    // ~
 }
@@ -106,7 +106,7 @@ func _len(i Instruction, vm LuaVM) {
 	a += 1
 	b += 1
 
-	vm.CheckStack(1)
+	//vm.CheckStack(1)
 	vm.Len(b)     // ~/#r[b]
 	vm.Replace(a) // ~
 }
