@@ -9,6 +9,29 @@ func (self *luaState) MaxStackSize() int {
 	return int(self.stack.luaCl.proto.MaxStackSize)
 }
 
+func (self *luaState) GetConst(index int) {
+	c := self.stack.luaCl.proto.Constants[index]
+	self.stack.push(c)
+}
+
+func (self *luaState) GetRK(rk int) {
+	if rk > 0xFF { // constant
+		self.GetConst(rk & 0xFF)
+	} else { // register
+		self.PushValue(rk + 1)
+	}
+}
+
+func (self *luaState) GetUpvalue2(index int) {
+	upval := self.stack.luaCl.upvals[index]
+	self.stack.push(*upval)
+}
+
+func (self *luaState) SetUpvalue2(index int) {
+	upval := self.stack.luaCl.upvals[index]
+	*upval = self.stack.pop()
+}
+
 func (self *luaState) LoadProto(index int) {
 	proto := self.stack.luaCl.proto.Protos[index]
 	closure := newLuaClosure(proto)
@@ -41,27 +64,4 @@ func (self *luaState) LoadVararg(n int) {
 			stack.push(nil)
 		}
 	}
-}
-
-func (self *luaState) GetRK(rk int) {
-	if rk > 0xFF { // constant
-		self.GetConst(rk & 0xFF)
-	} else { // register
-		self.PushValue(rk + 1)
-	}
-}
-
-func (self *luaState) GetConst(index int) {
-	c := self.stack.luaCl.proto.Constants[index]
-	self.stack.push(c)
-}
-
-func (self *luaState) GetUpvalue2(index int) {
-	upval := self.stack.luaCl.upvals[index]
-	self.stack.push(*upval)
-}
-
-func (self *luaState) SetUpvalue2(index int) {
-	upval := self.stack.luaCl.upvals[index]
-	*upval = self.stack.pop()
 }

@@ -3,6 +3,13 @@ package state
 import . "luago/api"
 
 // [-0, +0, –]
+// http://www.lua.org/manual/5.3/manual.html#lua_gettop
+// lua-5.3.4/src/lapi.c#lua_gettop()
+func (self *luaState) GetTop() int {
+	return self.stack.top
+}
+
+// [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_absindex
 // lua-5.3.4/src/lapi.c#lua_absindex()
 func (self *luaState) AbsIndex(idx int) int {
@@ -16,31 +23,6 @@ func (self *luaState) CheckStack(n int) bool {
 	return self.stack.check(n)
 }
 
-// [-0, +0, –]
-// http://www.lua.org/manual/5.3/manual.html#lua_gettop
-// lua-5.3.4/src/lapi.c#lua_gettop()
-func (self *luaState) GetTop() int {
-	return self.stack.top
-}
-
-// [-?, +?, –]
-// http://www.lua.org/manual/5.3/manual.html#lua_settop
-// lua-5.3.4/src/lapi.c#lua_settop()
-func (self *luaState) SetTop(idx int) {
-	absIdx := self.stack.absIndex(idx)
-	n := self.stack.top - absIdx
-
-	if n > 0 {
-		for i := 0; i < n; i++ {
-			self.stack.pop()
-		}
-	} else if n < 0 {
-		for i := 0; i > n; i-- {
-			self.stack.push(nil)
-		}
-	}
-}
-
 // [-n, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_pop
 // lua-5.3.4/src/lua.h#lua_pop()
@@ -48,6 +30,14 @@ func (self *luaState) Pop(n int) {
 	for i := 0; i < n; i++ {
 		self.stack.pop()
 	}
+}
+
+// [-0, +0, –]
+// http://www.lua.org/manual/5.3/manual.html#lua_copy
+// lua-5.3.4/src/lapi.c#lua_copy()
+func (self *luaState) Copy(fromIdx, toIdx int) {
+	val := self.stack.get(fromIdx)
+	self.stack.set(toIdx, val)
 }
 
 // [-0, +1, –]
@@ -58,12 +48,12 @@ func (self *luaState) PushValue(idx int) {
 	self.stack.push(val)
 }
 
-// [-0, +0, –]
-// http://www.lua.org/manual/5.3/manual.html#lua_copy
-// lua-5.3.4/src/lapi.c#lua_copy()
-func (self *luaState) Copy(fromIdx, toIdx int) {
-	val := self.stack.get(fromIdx)
-	self.stack.set(toIdx, val)
+// [-1, +0, –]
+// http://www.lua.org/manual/5.3/manual.html#lua_replace
+// lua-5.3.4/src/lua.h#lua_replace()
+func (self *luaState) Replace(idx int) {
+	self.Copy(-1, idx)
+	self.Pop(1)
 }
 
 // [-1, +1, –]
@@ -78,14 +68,6 @@ func (self *luaState) Insert(idx int) {
 // lua-5.3.4/src/lua.h#lua_remove()
 func (self *luaState) Remove(idx int) {
 	self.Rotate(idx, -1)
-	self.Pop(1)
-}
-
-// [-1, +0, –]
-// http://www.lua.org/manual/5.3/manual.html#lua_replace
-// lua-5.3.4/src/lua.h#lua_replace()
-func (self *luaState) Replace(idx int) {
-	self.Copy(-1, idx)
 	self.Pop(1)
 }
 
@@ -104,6 +86,24 @@ func (self *luaState) Rotate(idx, n int) {
 	self.stack.reverse(p, m)   /* reverse the prefix with length 'n' */
 	self.stack.reverse(m+1, t) /* reverse the suffix */
 	self.stack.reverse(p, t)   /* reverse the entire segment */
+}
+
+// [-?, +?, –]
+// http://www.lua.org/manual/5.3/manual.html#lua_settop
+// lua-5.3.4/src/lapi.c#lua_settop()
+func (self *luaState) SetTop(idx int) {
+	absIdx := self.stack.absIndex(idx)
+	n := self.stack.top - absIdx
+
+	if n > 0 {
+		for i := 0; i < n; i++ {
+			self.stack.pop()
+		}
+	} else if n < 0 {
+		for i := 0; i > n; i-- {
+			self.stack.push(nil)
+		}
+	}
 }
 
 // [-?, +?, –]

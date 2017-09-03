@@ -127,7 +127,7 @@ func (self *reader) readConstants() []interface{} {
 }
 
 func (self *reader) readConstant() interface{} {
-	switch LuaType(self.readByte()) {
+	switch self.readByte() {
 	case LUA_TNIL:
 		return nil
 	case LUA_TBOOLEAN:
