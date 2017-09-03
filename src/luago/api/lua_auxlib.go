@@ -16,8 +16,8 @@ type AuxLib interface {
 	DoFile(filename string) bool                         //
 	DoString(str string) bool                            //
 	Error2(fmt string)                                   // todo
-	GetMetaField(obj int, e string) LuaType              //
-	GetMetaTableL(tname string) LuaType                  //
+	GetMetafield(obj int, e string) LuaType              //
+	GetMetatableL(tname string) LuaType                  //
 	GetSubTable(idx int, fname string) bool              // push(r[idx][fname] || {})
 	Len2(idx int) int64                                  // #(r[idx])
 	LoadFile(filename string) ThreadStatus               //

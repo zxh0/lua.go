@@ -88,7 +88,7 @@ type BasicAPI interface {
 	RawGetI(idx int, n int64) LuaType    // push(r[idx][i])
 	RawGetP(idx int, p UserData) LuaType // push(r[idx][p])
 	CreateTable(nArr, nRec int)          // push({})
-	GetMetaTable(idx int) bool           // push(r[idx].metaTable)?
+	GetMetatable(idx int) bool           // push(r[idx].metatable)?
 	GetUserValue(idx int) LuaType        // push(r[idx].userValue)
 	NewTable()                           // push({})
 	/* set functions (stack -> Lua) */
@@ -97,7 +97,7 @@ type BasicAPI interface {
 	SetTable(idx int)                   // v=pop(); k=pop(); r[idx][k] = v
 	SetField(idx int, k string)         // r[idx][k] = pop()
 	SetI(idx int, n int64)              // r[idx][n] = pop()
-	SetMetaTable(idx int)               // r[idx].metatable = pop()
+	SetMetatable(idx int)               // r[idx].metatable = pop()
 	SetUserValue(idx int)               // r[idx].userValue = pop()
 	RawSet(idx int)                     // v=pop(); k=pop(); r[idx][k] = v
 	RawSetI(idx int, i int64)           // r[idx][n] = pop()

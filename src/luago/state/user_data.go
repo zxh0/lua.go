@@ -2,7 +2,7 @@ package state
 
 // todo
 type userData struct {
-	metaTable *luaTable
+	metatable *luaTable
 	userValue luaValue
 	data      interface{} // anything
 }

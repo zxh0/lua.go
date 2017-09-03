@@ -45,7 +45,7 @@ func (self *luaState) popLuaStack() {
 	self.callDepth--
 }
 
-func (self *luaState) getMetaTable(val luaValue) *luaTable {
+func (self *luaState) getMetatable(val luaValue) *luaTable {
 	switch x := val.(type) {
 	case nil:
 		return self.mtOfNil
@@ -58,15 +58,15 @@ func (self *luaState) getMetaTable(val luaValue) *luaTable {
 	case *luaClosure, *goClosure, GoFunction:
 		return self.mtOfFunc
 	case *luaTable:
-		return x.metaTable
+		return x.metatable
 	case *userData:
-		return x.metaTable
+		return x.metatable
 	default: // todo
 		return nil
 	}
 }
 
-func (self *luaState) setMetaTable(val luaValue, mt *luaTable) {
+func (self *luaState) setMetatable(val luaValue, mt *luaTable) {
 	switch x := val.(type) {
 	case nil:
 		self.mtOfNil = mt
@@ -79,16 +79,16 @@ func (self *luaState) setMetaTable(val luaValue, mt *luaTable) {
 	case *luaClosure, *goClosure, GoFunction:
 		self.mtOfFunc = mt
 	case *luaTable:
-		x.metaTable = mt
+		x.metatable = mt
 	case *userData:
-		x.metaTable = mt
+		x.metatable = mt
 	default:
 		// todo
 	}
 }
 
-func (self *luaState) getMetaField(val luaValue, fieldName string) luaValue {
-	if mt := self.getMetaTable(val); mt != nil {
+func (self *luaState) getMetafield(val luaValue, fieldName string) luaValue {
+	if mt := self.getMetatable(val); mt != nil {
 		return mt.get(fieldName)
 	} else {
 		return nil
@@ -97,7 +97,7 @@ func (self *luaState) getMetaField(val luaValue, fieldName string) luaValue {
 
 // todo: remove this method
 func (self *luaState) callMetaOp1(val luaValue, mmName string) (luaValue, bool) {
-	if mm := self.getMetaField(val, mmName); mm != nil {
+	if mm := self.getMetafield(val, mmName); mm != nil {
 		self.stack.check(4)
 		self.stack.push(mm)
 		self.stack.push(val)
@@ -109,9 +109,9 @@ func (self *luaState) callMetaOp1(val luaValue, mmName string) (luaValue, bool) 
 }
 
 func (self *luaState) callMetaOp2(a, b luaValue, mmName string) (luaValue, bool) {
-	mm := self.getMetaField(a, mmName)
+	mm := self.getMetafield(a, mmName)
 	if mm == nil {
-		mm = self.getMetaField(b, mmName)
+		mm = self.getMetafield(b, mmName)
 	}
 
 	if mm != nil {

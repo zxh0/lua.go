@@ -7,7 +7,7 @@ type pair struct {
 
 // todo: move to types?
 type luaTable struct {
-	metaTable *luaTable
+	metatable *luaTable
 	_map      map[luaValue]luaValue
 	list      []luaValue
 	pairs     []pair // used by next()
@@ -21,9 +21,9 @@ func newLuaTable(nArr, nRec int) *luaTable {
 	}
 }
 
-func (self *luaTable) hasMetaField(fieldName string) bool {
-	return self.metaTable != nil &&
-		self.metaTable.get(fieldName) != nil
+func (self *luaTable) hasMetafield(fieldName string) bool {
+	return self.metatable != nil &&
+		self.metatable.get(fieldName) != nil
 }
 
 func (self *luaTable) len() int {
