@@ -21,7 +21,7 @@ func newLuaTable(nArr, nRec int) *luaTable {
 	}
 }
 
-func (self *luaTable) hasMetaField(fieldName string) bool {
+func (self *luaTable) hasMetafield(fieldName string) bool {
 	return self.metatable != nil &&
 		self.metatable.get(fieldName) != nil
 }

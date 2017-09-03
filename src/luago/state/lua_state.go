@@ -87,7 +87,7 @@ func (self *luaState) setMetatable(val luaValue, mt *luaTable) {
 	}
 }
 
-func (self *luaState) getMetaField(val luaValue, fieldName string) luaValue {
+func (self *luaState) getMetafield(val luaValue, fieldName string) luaValue {
 	if mt := self.getMetatable(val); mt != nil {
 		return mt.get(fieldName)
 	} else {
@@ -97,7 +97,7 @@ func (self *luaState) getMetaField(val luaValue, fieldName string) luaValue {
 
 // todo: remove this method
 func (self *luaState) callMetaOp1(val luaValue, mmName string) (luaValue, bool) {
-	if mm := self.getMetaField(val, mmName); mm != nil {
+	if mm := self.getMetafield(val, mmName); mm != nil {
 		self.stack.check(4)
 		self.stack.push(mm)
 		self.stack.push(val)
@@ -109,9 +109,9 @@ func (self *luaState) callMetaOp1(val luaValue, mmName string) (luaValue, bool) 
 }
 
 func (self *luaState) callMetaOp2(a, b luaValue, mmName string) (luaValue, bool) {
-	mm := self.getMetaField(a, mmName)
+	mm := self.getMetafield(a, mmName)
 	if mm == nil {
-		mm = self.getMetaField(b, mmName)
+		mm = self.getMetafield(b, mmName)
 	}
 
 	if mm != nil {

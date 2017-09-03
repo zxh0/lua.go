@@ -70,7 +70,7 @@ func (self *luaState) RawGetP(idx int, p UserData) LuaType {
 func (self *luaState) _getTable(t, k luaValue, raw bool) LuaType {
 	if tbl, ok := t.(*luaTable); ok {
 		v := tbl.get(k)
-		if v != nil || raw || !tbl.hasMetaField("__index") {
+		if v != nil || raw || !tbl.hasMetafield("__index") {
 			self.stack.push(v)
 			return typeOf(v)
 		}
@@ -78,7 +78,7 @@ func (self *luaState) _getTable(t, k luaValue, raw bool) LuaType {
 		panic("not table!")
 	}
 
-	if mf := self.getMetaField(t, "__index"); mf != nil {
+	if mf := self.getMetafield(t, "__index"); mf != nil {
 		switch x := mf.(type) {
 		case *luaTable:
 			return self._getTable(x, k, true)

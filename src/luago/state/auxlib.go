@@ -144,7 +144,7 @@ func (self *luaState) Len2(index int) int64 {
 	}
 }
 
-func (self *luaState) GetMetaField(obj int, e string) LuaType {
+func (self *luaState) GetMetafield(obj int, e string) LuaType {
 	panic("todo!")
 }
 
@@ -295,7 +295,7 @@ func (self *luaState) tagError(arg int, tag LuaType) {
 
 // func (self *luaState) typeError(arg int, tname string) int {
 // 	var typearg string /* name for the type of the actual argument */
-// 	if self.GetMetaField(arg, "__name") == LUA_TSTRING {
+// 	if self.GetMetafield(arg, "__name") == LUA_TSTRING {
 // 		typearg, _ = self.ToString(-1) /* use the given type name */
 // 	//} else if self.Type(arg) == LUA_TLIGHTUSERDATA {
 // 	//	typearg = "light userdata" /* special name for messages */

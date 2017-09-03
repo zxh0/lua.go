@@ -70,7 +70,7 @@ func (self *luaState) RawSetP(idx int, p UserData) {
 // t[k]=v
 func (self *luaState) _setTable(t, k, v luaValue, raw bool) {
 	if tbl, ok := t.(*luaTable); ok {
-		if raw || !tbl.hasMetaField("__newindex") || tbl.get(k) != nil {
+		if raw || !tbl.hasMetafield("__newindex") || tbl.get(k) != nil {
 			tbl.put(k, v)
 			return
 		}
@@ -78,7 +78,7 @@ func (self *luaState) _setTable(t, k, v luaValue, raw bool) {
 		panic("not table!")
 	}
 
-	if mf := self.getMetaField(t, "__newindex"); mf != nil {
+	if mf := self.getMetafield(t, "__newindex"); mf != nil {
 		switch x := mf.(type) {
 		case *luaTable:
 			self._setTable(x, k, v, true)
