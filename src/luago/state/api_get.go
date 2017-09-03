@@ -97,10 +97,10 @@ func (self *luaState) _getTable(t, k luaValue, raw bool) LuaType {
 
 // [-0, +(0|1), –]
 // http://www.lua.org/manual/5.3/manual.html#lua_getmetatable
-func (self *luaState) GetMetaTable(idx int) bool {
+func (self *luaState) GetMetatable(idx int) bool {
 	val := self.stack.get(idx)
 
-	if mt := self.getMetaTable(val); mt != nil {
+	if mt := self.getMetatable(val); mt != nil {
 		self.stack.push(mt)
 		return true
 	} else {

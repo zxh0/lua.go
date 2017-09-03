@@ -17,8 +17,8 @@ var baseFuncs = map[string]GoFunction{
 	"dofile":         baseDoFile,
 	"pcall":          basePCall,
 	"xpcall":         baseXpcall,
-	"getmetatable":   baseGetMetaTable,
-	"setmetatable":   baseSetMetaTable,
+	"getmetatable":   baseGetMetatable,
+	"setmetatable":   baseSetMetatable,
 	"rawequal":       baseRawEqual,
 	"rawlen":         baseRawLen,
 	"rawget":         baseRawGet,
@@ -196,8 +196,8 @@ func baseXpcall(ls LuaState) int {
 
 // getmetatable (object)
 // http://www.lua.org/manual/5.3/manual.html#pdf-getmetatable
-func baseGetMetaTable(ls LuaState) int {
-	if !ls.GetMetaTable(1) {
+func baseGetMetatable(ls LuaState) int {
+	if !ls.GetMetatable(1) {
 		ls.PushNil()
 		return 1
 	}
@@ -214,8 +214,8 @@ func baseGetMetaTable(ls LuaState) int {
 
 // setmetatable (table, metatable)
 // http://www.lua.org/manual/5.3/manual.html#pdf-setmetatable
-func baseSetMetaTable(ls LuaState) int {
-	if ls.GetMetaTable(1) {
+func baseSetMetatable(ls LuaState) int {
+	if ls.GetMetatable(1) {
 		ls.PushString("__metatable")
 		ls.GetTable(-2)
 		if !ls.IsNil(-1) {
@@ -225,7 +225,7 @@ func baseSetMetaTable(ls LuaState) int {
 		}
 	}
 
-	ls.SetMetaTable(1)
+	ls.SetMetatable(1)
 	return 1
 }
 
@@ -294,7 +294,7 @@ func baseToNumber(ls LuaState) int {
 // http://www.lua.org/manual/5.3/manual.html#pdf-tostring
 func baseToString(ls LuaState) int {
 	ls.CheckStack(4)
-	ls.GetMetaTable(1)  // v/mt
+	ls.GetMetatable(1)  // v/mt
 	if ls.IsTable(-1) { //
 		ls.PushString("__tostring") // v/mt/"__tostring"
 		ls.GetTable(-2)             // v/mt/__tostring

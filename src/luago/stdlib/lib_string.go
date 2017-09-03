@@ -26,15 +26,15 @@ var strLib = map[string]GoFunction{
 
 func OpenStringLib(ls LuaState) int {
 	ls.NewLib(strLib)
-	createMetaTable(ls)
+	createMetatable(ls)
 	return 1
 }
 
-func createMetaTable(ls LuaState) {
+func createMetatable(ls LuaState) {
 	ls.CreateTable(0, 1)       /* table to be metatable for strings */
 	ls.PushString("dummy")     /* dummy string */
 	ls.PushValue(-2)           /* copy table */
-	ls.SetMetaTable(-2)        /* set table as metatable for strings */
+	ls.SetMetatable(-2)        /* set table as metatable for strings */
 	ls.Pop(1)                  /* pop dummy string */
 	ls.PushValue(-2)           /* get string library */
 	ls.SetField(-2, "__index") /* metatable.__index = string */

@@ -45,7 +45,7 @@ func (self *luaState) popLuaStack() {
 	self.callDepth--
 }
 
-func (self *luaState) getMetaTable(val luaValue) *luaTable {
+func (self *luaState) getMetatable(val luaValue) *luaTable {
 	switch x := val.(type) {
 	case nil:
 		return self.mtOfNil
@@ -58,15 +58,15 @@ func (self *luaState) getMetaTable(val luaValue) *luaTable {
 	case *luaClosure, *goClosure, GoFunction:
 		return self.mtOfFunc
 	case *luaTable:
-		return x.metaTable
+		return x.metatable
 	case *userData:
-		return x.metaTable
+		return x.metatable
 	default: // todo
 		return nil
 	}
 }
 
-func (self *luaState) setMetaTable(val luaValue, mt *luaTable) {
+func (self *luaState) setMetatable(val luaValue, mt *luaTable) {
 	switch x := val.(type) {
 	case nil:
 		self.mtOfNil = mt
@@ -79,16 +79,16 @@ func (self *luaState) setMetaTable(val luaValue, mt *luaTable) {
 	case *luaClosure, *goClosure, GoFunction:
 		self.mtOfFunc = mt
 	case *luaTable:
-		x.metaTable = mt
+		x.metatable = mt
 	case *userData:
-		x.metaTable = mt
+		x.metatable = mt
 	default:
 		// todo
 	}
 }
 
 func (self *luaState) getMetaField(val luaValue, fieldName string) luaValue {
-	if mt := self.getMetaTable(val); mt != nil {
+	if mt := self.getMetatable(val); mt != nil {
 		return mt.get(fieldName)
 	} else {
 		return nil
