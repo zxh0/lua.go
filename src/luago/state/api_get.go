@@ -78,7 +78,7 @@ func (self *luaState) _getTable(t, k luaValue, raw bool) LuaType {
 		panic("not table!")
 	}
 
-	if mf := self.getMetafield(t, "__index"); mf != nil {
+	if mf := getMetafield(t, "__index", self); mf != nil {
 		switch x := mf.(type) {
 		case *luaTable:
 			return self._getTable(x, k, true)
@@ -100,7 +100,7 @@ func (self *luaState) _getTable(t, k luaValue, raw bool) LuaType {
 func (self *luaState) GetMetatable(idx int) bool {
 	val := self.stack.get(idx)
 
-	if mt := self.getMetatable(val); mt != nil {
+	if mt := getMetatable(val, self); mt != nil {
 		self.stack.push(mt)
 		return true
 	} else {

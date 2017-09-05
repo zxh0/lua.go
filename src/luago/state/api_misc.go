@@ -77,7 +77,7 @@ func (self *luaState) Next(idx int) bool {
 // http://www.lua.org/manual/5.3/manual.html#lua_len
 func (self *luaState) Len(idx int) {
 	val := self.stack.get(idx)
-	if result, ok := self.callMetaOp1(val, "__len"); ok {
+	if result, ok := callMetamethod(val, val, "__len", self); ok {
 		self.stack.push(result)
 		return
 	}

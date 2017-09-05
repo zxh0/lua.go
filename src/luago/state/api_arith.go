@@ -54,7 +54,7 @@ func (self *luaState) add(a, b luaValue) {
 		self.stack.push(x + y)
 	} else if x, y, ok := _convertToFloat64s(a, b); ok {
 		self.stack.push(x + y)
-	} else if result, ok := self.callMetaOp2(a, b, "__add"); ok {
+	} else if result, ok := callMetamethod(a, b, "__add", self); ok {
 		self.stack.push(result)
 	} else {
 		panic("todo: __add")
@@ -66,7 +66,7 @@ func (self *luaState) sub(a, b luaValue) {
 		self.stack.push(x - y)
 	} else if x, y, ok := _convertToFloat64s(a, b); ok {
 		self.stack.push(x - y)
-	} else if result, ok := self.callMetaOp2(a, b, "__sub"); ok {
+	} else if result, ok := callMetamethod(a, b, "__sub", self); ok {
 		self.stack.push(result)
 	} else {
 		panic("todo: __sub")
@@ -78,7 +78,7 @@ func (self *luaState) mul(a, b luaValue) {
 		self.stack.push(x * y)
 	} else if x, y, ok := _convertToFloat64s(a, b); ok {
 		self.stack.push(x * y)
-	} else if result, ok := self.callMetaOp2(a, b, "__mul"); ok {
+	} else if result, ok := callMetamethod(a, b, "__mul", self); ok {
 		self.stack.push(result)
 	} else {
 		panic("todo: __mul")
@@ -90,7 +90,7 @@ func (self *luaState) idiv(a, b luaValue) {
 		self.stack.push(luanum.IFloorDiv(x, y))
 	} else if x, y, ok := _convertToFloat64s(a, b); ok {
 		self.stack.push(luanum.FFloorDiv(x, y))
-	} else if result, ok := self.callMetaOp2(a, b, "__idiv"); ok {
+	} else if result, ok := callMetamethod(a, b, "__idiv", self); ok {
 		self.stack.push(result)
 	} else {
 		panic("todo: __idiv")
@@ -102,7 +102,7 @@ func (self *luaState) mod(a, b luaValue) {
 		self.stack.push(luanum.IMod(x, y))
 	} else if x, y, ok := _convertToFloat64s(a, b); ok {
 		self.stack.push(luanum.FMod(x, y))
-	} else if result, ok := self.callMetaOp2(a, b, "__mod"); ok {
+	} else if result, ok := callMetamethod(a, b, "__mod", self); ok {
 		self.stack.push(result)
 	} else {
 		panic("todo: __mod")
@@ -114,7 +114,7 @@ func (self *luaState) unm(a luaValue) {
 		self.stack.push(-x)
 	} else if x, ok := convertToNumber(a); ok {
 		self.stack.push(-x)
-	} else if result, ok := self.callMetaOp1(a, "__unm"); ok {
+	} else if result, ok := callMetamethod(a, a, "__unm", self); ok {
 		self.stack.push(result)
 	} else {
 		panic("todo: __unm!")
@@ -126,7 +126,7 @@ func (self *luaState) unm(a luaValue) {
 func (self *luaState) div(a, b luaValue) {
 	if x, y, ok := _convertToFloat64s(a, b); ok {
 		self.stack.push(x / y)
-	} else if result, ok := self.callMetaOp2(a, b, "__div"); ok {
+	} else if result, ok := callMetamethod(a, b, "__div", self); ok {
 		self.stack.push(result)
 	} else {
 		panic("todo: __div")
@@ -136,7 +136,7 @@ func (self *luaState) div(a, b luaValue) {
 func (self *luaState) pow(a, b luaValue) {
 	if x, y, ok := _convertToFloat64s(a, b); ok {
 		self.stack.push(math.Pow(x, y))
-	} else if result, ok := self.callMetaOp2(a, b, "__pow"); ok {
+	} else if result, ok := callMetamethod(a, b, "__pow", self); ok {
 		self.stack.push(result)
 	} else {
 		panic("todo: __pow")
@@ -148,7 +148,7 @@ func (self *luaState) pow(a, b luaValue) {
 func (self *luaState) band(a, b luaValue) {
 	if x, y, ok := _convertToInt64s(a, b); ok {
 		self.stack.push(x & y)
-	} else if result, ok := self.callMetaOp2(a, b, "__band"); ok {
+	} else if result, ok := callMetamethod(a, b, "__band", self); ok {
 		self.stack.push(result)
 	} else {
 		panic("todo: __band")
@@ -158,7 +158,7 @@ func (self *luaState) band(a, b luaValue) {
 func (self *luaState) bor(a, b luaValue) {
 	if x, y, ok := _convertToInt64s(a, b); ok {
 		self.stack.push(x | y)
-	} else if result, ok := self.callMetaOp2(a, b, "__bor"); ok {
+	} else if result, ok := callMetamethod(a, b, "__bor", self); ok {
 		self.stack.push(result)
 	} else {
 		panic("todo: __bor")
@@ -168,7 +168,7 @@ func (self *luaState) bor(a, b luaValue) {
 func (self *luaState) bxor(a, b luaValue) {
 	if x, y, ok := _convertToInt64s(a, b); ok {
 		self.stack.push(x ^ y)
-	} else if result, ok := self.callMetaOp2(a, b, "__bxor"); ok {
+	} else if result, ok := callMetamethod(a, b, "__bxor", self); ok {
 		self.stack.push(result)
 	} else {
 		panic("todo: __bxor")
@@ -178,7 +178,7 @@ func (self *luaState) bxor(a, b luaValue) {
 func (self *luaState) shl(a, b luaValue) {
 	if x, y, ok := _convertToInt64s(a, b); ok {
 		self.stack.push(luanum.ShiftLeft(x, y))
-	} else if result, ok := self.callMetaOp2(a, b, "__shl"); ok {
+	} else if result, ok := callMetamethod(a, b, "__shl", self); ok {
 		self.stack.push(result)
 	} else {
 		panic("todo: __shl")
@@ -188,7 +188,7 @@ func (self *luaState) shl(a, b luaValue) {
 func (self *luaState) shr(a, b luaValue) {
 	if x, y, ok := _convertToInt64s(a, b); ok {
 		self.stack.push(luanum.ShiftRight(x, y))
-	} else if result, ok := self.callMetaOp2(a, b, "__shr"); ok {
+	} else if result, ok := callMetamethod(a, b, "__shr", self); ok {
 		self.stack.push(result)
 	} else {
 		panic("todo: __shr")
@@ -198,7 +198,7 @@ func (self *luaState) shr(a, b luaValue) {
 func (self *luaState) bnot(a luaValue) {
 	if x, ok := convertToInteger(a); ok {
 		self.stack.push(^x)
-	} else if result, ok := self.callMetaOp1(a, "__bnot"); ok {
+	} else if result, ok := callMetamethod(a, a, "__bnot", self); ok {
 		self.stack.push(result)
 	} else {
 		panic("todo: __bnot!")

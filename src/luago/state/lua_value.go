@@ -5,6 +5,8 @@ import "luago/luanum"
 
 type luaValue interface{}
 
+/* typeOf */
+
 func typeOf(val luaValue) LuaType {
 	return fullTypeOf(val) & 0x0F
 }
@@ -37,6 +39,8 @@ func fullTypeOf(val luaValue) LuaType {
 		panic("unkonwn type!")
 	}
 }
+
+/* convert */
 
 func convertToBoolean(val luaValue) bool {
 	switch x := val.(type) {
@@ -85,4 +89,72 @@ func _stringToInteger(s string) (int64, bool) {
 		return luanum.FloatToInteger(f)
 	}
 	return 0, false
+}
+
+/* metatable */
+
+func getMetatable(val luaValue, ls *luaState) *luaTable {
+	switch x := val.(type) {
+	case nil:
+		return ls.mtOfNil
+	case bool:
+		return ls.mtOfBool
+	case int64, float64:
+		return ls.mtOfNumber
+	case string:
+		return ls.mtOfString
+	case *luaClosure, *goClosure, GoFunction:
+		return ls.mtOfFunc
+	case *luaTable:
+		return x.metatable
+	case *userData:
+		return x.metatable
+	default: // todo
+		return nil
+	}
+}
+
+func setMetatable(val luaValue, mt *luaTable, ls *luaState) {
+	switch x := val.(type) {
+	case nil:
+		ls.mtOfNil = mt
+	case bool:
+		ls.mtOfBool = mt
+	case int64, float64:
+		ls.mtOfNumber = mt
+	case string:
+		ls.mtOfString = mt
+	case *luaClosure, *goClosure, GoFunction:
+		ls.mtOfFunc = mt
+	case *luaTable:
+		x.metatable = mt
+	case *userData:
+		x.metatable = mt
+	default:
+		// todo
+	}
+}
+
+func getMetafield(val luaValue, fieldName string, ls *luaState) luaValue {
+	if mt := getMetatable(val, ls); mt != nil {
+		return mt.get(fieldName)
+	} else {
+		return nil
+	}
+}
+
+func callMetamethod(a, b luaValue, mmName string, ls *luaState) (luaValue, bool) {
+	var mm luaValue
+	if mm = getMetafield(a, mmName, ls); mm == nil {
+		if mm = getMetafield(b, mmName, ls); mm == nil {
+			return nil, false
+		}
+	}
+
+	ls.stack.check(4)
+	ls.stack.push(mm)
+	ls.stack.push(a)
+	ls.stack.push(b)
+	ls.Call(2, 1)
+	return ls.stack.pop(), true
 }

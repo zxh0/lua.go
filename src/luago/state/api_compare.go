@@ -75,7 +75,7 @@ func (self *luaState) eq(val1, val2 luaValue, raw bool) bool {
 		if y, ok := val2.(*luaTable); ok {
 			if x == y {
 				return true
-			} else if result, ok := self.callMetaOp2(x, y, "__eq"); ok {
+			} else if result, ok := callMetamethod(x, y, "__eq", self); ok {
 				return convertToBoolean(result)
 			} else {
 				return false
@@ -112,7 +112,7 @@ func (self *luaState) lt(val1, val2 luaValue) bool {
 		y, ok := val2.(string)
 		return ok && x < y
 	default:
-		if result, ok := self.callMetaOp2(val1, val2, "__lt"); ok {
+		if result, ok := callMetamethod(val1, val2, "__lt", self); ok {
 			return convertToBoolean(result)
 		} else {
 			panic("todo: __lt!")
@@ -144,9 +144,9 @@ func (self *luaState) le(val1, val2 luaValue) bool {
 		y, ok := val2.(string)
 		return ok && x <= y
 	default:
-		if result, ok := self.callMetaOp2(val1, val2, "__le"); ok {
+		if result, ok := callMetamethod(val1, val2, "__le", self); ok {
 			return convertToBoolean(result)
-		} else if result, ok := self.callMetaOp2(val2, val1, "__lt"); ok {
+		} else if result, ok := callMetamethod(val2, val1, "__lt", self); ok {
 			return !convertToBoolean(result)
 		} else {
 			panic("todo: __le!")

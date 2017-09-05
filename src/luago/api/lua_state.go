@@ -79,13 +79,6 @@ type BasicAPI interface {
 	Arith(op ArithOp)                          // b=pop(); a=pop(); push(a op b)
 	Compare(idx1, idx2 int, op CompareOp) bool // r[idx1] op r[idx2]
 	RawEqual(idx1, idx2 int) bool              // r[idx1] == r[idx2]
-	/* 'load' and 'call' functions (load and run Lua code) */
-	Load(chunk []byte, chunkName, mode string) ThreadStatus // push(compile(chunk))
-	Call(nArgs, nResults int)                               // args=pop(nArgs); f=pop(); f(args)
-	CallK()                                                 //
-	PCall(nArgs, nResults, msgh int) ThreadStatus           // call(nArgs, nResults) || push(err)
-	PCallK()                                                //
-	Dump()                                                  // todo
 	/* get functions (Lua -> stack) */
 	NewTable()                           // push({})
 	CreateTable(nArr, nRec int)          // push({})
@@ -109,6 +102,13 @@ type BasicAPI interface {
 	SetGlobal(name string)              // global[name] = pop()
 	SetMetatable(idx int)               // r[idx].metatable = pop()
 	SetUserValue(idx int)               // r[idx].userValue = pop()
+	/* 'load' and 'call' functions (load and run Lua code) */
+	Load(chunk []byte, chunkName, mode string) ThreadStatus // push(compile(chunk))
+	Call(nArgs, nResults int)                               // args=pop(nArgs); f=pop(); f(args)
+	CallK()                                                 //
+	PCall(nArgs, nResults, msgh int) ThreadStatus           // call(nArgs, nResults) || push(err)
+	PCallK()                                                //
+	Dump()                                                  // todo
 	/* miscellaneous functions */
 	Concat(n int)                 // push(concat(pop(n)))
 	Len(idx int)                  // push(len(r[idx]))
