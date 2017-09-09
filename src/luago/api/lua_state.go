@@ -86,7 +86,7 @@ type BasicAPI interface {
 	GetField(idx int, k string) LuaType  // push(r[idx][k])
 	GetI(idx int, i int64) LuaType       // push(r[idx][i])
 	RawGet(idx int) LuaType              // push(r[idx][pop()])
-	RawGetI(idx int, n int64) LuaType    // push(r[idx][i])
+	RawGetI(idx int, i int64) LuaType    // push(r[idx][i])
 	RawGetP(idx int, p UserData) LuaType // push(r[idx][p])
 	GetGlobal(name string) LuaType       // push(global[name])
 	GetMetatable(idx int) bool           // push(r[idx].metatable)?
@@ -94,9 +94,9 @@ type BasicAPI interface {
 	/* set functions (stack -> Lua) */
 	SetTable(idx int)                   // v=pop(); k=pop(); r[idx][k] = v
 	SetField(idx int, k string)         // r[idx][k] = pop()
-	SetI(idx int, n int64)              // r[idx][n] = pop()
+	SetI(idx int, i int64)              // r[idx][i] = pop()
 	RawSet(idx int)                     // v=pop(); k=pop(); r[idx][k] = v
-	RawSetI(idx int, i int64)           // r[idx][n] = pop()
+	RawSetI(idx int, i int64)           // r[idx][i] = pop()
 	RawSetP(idx int, p UserData)        // r[idx][p] = pop()
 	Register(name string, f GoFunction) // global[name] = f
 	SetGlobal(name string)              // global[name] = pop()

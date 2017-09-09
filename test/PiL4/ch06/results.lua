@@ -29,7 +29,7 @@ assert(#t == 1 and t[1] == "a")
 t = {foo2()} -- t = {"a", "b"}
 assert(#t == 2 and t[1] == "a" and t[2] == "b")
 t = {foo0(), foo2(), 4} -- t[1] = nil, t[2] = "a", t[3] = 4
-assert(#t == 3 and t[1] == nil and t[2] == "a" and t[3] == 4)
+assert(t[1] == nil and t[2] == "a" and t[3] == 4)
 
 function foo (i)
   if i == 0 then return foo0()

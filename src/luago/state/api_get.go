@@ -19,7 +19,7 @@ func (self *luaState) NewTable() {
 // http://www.lua.org/manual/5.3/manual.html#lua_getglobal
 func (self *luaState) GetGlobal(name string) LuaType {
 	t := self.registry.get(LUA_RIDX_GLOBALS)
-	return self._getTable(t, name, false)
+	return self.getTable(t, name, false)
 }
 
 // [-1, +1, e]
@@ -27,21 +27,21 @@ func (self *luaState) GetGlobal(name string) LuaType {
 func (self *luaState) GetTable(idx int) LuaType {
 	t := self.stack.get(idx)
 	k := self.stack.pop()
-	return self._getTable(t, k, false)
+	return self.getTable(t, k, false)
 }
 
 // [-0, +1, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_getfield
 func (self *luaState) GetField(idx int, k string) LuaType {
 	t := self.stack.get(idx)
-	return self._getTable(t, k, false)
+	return self.getTable(t, k, false)
 }
 
 // [-0, +1, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_geti
 func (self *luaState) GetI(idx int, i int64) LuaType {
 	t := self.stack.get(idx)
-	return self._getTable(t, i, false)
+	return self.getTable(t, i, false)
 }
 
 // [-1, +1, –]
@@ -49,25 +49,25 @@ func (self *luaState) GetI(idx int, i int64) LuaType {
 func (self *luaState) RawGet(idx int) LuaType {
 	t := self.stack.get(idx)
 	k := self.stack.pop()
-	return self._getTable(t, k, true)
+	return self.getTable(t, k, true)
 }
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_rawgeti
-func (self *luaState) RawGetI(idx int, n int64) LuaType {
+func (self *luaState) RawGetI(idx int, i int64) LuaType {
 	t := self.stack.get(idx)
-	return self._getTable(t, n, true)
+	return self.getTable(t, i, true)
 }
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_rawgetp
 func (self *luaState) RawGetP(idx int, p UserData) LuaType {
 	t := self.stack.get(idx)
-	return self._getTable(t, p, true)
+	return self.getTable(t, p, true)
 }
 
 // push(t[k])
-func (self *luaState) _getTable(t, k luaValue, raw bool) LuaType {
+func (self *luaState) getTable(t, k luaValue, raw bool) LuaType {
 	if tbl, ok := t.(*luaTable); ok {
 		v := tbl.get(k)
 		if v != nil || raw || !tbl.hasMetafield("__index") {
@@ -81,7 +81,7 @@ func (self *luaState) _getTable(t, k luaValue, raw bool) LuaType {
 	if mf := getMetafield(t, "__index", self); mf != nil {
 		switch x := mf.(type) {
 		case *luaTable:
-			return self._getTable(x, k, true)
+			return self.getTable(x, k, true)
 		case *luaClosure, GoFunction:
 			self.stack.push(mf)
 			self.stack.push(t)

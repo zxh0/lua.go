@@ -14,7 +14,7 @@ func (self *luaState) Register(name string, f GoFunction) {
 func (self *luaState) SetGlobal(name string) {
 	t := self.registry.get(LUA_RIDX_GLOBALS)
 	v := self.stack.pop()
-	self._setTable(t, name, v, false)
+	self.setTable(t, name, v, false)
 }
 
 // [-2, +0, e]
@@ -23,7 +23,7 @@ func (self *luaState) SetTable(idx int) {
 	t := self.stack.get(idx)
 	v := self.stack.pop()
 	k := self.stack.pop()
-	self._setTable(t, k, v, false)
+	self.setTable(t, k, v, false)
 }
 
 // [-1, +0, e]
@@ -31,15 +31,15 @@ func (self *luaState) SetTable(idx int) {
 func (self *luaState) SetField(idx int, k string) {
 	t := self.stack.get(idx)
 	v := self.stack.pop()
-	self._setTable(t, k, v, false)
+	self.setTable(t, k, v, false)
 }
 
 // [-1, +0, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_seti
-func (self *luaState) SetI(idx int, n int64) {
+func (self *luaState) SetI(idx int, i int64) {
 	t := self.stack.get(idx)
 	v := self.stack.pop()
-	self._setTable(t, n, v, false)
+	self.setTable(t, i, v, false)
 }
 
 // [-2, +0, m]
@@ -48,7 +48,7 @@ func (self *luaState) RawSet(idx int) {
 	t := self.stack.get(idx)
 	v := self.stack.pop()
 	k := self.stack.pop()
-	self._setTable(t, k, v, true)
+	self.setTable(t, k, v, true)
 }
 
 // [-1, +0, m]
@@ -56,7 +56,7 @@ func (self *luaState) RawSet(idx int) {
 func (self *luaState) RawSetI(idx int, i int64) {
 	t := self.stack.get(idx)
 	v := self.stack.pop()
-	self._setTable(t, i, v, true)
+	self.setTable(t, i, v, true)
 }
 
 // [-1, +0, m]
@@ -64,11 +64,11 @@ func (self *luaState) RawSetI(idx int, i int64) {
 func (self *luaState) RawSetP(idx int, p UserData) {
 	t := self.stack.get(idx)
 	v := self.stack.pop()
-	self._setTable(t, p, v, true)
+	self.setTable(t, p, v, true)
 }
 
 // t[k]=v
-func (self *luaState) _setTable(t, k, v luaValue, raw bool) {
+func (self *luaState) setTable(t, k, v luaValue, raw bool) {
 	if tbl, ok := t.(*luaTable); ok {
 		if raw || !tbl.hasMetafield("__newindex") || tbl.get(k) != nil {
 			tbl.put(k, v)
@@ -81,7 +81,7 @@ func (self *luaState) _setTable(t, k, v luaValue, raw bool) {
 	if mf := getMetafield(t, "__newindex", self); mf != nil {
 		switch x := mf.(type) {
 		case *luaTable:
-			self._setTable(x, k, v, true)
+			self.setTable(x, k, v, true)
 			return
 		case *luaClosure, GoFunction:
 			self.stack.push(mf)

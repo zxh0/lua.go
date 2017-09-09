@@ -1,23 +1,25 @@
 package state
 
+import "luago/luanum"
+
 type pair struct {
 	key luaValue
 	val luaValue
 }
 
-// todo: move to types?
 type luaTable struct {
 	metatable *luaTable
 	_map      map[luaValue]luaValue
-	list      []luaValue
+	arr       []luaValue
+	_len      int
 	pairs     []pair // used by next()
 	nextPairs []pair // used by next()
 }
 
 func newLuaTable(nArr, nRec int) *luaTable {
 	return &luaTable{
-		list: make([]luaValue, 0, nArr),
 		_map: make(map[luaValue]luaValue),
+		arr:  make([]luaValue, 0, nArr),
 	}
 }
 
@@ -27,24 +29,27 @@ func (self *luaTable) hasMetafield(fieldName string) bool {
 }
 
 func (self *luaTable) len() int {
-	listLen := len(self.list)
-	for listLen > 0 { // remove tail nils
-		if self.list[listLen-1] == nil {
-			self.list = self.list[0 : listLen-1]
-			listLen -= 1
-		} else {
-			break
+	if self._len < 0 {
+		// calc & cache len of sequence
+		self._len = 0
+		for _, val := range self.arr {
+			if val != nil {
+				self._len++
+			} else {
+				break
+			}
 		}
 	}
-	return listLen
+
+	return self._len
 }
 
 func (self *luaTable) get(key luaValue) luaValue {
-	// todo: try to cast float key to integer
+	key = _floatToIntger(key)
 	if idx, ok := key.(int64); ok && idx >= 1 {
-		listLen := int64(len(self.list))
-		if idx <= listLen {
-			return self.list[idx-1]
+		arrLen := int64(len(self.arr))
+		if idx <= arrLen {
+			return self.arr[idx-1]
 		}
 	}
 	if val, found := self._map[key]; found {
@@ -55,19 +60,24 @@ func (self *luaTable) get(key luaValue) luaValue {
 }
 
 func (self *luaTable) put(key, val luaValue) {
-	// todo: try to cast float key to integer
+	if key == nil {
+		panic("table index is nil!")
+	}
+
 	self.pairs = nil // invalidate pairs
+	self._len = -1
+
+	key = _floatToIntger(key)
 	if idx, ok := key.(int64); ok && idx >= 1 {
-		listLen := int64(len(self.list))
-		if idx <= listLen {
-			self.list[idx-1] = val
+		arrLen := int64(len(self.arr))
+		if idx <= arrLen {
+			self.arr[idx-1] = val
 			return
 		}
-		if idx == listLen+1 {
-			self.list = append(self.list, val)
-			if val != nil {
-				self.growList()
-			}
+		if idx == arrLen+1 {
+			delete(self._map, key)
+			self.arr = append(self.arr, val)
+			self.expandArray()
 			return
 		}
 	}
@@ -78,13 +88,11 @@ func (self *luaTable) put(key, val luaValue) {
 	}
 }
 
-// todo: rename?
-func (self *luaTable) growList() {
-	for {
-		key := int64(len(self.list) + 1) // todo
-		if val, found := self._map[key]; found {
-			delete(self._map, key)
-			self.list = append(self.list, val)
+func (self *luaTable) expandArray() {
+	for idx := int64(len(self.arr)) + 1; true; idx++ {
+		if val, found := self._map[idx]; found {
+			delete(self._map, idx)
+			self.arr = append(self.arr, val)
 		} else {
 			break
 		}
@@ -101,11 +109,11 @@ func (self *luaTable) next(key luaValue) (nextKey, nextVal luaValue) {
 
 	if self.len() > 0 {
 		if key == nil {
-			return int64(1), self.list[0]
+			return int64(1), self.arr[0]
 		}
 		if idx, ok := key.(int64); ok && idx >= 1 {
-			if idx < int64(len(self.list)) {
-				return int64(idx + 1), self.list[idx]
+			if idx < int64(len(self.arr)) {
+				return int64(idx + 1), self.arr[idx]
 			}
 		}
 	}
@@ -127,4 +135,13 @@ func (self *luaTable) initPairs() {
 			self.pairs = append(self.pairs, pair{key, val})
 		}
 	}
+}
+
+func _floatToIntger(key luaValue) luaValue {
+	if f, ok := key.(float64); ok {
+		if i, ok := luanum.FloatToInteger(f); ok {
+			return i
+		}
+	}
+	return key
 }
