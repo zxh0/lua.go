@@ -3,23 +3,16 @@ package state
 import . "luago/api"
 
 // [-0, +1, m]
-// http://www.lua.org/manual/5.3/manual.html#lua_createtable
-func (self *luaState) CreateTable(nArr, nRec int) {
-	t := newLuaTable(nArr, nRec)
-	self.stack.push(t)
-}
-
-// [-0, +1, m]
 // http://www.lua.org/manual/5.3/manual.html#lua_newtable
 func (self *luaState) NewTable() {
 	self.CreateTable(0, 0)
 }
 
-// [-0, +1, e]
-// http://www.lua.org/manual/5.3/manual.html#lua_getglobal
-func (self *luaState) GetGlobal(name string) LuaType {
-	t := self.registry.get(LUA_RIDX_GLOBALS)
-	return self.getTable(t, name, false)
+// [-0, +1, m]
+// http://www.lua.org/manual/5.3/manual.html#lua_createtable
+func (self *luaState) CreateTable(nArr, nRec int) {
+	t := newLuaTable(nArr, nRec)
+	self.stack.push(t)
 }
 
 // [-1, +1, e]
@@ -66,6 +59,32 @@ func (self *luaState) RawGetP(idx int, p UserData) LuaType {
 	return self.getTable(t, p, true)
 }
 
+// [-0, +1, e]
+// http://www.lua.org/manual/5.3/manual.html#lua_getglobal
+func (self *luaState) GetGlobal(name string) LuaType {
+	t := self.registry.get(LUA_RIDX_GLOBALS)
+	return self.getTable(t, name, false)
+}
+
+// [-0, +(0|1), –]
+// http://www.lua.org/manual/5.3/manual.html#lua_getmetatable
+func (self *luaState) GetMetatable(idx int) bool {
+	val := self.stack.get(idx)
+
+	if mt := getMetatable(val, self); mt != nil {
+		self.stack.push(mt)
+		return true
+	} else {
+		return false
+	}
+}
+
+// [-0, +1, –]
+// http://www.lua.org/manual/5.3/manual.html#lua_getuservalue
+func (self *luaState) GetUserValue(idx int) LuaType {
+	panic("todo!")
+}
+
 // push(t[k])
 func (self *luaState) getTable(t, k luaValue, raw bool) LuaType {
 	if tbl, ok := t.(*luaTable); ok {
@@ -93,23 +112,4 @@ func (self *luaState) getTable(t, k luaValue, raw bool) LuaType {
 	}
 
 	panic("not table!") // todo
-}
-
-// [-0, +(0|1), –]
-// http://www.lua.org/manual/5.3/manual.html#lua_getmetatable
-func (self *luaState) GetMetatable(idx int) bool {
-	val := self.stack.get(idx)
-
-	if mt := getMetatable(val, self); mt != nil {
-		self.stack.push(mt)
-		return true
-	} else {
-		return false
-	}
-}
-
-// [-0, +1, –]
-// http://www.lua.org/manual/5.3/manual.html#lua_getuservalue
-func (self *luaState) GetUserValue(idx int) LuaType {
-	panic("todo!")
 }

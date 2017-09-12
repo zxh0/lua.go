@@ -17,7 +17,7 @@ type AuxLib interface {
 	DoString(str string) bool                            //
 	Error2(fmt string)                                   // todo
 	GetMetafield(obj int, e string) LuaType              //
-	GetMetatableL(tname string) LuaType                  //
+	GetMetatable2(tname string) LuaType                  //
 	GetSubTable(idx int, fname string) bool              // push(r[idx][fname] || {})
 	Len2(idx int) int64                                  // #(r[idx])
 	LoadFile(filename string) ThreadStatus               //
@@ -33,3 +33,16 @@ type AuxLib interface {
 	SetFuncs(l FuncReg, nup int)                         // l.each{name,func => r[-1][name]=func}
 	TypeName2(idx int) string                            //
 }
+//luaL_checkoption
+//luaL_checkudata
+//luaL_execresult
+//luaL_fileresult
+//luaL_gsub
+//luaL_newmetatable
+//luaL_newstate
+//luaL_setmetatable
+//luaL_testudata
+//luaL_tolstring
+//luaL_traceback
+//luaL_unref
+//luaL_where

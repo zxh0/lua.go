@@ -2,21 +2,6 @@ package state
 
 import . "luago/api"
 
-// [-0, +0, e]
-// http://www.lua.org/manual/5.3/manual.html#lua_register
-func (self *luaState) Register(name string, f GoFunction) {
-	self.PushGoFunction(f)
-	self.SetGlobal(name)
-}
-
-// [-1, +0, e]
-// http://www.lua.org/manual/5.3/manual.html#lua_setglobal
-func (self *luaState) SetGlobal(name string) {
-	t := self.registry.get(LUA_RIDX_GLOBALS)
-	v := self.stack.pop()
-	self.setTable(t, name, v, false)
-}
-
 // [-2, +0, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_settable
 func (self *luaState) SetTable(idx int) {
@@ -67,6 +52,42 @@ func (self *luaState) RawSetP(idx int, p UserData) {
 	self.setTable(t, p, v, true)
 }
 
+// [-0, +0, e]
+// http://www.lua.org/manual/5.3/manual.html#lua_register
+func (self *luaState) Register(name string, f GoFunction) {
+	self.PushGoFunction(f)
+	self.SetGlobal(name)
+}
+
+// [-1, +0, e]
+// http://www.lua.org/manual/5.3/manual.html#lua_setglobal
+func (self *luaState) SetGlobal(name string) {
+	t := self.registry.get(LUA_RIDX_GLOBALS)
+	v := self.stack.pop()
+	self.setTable(t, name, v, false)
+}
+
+// [-1, +0, –]
+// http://www.lua.org/manual/5.3/manual.html#lua_setmetatable
+func (self *luaState) SetMetatable(idx int) {
+	val := self.stack.get(idx)
+	mtVal := self.stack.pop()
+
+	if mt, ok := mtVal.(*luaTable); ok {
+		setMetatable(val, mt, self)
+	} else {
+		panic("not table: " + valToString(mtVal)) // todo
+	}
+}
+
+// [-1, +0, –]
+// http://www.lua.org/manual/5.3/manual.html#lua_setuservalue
+func (self *luaState) SetUserValue(idx int) {
+	// val := self.stack.pop()
+	// ud := self.stack.get(idx)
+	panic("todo!")
+}
+
 // t[k]=v
 func (self *luaState) setTable(t, k, v luaValue, raw bool) {
 	if tbl, ok := t.(*luaTable); ok {
@@ -94,25 +115,4 @@ func (self *luaState) setTable(t, k, v luaValue, raw bool) {
 	}
 
 	panic("not table!")
-}
-
-// [-1, +0, –]
-// http://www.lua.org/manual/5.3/manual.html#lua_setmetatable
-func (self *luaState) SetMetatable(idx int) {
-	val := self.stack.get(idx)
-	mtVal := self.stack.pop()
-
-	if mt, ok := mtVal.(*luaTable); ok {
-		setMetatable(val, mt, self)
-	} else {
-		panic("not table: " + valToString(mtVal)) // todo
-	}
-}
-
-// [-1, +0, –]
-// http://www.lua.org/manual/5.3/manual.html#lua_setuservalue
-func (self *luaState) SetUserValue(idx int) {
-	// val := self.stack.pop()
-	// ud := self.stack.get(idx)
-	panic("todo!")
 }

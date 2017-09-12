@@ -148,7 +148,7 @@ func (self *luaState) GetMetafield(obj int, e string) LuaType {
 	panic("todo!")
 }
 
-func (self *luaState) GetMetatableL(tname string) LuaType {
+func (self *luaState) GetMetatable2(tname string) LuaType {
 	panic("todo!")
 }
 
