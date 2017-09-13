@@ -52,91 +52,107 @@ func OpenMathLib(ls LuaState) int {
 
 // math.random ([m [, n]])
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.random
+// lua-5.3.4/src/lmathlib.c#math_random()
 func mathRandom(ls LuaState) int {
-	switch ls.GetTop() {
-	case 0:
-		r := rand.Float64()
-		ls.PushNumber(r)
+	var low, up int64
+	switch ls.GetTop() { /* check number of arguments */
+	case 0: /* no arguments */
+		ls.PushNumber(rand.Float64()) /* Number between 0 and 1 */
 		return 1
-	case 1: // todo
-		n := ls.ToInteger(1)
-		r := 1 + rand.Int63n(n)
-		ls.PushInteger(r)
-		return 1
-	case 2: // todo
-		m := ls.ToInteger(1)
-		n := ls.ToInteger(1)
-		r := m + rand.Int63n(n-m)
-		ls.PushInteger(r)
-		return 1
+	case 1: /* only upper limit */
+		low = 1
+		up = ls.CheckInteger(1)
+	case 2: /* lower and upper limits */
+		low = ls.CheckInteger(1)
+		up = ls.CheckInteger(2)
+	default:
+		return ls.Error2("wrong number of arguments")
 	}
 
-	panic("todo!")
+	/* random integer in the interval [low, up] */
+	ls.ArgCheck(low <= up, 1, "interval is empty")
+	ls.ArgCheck(low >= 0 || up <= math.MaxInt64+low, 1,
+		"interval too large")
+	r := low + rand.Int63n(up-low)
+	ls.PushInteger(r)
+	return 1
 }
 
 // math.randomseed (x)
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.randomseed
+// lua-5.3.4/src/lmathlib.c#math_randomseed()
 func mathRandomSeed(ls LuaState) int {
-	if seed, ok := ls.ToIntegerX(1); ok {
-		rand.Seed(seed)
-		return 0
-	} else {
-		panic("todo!")
-	}
+	x := ls.CheckNumber(1)
+	rand.Seed(int64(x))
+	return 0
 }
 
 /* max & min */
 
 // math.max (x, ···)
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.max
+// lua-5.3.4/src/lmathlib.c#math_max()
 func mathMax(ls LuaState) int {
-	return _maxOrMin(ls, true)
+	n := ls.GetTop() /* number of arguments */
+	imax := 1        /* index of current maximum value */
+	ls.ArgCheck(n >= 1, 1, "value expected")
+	for i := 2; i <= n; i++ {
+		if ls.Compare(imax, i, LUA_OPLT) {
+			imax = i
+		}
+	}
+	ls.PushValue(imax)
+	return 1
 }
 
 // math.min (x, ···)
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.min
+// lua-5.3.4/src/lmathlib.c#math_min()
 func mathMin(ls LuaState) int {
-	return _maxOrMin(ls, false)
-}
-
-func _maxOrMin(ls LuaState, max bool) int {
-	top := ls.GetTop()
-	switch top {
-	case 0:
-		panic("todo!")
-	case 1:
-		return 1
-	default: // todo
-		idx := 1
-		for i := 1; i < top; i++ {
-			if max && ls.Compare(i, i+1, LUA_OPLT) || // arg[i] < arg[i+1] ?
-				!max && ls.Compare(i+1, i, LUA_OPLT) { // arg[i+1] < arg[i] ?
-
-				idx = i + 1
-			}
+	n := ls.GetTop() /* number of arguments */
+	imin := 1        /* index of current minimum value */
+	ls.ArgCheck(n >= 1, 1, "value expected")
+	for i := 2; i <= n; i++ {
+		if ls.Compare(i, imin, LUA_OPLT) {
+			imin = i
 		}
-		ls.PushValue(idx)
-		return 1
 	}
+	ls.PushValue(imin)
+	return 1
 }
 
 /* exponentiation and logarithms */
 
 // math.exp (x)
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.exp
+// lua-5.3.4/src/lmathlib.c#math_exp()
 func mathExp(ls LuaState) int {
-	x := ls.ToNumber(1)
+	x := ls.CheckNumber(1)
 	ls.PushNumber(math.Exp(x))
 	return 1
 }
 
 // math.log (x [, base])
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.log
+// lua-5.3.4/src/lmathlib.c#math_log()
 func mathLog(ls LuaState) int {
-	x := ls.ToNumber(1)
-	b := ls.ToNumber(2)
-	l := math.Log(x) / math.Log(b)
-	ls.PushNumber(l)
+	x := ls.CheckNumber(1)
+	var res float64
+
+	if ls.IsNoneOrNil(2) {
+		res = math.Log(x)
+	} else {
+		base := ls.ToNumber(2)
+		if base == 2 {
+			res = math.Log2(x)
+		} else if base == 10 {
+			res = math.Log10(x)
+		} else {
+			res = math.Log(x) / math.Log(base)
+		}
+	}
+
+	ls.PushNumber(res)
 	return 1
 }
 
@@ -144,66 +160,72 @@ func mathLog(ls LuaState) int {
 
 // math.deg (x)
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.deg
+// lua-5.3.4/src/lmathlib.c#math_deg()
 func mathDeg(ls LuaState) int {
-	x := ls.ToNumber(1)
-	d := x * 180 / math.Pi
-	ls.PushNumber(d)
+	x := ls.CheckNumber(1)
+	ls.PushNumber(x * 180 / math.Pi)
 	return 1
 }
 
 // math.rad (x)
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.rad
+// lua-5.3.4/src/lmathlib.c#math_rad()
 func mathRad(ls LuaState) int {
-	x := ls.ToNumber(1)
-	r := x * math.Pi / 180
-	ls.PushNumber(r)
+	x := ls.CheckNumber(1)
+	ls.PushNumber(x * math.Pi / 180)
 	return 1
 }
 
 // math.sin (x)
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.sin
+// lua-5.3.4/src/lmathlib.c#math_sin()
 func mathSin(ls LuaState) int {
-	x := ls.ToNumber(1)
+	x := ls.CheckNumber(1)
 	ls.PushNumber(math.Sin(x))
 	return 1
 }
 
 // math.cos (x)
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.cos
+// lua-5.3.4/src/lmathlib.c#math_cos()
 func mathCos(ls LuaState) int {
-	x := ls.ToNumber(1)
+	x := ls.CheckNumber(1)
 	ls.PushNumber(math.Cos(x))
 	return 1
 }
 
 // math.tan (x)
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.tan
+// lua-5.3.4/src/lmathlib.c#math_tan()
 func mathTan(ls LuaState) int {
-	x := ls.ToNumber(1)
+	x := ls.CheckNumber(1)
 	ls.PushNumber(math.Tan(x))
 	return 1
 }
 
 // math.asin (x)
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.asin
+// lua-5.3.4/src/lmathlib.c#math_asin()
 func mathAsin(ls LuaState) int {
-	x := ls.ToNumber(1)
+	x := ls.CheckNumber(1)
 	ls.PushNumber(math.Asin(x))
 	return 1
 }
 
 // math.acos (x)
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.acos
+// lua-5.3.4/src/lmathlib.c#math_acos()
 func mathAcos(ls LuaState) int {
-	x := ls.ToNumber(1)
+	x := ls.CheckNumber(1)
 	ls.PushNumber(math.Acos(x))
 	return 1
 }
 
 // math.atan (y [, x])
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.atan
+// lua-5.3.4/src/lmathlib.c#math_atan()
 func mathAtan(ls LuaState) int {
-	y := ls.ToNumber(1)
+	y := ls.CheckNumber(1)
 	x := ls.OptNumber(2, 1.0)
 	ls.PushNumber(math.Atan2(y, x))
 	return 1
@@ -213,17 +235,27 @@ func mathAtan(ls LuaState) int {
 
 // math.ceil (x)
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.ceil
+// lua-5.3.4/src/lmathlib.c#math_ceil()
 func mathCeil(ls LuaState) int {
-	x := ls.ToNumber(1)
-	ls.PushNumber(math.Ceil(x))
+	if ls.IsInteger(1) {
+		ls.SetTop(1) /* integer is its own ceil */
+	} else {
+		x := ls.CheckNumber(1)
+		ls.PushNumber(math.Ceil(x))
+	}
 	return 1
 }
 
 // math.floor (x)
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.floor
+// lua-5.3.4/src/lmathlib.c#math_floor()
 func mathFloor(ls LuaState) int {
-	x := ls.ToNumber(1)
-	ls.PushNumber(math.Floor(x))
+	if ls.IsInteger(1) {
+		ls.SetTop(1) /* integer is its own floor */
+	} else {
+		x := ls.CheckNumber(1)
+		ls.PushNumber(math.Floor(x))
+	}
 	return 1
 }
 
@@ -231,89 +263,102 @@ func mathFloor(ls LuaState) int {
 
 // math.fmod (x, y)
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.fmod
+// lua-5.3.4/src/lmathlib.c#math_fmod()
 func mathFmod(ls LuaState) int {
-	x := ls.ToNumber(1)
-	y := ls.ToNumber(2)
-	ls.PushNumber(math.Remainder(x, y))
+	if ls.IsInteger(1) && ls.IsInteger(2) {
+		d := ls.ToInteger(2)
+		if uint64(d)+1 <= 1 { /* special cases: -1 or 0 */
+			ls.ArgCheck(d != 0, 2, "zero")
+			ls.PushInteger(0) /* avoid overflow with 0x80000... / -1 */
+		} else {
+			ls.PushInteger(ls.ToInteger(1) % d)
+		}
+	} else {
+		x := ls.CheckNumber(1)
+		y := ls.CheckNumber(2)
+		ls.PushNumber(math.Remainder(x, y))
+	}
+
 	return 1
 }
 
 // math.modf (x)
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.modf
+// lua-5.3.4/src/lmathlib.c#math_modf()
 func mathModf(ls LuaState) int {
-	x := ls.ToNumber(1)
-	i, f := math.Modf(x)
-	ls.PushNumber(i)
-	ls.PushNumber(f)
+	if ls.IsInteger(1) {
+		ls.SetTop(1)     /* number is its own integer part */
+		ls.PushNumber(0) /* no fractional part */
+	} else {
+		x := ls.CheckNumber(1)
+		i, f := math.Modf(x)
+		ls.PushNumber(i)
+		ls.PushNumber(f)
+	}
+
 	return 2
 }
 
 // math.abs (x)
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.abs
+// lua-5.3.4/src/lmathlib.c#math_abs()
 func mathAbs(ls LuaState) int {
-	if ls.GetTop() != 1 {
-		panic("todo!")
-	}
-
 	if ls.IsInteger(1) {
 		x := ls.ToInteger(1)
 		if x < 0 {
 			ls.PushInteger(-x)
 		}
-		return 1
-	}
-
-	if x, ok := ls.ToNumberX(1); ok {
+	} else {
+		x := ls.CheckNumber(1)
 		ls.PushNumber(math.Abs(x))
-		return 1
 	}
-
-	panic("todo!")
+	return 1
 }
 
 // math.sqrt (x)
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.sqrt
+// lua-5.3.4/src/lmathlib.c#math_sqrt()
 func mathSqrt(ls LuaState) int {
-	if ls.GetTop() != 1 {
-		panic("todo!")
-	}
-	if x, ok := ls.ToNumberX(1); ok {
-		ls.PushNumber(math.Sqrt(x))
-		return 1
-	} else {
-		panic("todo!")
-	}
+	x := ls.CheckNumber(1)
+	ls.PushNumber(math.Sqrt(x))
+	return 1
 }
 
 // math.ult (m, n)
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.ult
+// lua-5.3.4/src/lmathlib.c#math_ult()
 func mathUlt(ls LuaState) int {
-	// todo
-	m := uint64(ls.ToInteger(1))
-	n := uint64(ls.ToInteger(2))
-	ls.PushBoolean(m < n)
+	m := ls.CheckInteger(1)
+	n := ls.CheckInteger(2)
+	ls.PushBoolean(uint64(m) < uint64(n))
 	return 1
 }
 
 // math.tointeger (x)
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.tointeger
+// lua-5.3.4/src/lmathlib.c#math_toint()
 func mathToInt(ls LuaState) int {
 	if i, ok := ls.ToIntegerX(1); ok {
 		ls.PushInteger(i)
 	} else {
-		ls.PushNil()
+		ls.CheckAny(1)
+		ls.PushNil() /* value is not convertible to integer */
 	}
 	return 1
 }
 
 // math.type (x)
 // http://www.lua.org/manual/5.3/manual.html#pdf-math.type
+// lua-5.3.4/src/lmathlib.c#math_type()
 func mathType(ls LuaState) int {
-	if ls.IsInteger(1) {
-		ls.PushString("integer")
-	} else if ls.Type(1) == LUA_TNUMBER {
-		ls.PushString("float")
+	if ls.Type(1) == LUA_TNUMBER {
+		if ls.IsInteger(1) {
+			ls.PushString("integer")
+		} else {
+			ls.PushString("float")
+		}
 	} else {
+		ls.CheckAny(1)
 		ls.PushNil()
 	}
 	return 1
