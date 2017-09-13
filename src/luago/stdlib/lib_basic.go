@@ -16,7 +16,7 @@ var baseFuncs = map[string]GoFunction{
 	"loadfile":       baseLoadFile,
 	"dofile":         baseDoFile,
 	"pcall":          basePCall,
-	"xpcall":         baseXpcall,
+	"xpcall":         baseXPCall,
 	"getmetatable":   baseGetMetatable,
 	"setmetatable":   baseSetMetatable,
 	"rawequal":       baseRawEqual,
@@ -190,8 +190,8 @@ func basePCall(ls LuaState) int {
 
 // xpcall (f, msgh [, arg1, ···])
 // http://www.lua.org/manual/5.3/manual.html#pdf-xpcall
-func baseXpcall(ls LuaState) int {
-	panic("todo! baseXpcall")
+func baseXPCall(ls LuaState) int {
+	panic("todo! baseXPCall")
 }
 
 // getmetatable (object)
@@ -312,17 +312,25 @@ func baseToString(ls LuaState) int {
 	return 1
 }
 
+// static int luaB_tostring (lua_State *L) {
+//   luaL_checkany(L, 1);
+//   luaL_tolstring(L, 1, NULL);
+//   return 1;
+// }
+
 // type (v)
 // http://www.lua.org/manual/5.3/manual.html#pdf-type
+// lua-5.3.4/src/lbaselib.c#luaB_type()
 func baseType(ls LuaState) int {
-	luaType := ls.Type(1)
-	typeName := ls.TypeName(luaType)
-	ls.PushString(typeName)
+	t := ls.Type(1)
+	ls.ArgCheck(t != LUA_TNONE, 1, "value expected")
+	ls.PushString(ls.TypeName(t))
 	return 1
 }
 
 // collectgarbage ([opt [, arg]])
 // http://www.lua.org/manual/5.3/manual.html#pdf-collectgarbage
 func baseCollectGarbage(ls LuaState) int {
-	panic("todo! baseCollectGarbage")
+	// do nothing
+	return 0
 }
