@@ -1,8 +1,20 @@
 package stdlib
 
+import "math"
 import "sort"
 import "strings"
 import . "luago/api"
+
+/*
+** Operations that an object must define to mimic a table
+** (some functions only need some of them)
+ */
+const (
+	TAB_R  = 1               /* read */
+	TAB_W  = 2               /* write */
+	TAB_L  = 4               /* length */
+	TAB_RW = (TAB_R | TAB_W) /* read/write */
+)
 
 var tabFuncs = map[string]GoFunction{
 	"insert": tabInsert,
@@ -21,85 +33,90 @@ func OpenTableLib(ls LuaState) int {
 
 // table.insert (list, [pos,] value)
 // http://www.lua.org/manual/5.3/manual.html#pdf-table.insert
+// lua-5.3.4/src/ltablib.c#tinsert()
 func tabInsert(ls LuaState) int {
-	tabLen := ls.Len2(1)
-
+	e := _auxGetN(ls, 1, TAB_RW) + 1 /* first empty element */
+	var pos int64                    /* where to insert new element */
 	switch ls.GetTop() {
-	case 2:
-		ls.SetI(1, tabLen+1) // append
+	case 2: /* called with only 2 arguments */
+		pos = e /* insert new element at the end */
 	case 3:
-		if pos, ok := ls.ToIntegerX(2); ok {
-			if pos == tabLen+1 {
-				ls.SetI(1, pos) // append
-			} else if pos >= 1 && pos <= tabLen { // insert
-				for i := tabLen; i >= pos; i-- {
-					ls.GetI(1, i)
-					ls.SetI(1, i+1)
-				}
-				ls.SetI(1, pos)
-			} else {
-				panic("todo!")
-			}
-		} else {
-			panic("todo!")
+		pos = ls.CheckInteger(2) /* 2nd argument is the position */
+		ls.ArgCheck(1 <= pos && pos <= e, 2, "position out of bounds")
+		for i := e; i > pos; i-- { /* move up elements */
+			ls.GetI(1, i-1)
+			ls.SetI(1, i) /* t[i] = t[i - 1] */
 		}
 	default:
-		panic("todo!")
+		return ls.Error2("wrong number of arguments to 'insert'")
 	}
-
+	ls.SetI(1, pos) /* t[pos] = v */
 	return 0
 }
 
 // table.remove (list [, pos])
 // http://www.lua.org/manual/5.3/manual.html#pdf-table.remove
+// lua-5.3.4/src/ltablib.c#tremove()
 func tabRemove(ls LuaState) int {
-	tabLen := ls.Len2(1)
-	pos := ls.OptInteger(2, tabLen)
-
-	if pos < 0 || pos == 0 && tabLen > 0 || pos > tabLen+1 {
-		panic("todo!")
+	size := _auxGetN(ls, 1, TAB_RW)
+	pos := ls.OptInteger(2, size)
+	if pos != size { /* validate 'pos' if given */
+		ls.ArgCheck(1 <= pos && pos <= size+1, 1, "position out of bounds")
 	}
-
-	if pos == 0 && tabLen == 0 || pos == tabLen+1 {
-		ls.PushNil()
-		return 1
-	}
-
-	ls.GetI(1, pos)
-	for i := pos; i < tabLen; i++ {
-		ls.GetI(1, i+1)
-		ls.SetI(1, i)
+	ls.GetI(1, pos) /* result = t[pos] */
+	for ; pos < size; pos++ {
+		ls.GetI(1, pos+1)
+		ls.SetI(1, pos) /* t[pos] = t[pos + 1] */
 	}
 	ls.PushNil()
-	ls.SetI(1, tabLen)
+	ls.SetI(1, pos) /* t[pos] = nil */
 	return 1
 }
 
 // table.move (a1, f, e, t [,a2])
 // http://www.lua.org/manual/5.3/manual.html#pdf-table.move
+// lua-5.3.4/src/ltablib.c#tremove()
 func tabMove(ls LuaState) int {
-	panic("todo: tabMove!")
-}
-
-// table.sort (list [, comp])
-// http://www.lua.org/manual/5.3/manual.html#pdf-table.sort
-func tabSort(ls LuaState) int {
-	sort.Sort(wrapper{ls})
-	return 0
+	f := ls.CheckInteger(2)
+	e := ls.CheckInteger(3)
+	t := ls.CheckInteger(4)
+	tt := 1 /* destination table */
+	if !ls.IsNoneOrNil(5) {
+		tt = 5
+	}
+	_checkTab(ls, 1, TAB_R)
+	_checkTab(ls, tt, TAB_W)
+	if e >= f { /* otherwise, nothing to move */
+		var n, i int64
+		ls.ArgCheck(f > 0 || e < math.MaxInt64+f, 3,
+			"too many elements to move")
+		n = e - f + 1 /* number of elements to move */
+		ls.ArgCheck(t <= math.MaxInt64-n+1, 4,
+			"destination wrap around")
+		if t > e || t <= f || (tt != 1 && !ls.Compare(1, tt, LUA_OPEQ)) {
+			for i = 0; i < n; i++ {
+				ls.GetI(1, f+i)
+				ls.SetI(tt, t+i)
+			}
+		} else {
+			for i = n - 1; i >= 0; i-- {
+				ls.GetI(1, f+i)
+				ls.SetI(tt, t+i)
+			}
+		}
+	}
+	ls.PushValue(tt) /* return destination table */
+	return 1
 }
 
 // table.concat (list [, sep [, i [, j]]])
 // http://www.lua.org/manual/5.3/manual.html#pdf-table.concat
+// lua-5.3.4/src/ltablib.c#tconcat()
 func tabConcat(ls LuaState) int {
-	tabLen := ls.Len2(1)
-
+	tabLen := _auxGetN(ls, 1, TAB_R)
 	sep := ls.OptString(2, "")
 	i := ls.OptInteger(3, 1)
 	j := ls.OptInteger(4, tabLen)
-
-	if i < 1 || j > tabLen {
-		panic("todo!")
-	}
 
 	if i > j {
 		ls.PushString("")
@@ -108,7 +125,11 @@ func tabConcat(ls LuaState) int {
 
 	buf := make([]string, j-i+1)
 	for k := i; k <= j; k++ {
-		ls.GetI(1, int64(k))
+		ls.GetI(1, k)
+		if !ls.IsString(-1) {
+			ls.Error2("invalid value (%s) at index %d in table for 'concat'",
+				ls.TypeName2(-1), i)
+		}
 		buf[k-1], _ = ls.ToString(-1)
 		ls.Pop(1)
 	}
@@ -117,8 +138,40 @@ func tabConcat(ls LuaState) int {
 	return 1
 }
 
+func _auxGetN(ls LuaState, n, w int) int64 {
+	_checkTab(ls, n, w|TAB_L)
+	return ls.Len2(n)
+}
+
+/*
+** Check that 'arg' either is a table or can behave like one (that is,
+** has a metatable with the required metamethods)
+ */
+func _checkTab(ls LuaState, arg, what int) {
+	if ls.Type(arg) != LUA_TTABLE { /* is it not a table? */
+		n := 1                     /* number of elements to pop */
+		if ls.GetMetatable(arg) && /* must have metatable */
+			(what&TAB_R != 0 || _checkField(ls, "__index", &n)) &&
+			(what&TAB_W != 0 || _checkField(ls, "__newindex", &n)) &&
+			(what&TAB_L != 0 || _checkField(ls, "__len", &n)) {
+			ls.Pop(n) /* pop metatable and tested metamethods */
+		} else {
+			ls.CheckType(arg, LUA_TTABLE) /* force an error */
+		}
+	}
+}
+
+func _checkField(ls LuaState, key string, n *int) bool {
+	ls.PushString(key)
+	*n++
+	return ls.RawGet(-*n) != LUA_TNIL
+}
+
+/* Pack/unpack */
+
 // table.pack (···)
 // http://www.lua.org/manual/5.3/manual.html#pdf-table.pack
+// lua-5.3.4/src/ltablib.c#pack()
 func tabPack(ls LuaState) int {
 	n := int64(ls.GetTop())   /* number of elements to pack */
 	ls.CreateTable(int(n), 1) /* create result table */
@@ -133,6 +186,7 @@ func tabPack(ls LuaState) int {
 
 // table.unpack (list [, i [, j]])
 // http://www.lua.org/manual/5.3/manual.html#pdf-table.unpack
+// lua-5.3.4/src/ltablib.c#unpack()
 func tabUnpack(ls LuaState) int {
 	i := ls.OptInteger(2, 1)
 	e := ls.OptInteger(3, ls.Len2(1))
@@ -151,7 +205,14 @@ func tabUnpack(ls LuaState) int {
 	return n
 }
 
-/* table.sort */
+/* sort */
+
+// table.sort (list [, comp])
+// http://www.lua.org/manual/5.3/manual.html#pdf-table.sort
+func tabSort(ls LuaState) int {
+	sort.Sort(wrapper{ls})
+	return 0
+}
 
 type wrapper struct {
 	ls LuaState

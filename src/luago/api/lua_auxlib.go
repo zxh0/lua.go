@@ -5,9 +5,9 @@ type FuncReg map[string]GoFunction
 // auxiliary library
 type AuxLib interface {
 	/* Error-report functions */
-	Error2(fmt string) int                 // todo
-	ArgError(arg int, extraMsg string) int // todo
-	Where(lvl int)                         //
+	Error2(fmt string, a ...interface{}) int // todo
+	ArgError(arg int, extraMsg string) int   // todo
+	Where(lvl int)                           //
 	/* Argument check functions */
 	CheckStack2(sz int, msg string)               //
 	ArgCheck(cond bool, arg int, extraMsg string) //

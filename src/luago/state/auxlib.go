@@ -7,7 +7,7 @@ import "luago/stdlib"
 
 // [-0, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#luaL_error
-func (self *luaState) Error2(fmt string) int {
+func (self *luaState) Error2(fmt string, a ...interface{}) int {
 	panic("todo: Error2!")
 }
 
