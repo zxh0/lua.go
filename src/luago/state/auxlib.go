@@ -1,12 +1,13 @@
 package state
 
+import "fmt"
 import "io/ioutil"
 import . "luago/api"
 import "luago/stdlib"
 
 // [-0, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#luaL_error
-func (self *luaState) Error2(fmt string) {
+func (self *luaState) Error2(fmt string) int {
 	panic("todo: Error2!")
 }
 
@@ -15,6 +16,13 @@ func (self *luaState) Error2(fmt string) {
 func (self *luaState) ArgError(arg int, extraMsg string) int {
 	// bad argument #arg to 'funcname' (extramsg)
 	panic("todo: ArgError!")
+}
+
+// [-0, +1, m]
+// http://www.lua.org/manual/5.3/manual.html#luaL_where
+func (self *luaState) Where(lvl int) {
+	// chunkname:currentline:
+	panic("todo: Where!")
 }
 
 // [-0, +0, v]
@@ -232,6 +240,7 @@ func (self *luaState) OpenLibs() {
 
 // [-0, +1, e]
 // http://www.lua.org/manual/5.3/manual.html#luaL_requiref
+// lua-5.3.4/src/lauxlib.c#luaL_requiref()
 func (self *luaState) RequireF(modname string, openf GoFunction, glb bool) {
 	self.GetSubTable(LUA_REGISTRYINDEX, "_LOADED") // ~/_LOADED
 	self.GetField(-1, modname)                     // ~/_LOADED/_LOADED[modname]
@@ -252,6 +261,7 @@ func (self *luaState) RequireF(modname string, openf GoFunction, glb bool) {
 
 // [-0, +1, m]
 // http://www.lua.org/manual/5.3/manual.html#luaL_newlib
+// lua-5.3.4/src/lauxlib.h#luaL_newlib()
 func (self *luaState) NewLib(l FuncReg) {
 	self.NewLibTable(l)
 	self.SetFuncs(l, 0)
@@ -259,12 +269,14 @@ func (self *luaState) NewLib(l FuncReg) {
 
 // [-0, +1, m]
 // http://www.lua.org/manual/5.3/manual.html#luaL_newlibtable
+// lua-5.3.4/src/lauxlib.h#luaL_newlibtable()
 func (self *luaState) NewLibTable(l FuncReg) {
 	self.CreateTable(0, len(l))
 }
 
 // [-nup, +0, m]
 // http://www.lua.org/manual/5.3/manual.html#luaL_setfuncs
+// lua-5.3.4/src/lauxlib.c#luaL_setfuncs()
 func (self *luaState) SetFuncs(l FuncReg, nup int) {
 	self.CheckStack2(nup, "too many upvalues")
 	for name, fun := range l { /* fill the table with given functions */
@@ -280,6 +292,7 @@ func (self *luaState) SetFuncs(l FuncReg, nup int) {
 
 // [-0, +1, e]
 // http://www.lua.org/manual/5.3/manual.html#luaL_getsubtable
+// lua-5.3.4/src/lauxlib.c#luaL_getsubtable()
 func (self *luaState) GetSubTable(idx int, fname string) bool {
 	if self.GetField(idx, fname) == LUA_TTABLE {
 		return true /* table already there */
@@ -294,71 +307,73 @@ func (self *luaState) GetSubTable(idx int, fname string) bool {
 
 // [-0, +0, e]
 // http://www.lua.org/manual/5.3/manual.html#luaL_len
-func (self *luaState) Len2(index int) int64 {
-	self.Len(index)
-	if i, ok := self.ToIntegerX(-1); ok {
-		self.Pop(1)
-		return i
-	} else {
-		panic("todo!")
+// lua-5.3.4/src/lauxlib.c#luaL_len()
+func (self *luaState) Len2(idx int) int64 {
+	self.Len(idx)
+	i, isNum := self.ToIntegerX(-1)
+	if !isNum {
+		self.Error2("object length is not an integer")
 	}
+	self.Pop(1)
+	return i
 }
 
-func (self *luaState) TypeName2(index int) string {
-	panic("todo!")
+// [-0, +0, –]
+// http://www.lua.org/manual/5.3/manual.html#luaL_typename
+// lua-5.3.4/src/lauxlib.h#luaL_typename()
+func (self *luaState) TypeName2(idx int) string {
+	return self.TypeName(self.Type(idx))
 }
 
 // [-0, +1, e]
 // http://www.lua.org/manual/5.3/manual.html#luaL_tolstring
+// lua-5.3.4/src/lauxlib.c#luaL_tolstring()
 func (self *luaState) ToString2(idx int) string {
-	panic("todo!")
-}
+	if self.CallMeta(idx, "__tostring") { /* metafield? */
+		if !self.IsString(-1) {
+			self.Error2("'__tostring' must return a string")
+		}
+	} else {
+		switch self.Type(idx) {
+		case LUA_TNUMBER:
+			if self.IsInteger(idx) {
+				self.PushString(fmt.Sprintf("%d", self.ToInteger(idx))) // todo
+			} else {
+				self.PushString(fmt.Sprintf("%g", self.ToNumber(idx))) // todo
+			}
+		case LUA_TSTRING:
+			self.PushValue(idx)
+		case LUA_TBOOLEAN:
+			if self.ToBoolean(idx) {
+				self.PushString("true")
+			} else {
+				self.PushString("false")
+			}
+		case LUA_TNIL:
+			self.PushString("nil")
+		default:
+			tt := self.GetMetafield(idx, "__name") /* try name */
+			var kind string
+			if tt == LUA_TSTRING {
+				kind = self.CheckString(-1)
+			} else {
+				kind = self.TypeName2(idx)
+			}
 
-/*
-LUALIB_API const char *luaL_tolstring (lua_State *L, int idx, size_t *len) {
-  if (luaL_callmeta(L, idx, "__tostring")) {  /* metafield? * /
-    if (!lua_isstring(L, -1))
-      luaL_error(L, "'__tostring' must return a string");
-  }
-  else {
-    switch (lua_type(L, idx)) {
-      case LUA_TNUMBER: {
-        if (lua_isinteger(L, idx))
-          lua_pushfstring(L, "%I", (LUAI_UACINT)lua_tointeger(L, idx));
-        else
-          lua_pushfstring(L, "%f", (LUAI_UACNUMBER)lua_tonumber(L, idx));
-        break;
-      }
-      case LUA_TSTRING:
-        lua_pushvalue(L, idx);
-        break;
-      case LUA_TBOOLEAN:
-        lua_pushstring(L, (lua_toboolean(L, idx) ? "true" : "false"));
-        break;
-      case LUA_TNIL:
-        lua_pushliteral(L, "nil");
-        break;
-      default: {
-        int tt = luaL_getmetafield(L, idx, "__name");  /* try name * /
-        const char *kind = (tt == LUA_TSTRING) ? lua_tostring(L, -1) :
-                                                 luaL_typename(L, idx);
-        lua_pushfstring(L, "%s: %p", kind, lua_topointer(L, idx));
-        if (tt != LUA_TNIL)
-          lua_remove(L, -2);  /* remove '__name' * /
-        break;
-      }
-    }
-  }
-  return lua_tolstring(L, -1, len);
+			self.PushString(fmt.Sprintf("%s: %p", kind, self.ToPointer(idx)))
+			if tt != LUA_TNIL {
+				self.Remove(-2) /* remove '__name' */
+			}
+		}
+	}
+	return self.CheckString(-1)
 }
-*/
 
 // [-0, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#luaL_checkversion
 func (self *luaState) CheckVersion() {
 	//panic("todo: CheckVersion!")
 }
-
 
 func (self *luaState) intError(arg int) {
 	if self.IsNumber(arg) {
@@ -386,4 +401,3 @@ func (self *luaState) tagError(arg int, tag LuaType) {
 // 	msg := self.PushFString("%s expected, got %s", tname, typearg)
 // 	return self.ArgError(arg, msg)
 // }
-

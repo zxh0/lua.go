@@ -5,8 +5,9 @@ type FuncReg map[string]GoFunction
 // auxiliary library
 type AuxLib interface {
 	/* Error-report functions */
-	Error2(fmt string)                     // todo
+	Error2(fmt string) int                 // todo
 	ArgError(arg int, extraMsg string) int // todo
+	Where(lvl int)                         //
 	/* Argument check functions */
 	CheckStack2(sz int, msg string)               //
 	ArgCheck(cond bool, arg int, extraMsg string) //
@@ -35,12 +36,11 @@ type AuxLib interface {
 	SetFuncs(l FuncReg, nup int)                         // l.each{name,func => r[-1][name]=func}
 	GetSubTable(idx int, fname string) bool              // push(r[idx][fname] || {})
 	Len2(idx int) int64                                  // #(r[idx])
-	TypeName2(idx int) string                            //
+	TypeName2(idx int) string                            // typename(type(idx))
 	ToString2(idx int) string                            //
 	CheckVersion()                                       //
 }
 
-// luaL_where
 // luaL_fileresult
 // luaL_execresult
 // luaL_checkoption
