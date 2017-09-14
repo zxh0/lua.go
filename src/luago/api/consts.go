@@ -1,5 +1,50 @@
 package api
 
+// LUA_HOOKCALL
+// LUA_HOOKCOUNT
+// LUA_HOOKLINE
+// LUA_HOOKRET
+// LUA_HOOKTAILCALL
+// LUA_MASKCALL
+// LUA_MASKCOUNT
+// LUA_MASKLINE
+// LUA_MASKRET
+// LUA_NOREF
+// LUA_REFNIL
+// LUA_USE_APICHECK
+// LUAL_BUFFERSIZE
+
+/* option for multiple returns in 'lua_pcall' and 'lua_call' */
+const LUA_MULTRET = -1
+
+/* minimum Lua stack available to a C function */
+const LUA_MINSTACK = 20
+
+/*
+@@ LUAI_MAXSTACK limits the size of the Lua stack.
+** CHANGE it if you need a different limit. This limit is arbitrary;
+** its only purpose is to stop Lua from consuming unlimited stack
+** space (and to reserve some numbers for pseudo-indices).
+*/
+const LUAI_MAXSTACK = 1000000
+
+/*
+** Pseudo-indices
+** (-LUAI_MAXSTACK is the minimum valid index; we keep some free empty
+** space after that to help overflow detection)
+ */
+const LUA_REGISTRYINDEX = -LUAI_MAXSTACK - 1000
+
+/* predefined values in the registry */
+const LUA_RIDX_MAINTHREAD int64 = 1
+const LUA_RIDX_GLOBALS int64 = 2
+const LUA_RIDX_LAST = LUA_RIDX_GLOBALS
+
+const (
+	LUA_MAXINTEGER = 1<<63 - 1
+	LUA_MININTEGER = -1 << 63
+)
+
 // lua-5.3.4/src/lua.h
 /* basic types */
 const (
@@ -64,4 +109,5 @@ const (
 	LUA_ERRMEM    = 4
 	LUA_ERRGCMM   = 5
 	LUA_ERRERR    = 6
+	LUA_ERRFILE   = 7
 )

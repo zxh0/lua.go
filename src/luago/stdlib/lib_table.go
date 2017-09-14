@@ -1,6 +1,5 @@
 package stdlib
 
-import "math"
 import "sort"
 import "strings"
 import . "luago/api"
@@ -88,10 +87,10 @@ func tabMove(ls LuaState) int {
 	_checkTab(ls, tt, TAB_W)
 	if e >= f { /* otherwise, nothing to move */
 		var n, i int64
-		ls.ArgCheck(f > 0 || e < math.MaxInt64+f, 3,
+		ls.ArgCheck(f > 0 || e < LUA_MAXINTEGER+f, 3,
 			"too many elements to move")
 		n = e - f + 1 /* number of elements to move */
-		ls.ArgCheck(t <= math.MaxInt64-n+1, 4,
+		ls.ArgCheck(t <= LUA_MAXINTEGER-n+1, 4,
 			"destination wrap around")
 		if t > e || t <= f || (tt != 1 && !ls.Compare(1, tt, LUA_OPEQ)) {
 			for i = 0; i < n; i++ {
