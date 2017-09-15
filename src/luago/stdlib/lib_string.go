@@ -116,8 +116,8 @@ func strUpper(ls LuaState) int {
 func strSub(ls LuaState) int {
 	s := ls.CheckString(1)
 	sLen := len(s)
-	i := _posRelat(ls.CheckInteger(2), sLen)
-	j := _posRelat(ls.OptInteger(3, -1), sLen)
+	i := posRelat(ls.CheckInteger(2), sLen)
+	j := posRelat(ls.OptInteger(3, -1), sLen)
 
 	if i < 1 {
 		i = 1
@@ -136,7 +136,7 @@ func strSub(ls LuaState) int {
 }
 
 /* translate a relative string position: negative means back from end */
-func _posRelat(pos int64, _len int) int {
+func posRelat(pos int64, _len int) int {
 	_pos := int(pos)
 	if _pos >= 0 {
 		return _pos
@@ -170,8 +170,8 @@ func strChar(ls LuaState) int {
 func strByte(ls LuaState) int {
 	s := ls.CheckString(1)
 	sLen := len(s)
-	i := _posRelat(ls.OptInteger(2, 1), sLen)
-	j := _posRelat(ls.OptInteger(3, int64(i)), sLen)
+	i := posRelat(ls.OptInteger(2, 1), sLen)
+	j := posRelat(ls.OptInteger(3, int64(i)), sLen)
 
 	if i < 1 {
 		i = 1
@@ -245,28 +245,24 @@ func strFormat(ls LuaState) int {
 	}
 
 	argIdx := 1
-	parsedFmt := parseFmtStr(fmtStr)
-	formatted := make([]string, 0, len(parsedFmt))
-	for i := 0; i < len(parsedFmt); i++ {
-		tagOrStr := parsedFmt[i]
-		if tagOrStr[0] == '%' {
-			specifier := tagOrStr[len(tagOrStr)-1]
-			if specifier != '%' {
+	arr := parseFmtStr(fmtStr)
+	for i, s := range arr {
+		if s[0] == '%' {
+			if s == "%%" {
+				arr[i] = "%"
+			} else {
 				argIdx += 1
+				arr[i] = _fmtArg(s, ls, argIdx)
 			}
-
-			formatted = append(formatted, _fmtArg(specifier, tagOrStr, ls, argIdx))
-		} else {
-			formatted = append(formatted, tagOrStr)
 		}
 	}
 
-	ls.PushString(strings.Join(formatted, ""))
+	ls.PushString(strings.Join(arr, ""))
 	return 1
 }
 
-func _fmtArg(specifier byte, tag string, ls LuaState, argIdx int) string {
-	switch specifier {
+func _fmtArg(tag string, ls LuaState, argIdx int) string {
+	switch tag[len(tag)-1] { // specifier
 	case 'c': // character
 		return string([]byte{byte(ls.ToInteger(argIdx))})
 	case 'i':
@@ -281,12 +277,8 @@ func _fmtArg(specifier byte, tag string, ls LuaState, argIdx int) string {
 		return fmt.Sprintf(tag, uint(ls.ToInteger(argIdx)))
 	case 'f': // float
 		return fmt.Sprintf(tag, ls.ToNumber(argIdx))
-	case 's': // string
+	case 's', 'q': // string
 		return fmt.Sprintf(tag, ls.ToString2(argIdx))
-	case 'q': // double quoted string
-		return quote(ls.CheckString(argIdx))
-	case '%':
-		return "%"
 	default:
 		panic("todo! tag=" + tag)
 	}
@@ -298,8 +290,16 @@ func _fmtArg(specifier byte, tag string, ls LuaState, argIdx int) string {
 // http://www.lua.org/manual/5.3/manual.html#pdf-string.find
 func strFind(ls LuaState) int {
 	s := ls.CheckString(1)
+	sLen := len(s)
 	pattern := ls.CheckString(2)
-	init := int(ls.OptInteger(3, 1))
+	init := posRelat(ls.OptInteger(3, 1), sLen)
+	if init < 1 {
+		init = 1
+	} else if init > sLen+1 { /* start after string's end? */
+		ls.PushNil()
+		return 1
+	}
+
 	plain := false
 	if ls.IsBoolean(4) {
 		plain = ls.ToBoolean(4)
@@ -320,8 +320,15 @@ func strFind(ls LuaState) int {
 // http://www.lua.org/manual/5.3/manual.html#pdf-string.match
 func strMatch(ls LuaState) int {
 	s := ls.CheckString(1)
+	sLen := len(s)
 	pattern := ls.CheckString(2)
-	init := int(ls.OptInteger(3, 1))
+	init := posRelat(ls.OptInteger(3, 1), sLen)
+	if init < 1 {
+		init = 1
+	} else if init > sLen+1 { /* start after string's end? */
+		ls.PushNil()
+		return 1
+	}
 
 	captures := match(s, pattern, init)
 

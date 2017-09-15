@@ -3,6 +3,7 @@ package stdlib
 import "math"
 import "math/rand"
 import . "luago/api"
+import "luago/luanum"
 
 var mathLib = map[string]GoFunction{
 	"random":     mathRandom,
@@ -241,7 +242,7 @@ func mathCeil(ls LuaState) int {
 		ls.SetTop(1) /* integer is its own ceil */
 	} else {
 		x := ls.CheckNumber(1)
-		ls.PushNumber(math.Ceil(x))
+		_pushNumInt(ls, math.Ceil(x))
 	}
 	return 1
 }
@@ -254,7 +255,7 @@ func mathFloor(ls LuaState) int {
 		ls.SetTop(1) /* integer is its own floor */
 	} else {
 		x := ls.CheckNumber(1)
-		ls.PushNumber(math.Floor(x))
+		_pushNumInt(ls, math.Floor(x))
 	}
 	return 1
 }
@@ -292,7 +293,7 @@ func mathModf(ls LuaState) int {
 	} else {
 		x := ls.CheckNumber(1)
 		i, f := math.Modf(x)
-		ls.PushNumber(i)
+		_pushNumInt(ls, i)
 		ls.PushNumber(f)
 	}
 
@@ -362,4 +363,12 @@ func mathType(ls LuaState) int {
 		ls.PushNil()
 	}
 	return 1
+}
+
+func _pushNumInt(ls LuaState, d float64) {
+	if i, ok := luanum.FloatToInteger(d); ok { /* does 'd' fit in an integer? */
+		ls.PushInteger(i) /* result is integer */
+	} else {
+		ls.PushNumber(d) /* result is float */
+	}
 }

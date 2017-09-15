@@ -28,12 +28,18 @@ func OpenUTF8Lib(ls LuaState) int {
 // utf8.offset (s, n [, i])
 // http://www.lua.org/manual/5.3/manual.html#pdf-utf8.offset
 func utfByteOffset(ls LuaState) int {
-	// s := ls.CheckString(1)
-	// n := ls.CheckInteger(2)
-	// //i = (n >= 0) ? 1 : len(s) + 1;
-	// i := ls.OptInteger(3, 1)
-	// ls.ArgCheck(1 <= i && i <= len(s)+1, 3,
-	// 	"position out of range")
+	s := ls.CheckString(1)
+	sLen := int64(len(s))
+	n := ls.CheckInteger(2)
+	i := int64(1)
+	if n < 0 {
+		i = sLen + 1
+	}
+	i = posRelat(ls.OptInteger(3, i))
+	ls.ArgCheck(1 <= i && i <= sLen+1, 3,
+		"position out of range")
+
+	// todo
 	panic("todo: utfByteOffset!")
 }
 
@@ -42,15 +48,19 @@ func utfByteOffset(ls LuaState) int {
 // lua-5.3.4/src/lutf8lib.c#codepoint()
 func utfCodePoint(ls LuaState) int {
 	s := ls.CheckString(1)
-	i := ls.OptInteger(2, 1)
-	j := ls.OptInteger(3, i)
+	sLen := len(s)
+	i := posRelat(ls.OptInteger(2, 1), sLen)
+	j := posRelat(ls.OptInteger(3, int64(i)), sLen)
+
 	ls.ArgCheck(i >= 1, 2, "out of range")
-	ls.ArgCheck(int(j) <= len(s), 3, "out of range")
+	ls.ArgCheck(int(j) <= sLen, 3, "out of range")
 	if i > j {
 		return 0 /* empty interval; return no values */
 	}
+	//if (pose - posi >= INT_MAX)  /* (lua_Integer -> int) overflow? */
+	//	return luaL_error(L, "string slice too long");
 
-	codePoints := decodeUtf8(subStr(s, int(i), int(j)))
+	codePoints := _decodeUtf8(s[i-1 : j])
 	ls.CheckStack2(len(codePoints), "string slice too long")
 	for _, cp := range codePoints {
 		ls.PushInteger(int64(cp))
@@ -58,7 +68,7 @@ func utfCodePoint(ls LuaState) int {
 	return len(codePoints)
 }
 
-func decodeUtf8(str string) []rune {
+func _decodeUtf8(str string) []rune {
 	codePoints := make([]rune, 0, len(str))
 
 	for len(str) > 0 {
@@ -84,11 +94,11 @@ func utfChar(ls LuaState) int {
 		codePoints[i-1] = rune(cp)
 	}
 
-	ls.PushString(encodeUtf8(codePoints))
+	ls.PushString(_encodeUtf8(codePoints))
 	return 1
 }
 
-func encodeUtf8(codePoints []rune) string {
+func _encodeUtf8(codePoints []rune) string {
 	buf := make([]byte, 6)
 	str := make([]byte, 0, len(codePoints))
 
@@ -105,32 +115,21 @@ func encodeUtf8(codePoints []rune) string {
 // lua-5.3.4/src/lutf8lib.c#utflen()
 func utfLen(ls LuaState) int {
 	s := ls.CheckString(1)
-	i := int(ls.OptInteger(2, 1))
-	j := int(ls.OptInteger(3, -1))
-	ls.ArgCheck(1 <= i && i <= len(s)+1, 2,
+	sLen := len(s)
+	i := posRelat(ls.OptInteger(2, 1), sLen)
+	j := posRelat(ls.OptInteger(3, -1), sLen)
+	ls.ArgCheck(1 <= i && i <= sLen+1, 2,
 		"initial position out of string")
-	ls.ArgCheck(j < len(s)+1, 3,
+	ls.ArgCheck(j <= sLen, 3,
 		"final position out of string")
 
-	s1 := subStr(s, i, j)
+	if i > j {
+		ls.PushInteger(0)
+	} else {
+		n := utf8.RuneCountInString(s[i-1 : j])
+		ls.PushInteger(int64(n))
+	}
 
-	// var n int64 = 0
-	// for len(s1) > 0 {
-	// 	r, size := utf8.DecodeRuneInString(s1)
-	// 	if r == utf8.RuneError { /* conversion error? */
-	// 		ls.PushNil()                 /* return nil ... */
-	// 		ls.PushInteger(int64(i + 1)) /* ... and current position */
-	// 		return 2
-	// 	}
-
-	// 	s1 = s1[size:]
-	// 	i += size
-	// 	n += 1
-	// }
-	// ls.PushInteger(n)
-
-	n := utf8.RuneCountInString(s1)
-	ls.PushInteger(int64(n))
 	return 1
 }
 
