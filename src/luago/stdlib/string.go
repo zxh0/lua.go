@@ -86,7 +86,7 @@ func find(s, pattern string, init int, plain bool) (start, end int) {
 		start = strings.Index(tail, pattern)
 		end = start + len(pattern) - 1
 	} else {
-		re, err := compile(pattern)
+		re, err := _compile(pattern)
 		if err != "" {
 			panic(err) // todo
 		} else {
@@ -112,7 +112,7 @@ func match(s, pattern string, init int) []int {
 		tail = subStr(s, init, -1)
 	}
 
-	re, err := compile(pattern)
+	re, err := _compile(pattern)
 	if err != "" {
 		panic(err) // todo
 	} else {
@@ -127,7 +127,7 @@ func match(s, pattern string, init int) []int {
 
 // todo
 func gsub(s, pattern, repl string, n int) (string, int) {
-	re, err := compile(pattern)
+	re, err := _compile(pattern)
 	if err != "" {
 		panic(err) // todo
 	} else {
@@ -147,7 +147,7 @@ func gsub(s, pattern, repl string, n int) (string, int) {
 	}
 }
 
-func compile(pattern string) (*regexp.Regexp, string) {
+func _compile(pattern string) (*regexp.Regexp, string) {
 	expr, errStr := toRegexp(pattern)
 	if errStr != "" {
 		return nil, errStr

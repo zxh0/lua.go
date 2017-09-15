@@ -26,7 +26,7 @@ func (self *luaState) Load(chunk []byte, chunkName, mode string) ThreadStatus {
 
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_dump
-func (self *luaState) Dump() {
+func (self *luaState) Dump(strip bool) []byte {
 	panic("todo!")
 }
 

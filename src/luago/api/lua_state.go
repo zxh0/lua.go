@@ -108,7 +108,7 @@ type BasicAPI interface {
 	CallK()                                                 //
 	PCall(nArgs, nResults, msgh int) ThreadStatus           // call(nArgs, nResults) || push(err)
 	PCallK()                                                //
-	Dump()                                                  // todo
+	Dump(strip bool) []byte                                 // todo
 	/* miscellaneous functions */
 	Concat(n int)                 // push(concat(pop(n)))
 	Len(idx int)                  // push(len(r[idx]))
