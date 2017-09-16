@@ -29,13 +29,13 @@ func OpenUTF8Lib(ls LuaState) int {
 // http://www.lua.org/manual/5.3/manual.html#pdf-utf8.offset
 func utfByteOffset(ls LuaState) int {
 	s := ls.CheckString(1)
-	sLen := int64(len(s))
+	sLen := len(s)
 	n := ls.CheckInteger(2)
-	i := int64(1)
+	i := 1
 	if n < 0 {
 		i = sLen + 1
 	}
-	i = posRelat(ls.OptInteger(3, i))
+	i = posRelat(ls.OptInteger(3, int64(i)), sLen)
 	ls.ArgCheck(1 <= i && i <= sLen+1, 3,
 		"position out of range")
 
