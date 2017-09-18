@@ -5,6 +5,12 @@ import "luago/binchunk"
 import "luago/compiler"
 import "luago/vm"
 
+// [-0, +0, –]
+// http://www.lua.org/manual/5.3/manual.html#lua_dump
+func (self *luaState) Dump(strip bool) []byte {
+	panic("todo!")
+}
+
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_load
 func (self *luaState) Load(chunk []byte, chunkName, mode string) ThreadStatus {
@@ -22,12 +28,6 @@ func (self *luaState) Load(chunk []byte, chunkName, mode string) ThreadStatus {
 	}
 	self.stack.push(cl)
 	return LUA_OK
-}
-
-// [-0, +0, –]
-// http://www.lua.org/manual/5.3/manual.html#lua_dump
-func (self *luaState) Dump(strip bool) []byte {
-	panic("todo!")
 }
 
 // [-(nargs+1), +nresults, e]

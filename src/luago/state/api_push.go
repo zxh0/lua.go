@@ -1,5 +1,6 @@
 package state
 
+import "fmt"
 import . "luago/api"
 
 // [-0, +1, –]
@@ -40,12 +41,12 @@ func (self *luaState) PushGoFunction(f GoFunction) {
 
 // [-n, +1, m]
 // http://www.lua.org/manual/5.3/manual.html#lua_pushcclosure
-func (self *luaState) PushGoClosure(fn GoFunction, n int) {
+func (self *luaState) PushGoClosure(f GoFunction, n int) {
 	if n == 0 {
-		self.stack.push(fn)
+		self.stack.push(f)
 	} else { // closure
 		vals := self.stack.popN(n)
-		closure := &goClosure{fn, vals}
+		closure := &goClosure{f, vals}
 		self.stack.push(closure)
 	}
 }
@@ -59,14 +60,9 @@ func (self *luaState) PushUserData(d UserData) {
 
 // [-0, +1, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_pushfstring
-func (self *luaState) PushFString(fmt string) {
-	panic("todo!")
-}
-
-// [-0, +1, m]
-// http://www.lua.org/manual/5.3/manual.html#lua_pushvfstring
-func (self *luaState) PushVFString() {
-	panic("todo!")
+func (self *luaState) PushFString(fmtStr string, a ...interface{}) {
+	str := fmt.Sprintf(fmtStr, a...)
+	self.stack.push(str)
 }
 
 // [-0, +1, –]

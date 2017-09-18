@@ -31,7 +31,9 @@ func (self *luaState) Version() float64 {
 // [-1, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#lua_error
 func (self *luaState) Error() int {
-	panic("todo!")
+	// todo
+	err := self.stack.get(-1)
+	panic(err)
 }
 
 // [-0, +0, m]
@@ -114,23 +116,10 @@ func (self *luaState) Concat(n int) {
 }
 
 func popString(ls *luaState) string {
-	s := ""
-
-	switch ls.Type(-1) {
-	case LUA_TNIL:
-		s = "nil"
-	case LUA_TBOOLEAN:
-		if ls.ToBoolean(-1) {
-			s = "true"
-		} else {
-			s = "false"
-		}
-	case LUA_TSTRING, LUA_TNUMBER:
-		s, _ = ls.ToString(-1)
-	default:
-		panic("todo popString()!")
+	if s, ok := ls.ToString(-1); ok {
+		ls.Pop(1)
+		return s
+	} else {
+		panic("todo: __concat")
 	}
-
-	ls.Pop(1)
-	return s
 }

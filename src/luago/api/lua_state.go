@@ -5,9 +5,6 @@ type ArithOp = int
 type CompareOp = int
 type ThreadStatus = int
 
-// type LuaBoolean bool
-// type LuaInteger int64
-// type LuaNumber float64
 type GoFunction func(LuaState) int
 type UserData interface{}
 
@@ -63,18 +60,17 @@ type BasicAPI interface {
 	ToPointer(idx int) interface{}     // r[idx] as interface{}
 	RawLen(idx int) uint               // len(r[idx])
 	/* push functions (C -> stack) */
-	PushNil()                           // push(nil)
-	PushBoolean(b bool)                 // push(b)
-	PushInteger(n int64)                // push(n)
-	PushNumber(n float64)               // push(n)
-	PushString(s string)                // push(s)
-	PushFString(fmt string)             // todo
-	PushVFString()                      // todo
-	PushGoClosure(fn GoFunction, n int) // push(f)
-	PushGoFunction(f GoFunction)        // push(f)
-	PushThread(ls LuaState) bool        // push(ls)
-	PushUserData(d UserData)            // push(d)
-	PushGlobalTable()                   // push(global)
+	PushNil()                                 // push(nil)
+	PushBoolean(b bool)                       // push(b)
+	PushInteger(n int64)                      // push(n)
+	PushNumber(n float64)                     // push(n)
+	PushString(s string)                      // push(s)
+	PushFString(fmt string, a ...interface{}) // push(fmt*a)
+	PushGoFunction(f GoFunction)              // push(f)
+	PushGoClosure(f GoFunction, n int)        // push(f)
+	PushThread(ls LuaState) bool              // push(ls)
+	PushUserData(d UserData)                  // push(d)
+	PushGlobalTable()                         // push(global)
 	/* Comparison and arithmetic functions */
 	Arith(op ArithOp)                          // b=pop(); a=pop(); push(a op b)
 	Compare(idx1, idx2 int, op CompareOp) bool // r[idx1] op r[idx2]
@@ -103,18 +99,18 @@ type BasicAPI interface {
 	SetMetatable(idx int)               // r[idx].metatable = pop()
 	SetUserValue(idx int)               // r[idx].userValue = pop()
 	/* 'load' and 'call' functions (load and run Lua code) */
+	Dump(strip bool) []byte                                 // todo
 	Load(chunk []byte, chunkName, mode string) ThreadStatus // push(compile(chunk))
 	Call(nArgs, nResults int)                               // args=pop(nArgs); f=pop(); f(args)
 	CallK()                                                 //
 	PCall(nArgs, nResults, msgh int) ThreadStatus           // call(nArgs, nResults) || push(err)
 	PCallK()                                                //
-	Dump(strip bool) []byte                                 // todo
 	/* miscellaneous functions */
 	Concat(n int)                 // push(concat(pop(n)))
 	Len(idx int)                  // push(len(r[idx]))
 	Next(idx int) bool            // key=pop(); k,v=next(r[idx]); push(k,v);
 	StringToNumber(s string) bool // push(number(s))
-	Error() int                   //
+	Error() int                   // panic(r[-1])
 	/* coroutine functions */
 	NewThread() LuaState                          // todo
 	Yield(nResults int) int                       // todo
@@ -126,18 +122,23 @@ type BasicAPI interface {
 	GC(what, data int) int //
 }
 
-// type LuaLightUserData UserData
-// type LuaKContext int  // todo
-// type LuaKFunction int // todo
-// type LuaReader int    // todo
-// type LuaWriter int    // todo
+// type LuaBoolean bool
+// type LuaInteger int64
+// type LuaNumber float64
 
-//GetAllocf()
-//GetExtraSpace()
-//IsLightUserData(idx int)
-//NewUserData(size uint)
-//PushLightUserData()
-//PushLiteral
-//PushLString
-//SetAllocf()
-//ToLString(idx int) (string, uint)
+// type LuaLightUserData UserData
+// type LuaKContext int
+// type LuaKFunction int
+// type LuaReader int
+// type LuaWriter int
+
+// GetAllocf()
+// GetExtraSpace()
+// IsLightUserData(idx int)
+// NewUserData(size uint)
+// PushLightUserData()
+// PushLiteral
+// PushLString
+// PushVFString()
+// SetAllocf()
+// ToLString(idx int) (string, uint)

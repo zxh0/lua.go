@@ -8,7 +8,9 @@ import "luago/stdlib"
 // [-0, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#luaL_error
 func (self *luaState) Error2(fmt string, a ...interface{}) int {
-	panic("todo: Error2!")
+	// todo
+	self.PushFString(fmt, a...)
+	return self.Error()
 }
 
 // [-0, +0, v]

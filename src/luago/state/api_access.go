@@ -245,5 +245,10 @@ func (self *luaState) ToUserData(idx int) UserData {
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_topointer
 func (self *luaState) ToPointer(idx int) interface{} {
-	return self.stack.get(idx)
+	val := self.stack.get(idx)
+	if val == nil || typeOf(val) < LUA_TTABLE {
+		return nil
+	} else {
+		return val
+	}
 }
