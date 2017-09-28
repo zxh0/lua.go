@@ -159,7 +159,7 @@ func (self *printer) printConstant(f *Prototype, i int) {
 	case nil:
 		self.printf("nil")
 	case bool:
-		self.printf(_t(x, "true", "false"))
+		self.printf("%t", x)
 	case float64:
 		self.printf("%.14g", x) // todo
 	case int64:

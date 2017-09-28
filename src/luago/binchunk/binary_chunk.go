@@ -1,25 +1,26 @@
 package binchunk
 
-const CINT_SIZE = 4
-const CSZIET_SIZE = 8
-const INSTRUCTION_SIZE = 4
-const LUA_INTEGER_SIZE = 8
-const LUA_NUMBER_SIZE = 8
-
-const LUA_SIGNATURE = "\x1bLua"
-const LUAC_VERSION byte = 0x53
-const LUAC_FORMAT byte = 0
-const LUAC_DATA = "\x19\x93\r\n\x1a\n"
-const LUAC_INT int64 = 0x5678
-const LUAC_NUM float64 = 370.5
+const (
+	LUA_SIGNATURE    = "\x1bLua"
+	LUAC_VERSION     = 0x53
+	LUAC_FORMAT      = 0
+	LUAC_DATA        = "\x19\x93\r\n\x1a\n"
+	CINT_SIZE        = 4
+	CSZIET_SIZE      = 8
+	INSTRUCTION_SIZE = 4
+	LUA_INTEGER_SIZE = 8
+	LUA_NUMBER_SIZE  = 8
+	LUAC_INT         = 0x5678
+	LUAC_NUM         = 370.5
+)
 
 type binaryChunk struct {
-	binaryChunkHeader
+	header
 	sizeUpvalues byte // ?
 	mainFunc     *Prototype
 }
 
-type binaryChunkHeader struct {
+type header struct {
 	signature       [4]byte
 	version         byte
 	format          byte
@@ -68,7 +69,7 @@ func IsBinaryChunk(data []byte) bool {
 
 func Undump(data []byte) *Prototype {
 	reader := &reader{data}
-	reader.readHeader()
+	reader.checkHeader()
 	reader.readByte() // size_upvalues
 	return reader.readProto("")
 }

@@ -48,7 +48,7 @@ func encodeInst(i instruction) uint32 {
 	case IABx:
 		return uint32(i.opcode | i.a<<6 | i.b<<14)
 	case IAsBx:
-		return uint32(i.opcode | i.a<<6 | (i.b+HALF_BX)<<14)
+		return uint32(i.opcode | i.a<<6 | (i.b+MAXARG_sBx)<<14)
 	default: // IAx
 		return uint32(i.opcode | i.a<<6)
 	}

@@ -2,7 +2,8 @@ package vm
 
 import "luago/api"
 
-const HALF_BX = (1<<18 - 1) >> 1 // 131071
+const MAXARG_Bx = 1<<18 - 1 // 2^18 - 1 = 262143
+const MAXARG_sBx = MAXARG_Bx >> 1 // 262143 / 2 = 131071
 
 /*
  31       22       13       5    0
@@ -42,7 +43,7 @@ func (self Instruction) ABx() (a, bx int) {
 
 func (self Instruction) AsBx() (a, sbx int) {
 	a, bx := self.ABx()
-	return a, bx - HALF_BX
+	return a, bx - MAXARG_sBx
 }
 
 func (self Instruction) Ax() int {

@@ -52,7 +52,7 @@ func (self *reader) readString() string {
 	return string(bytes) // todo
 }
 
-func (self *reader) readHeader() {
+func (self *reader) checkHeader() {
 	if string(self.readBytes(4)) != LUA_SIGNATURE {
 		panic("not a precompiled chunk")
 	}
@@ -66,10 +66,10 @@ func (self *reader) readHeader() {
 		panic("corrupted!")
 	}
 	if self.readByte() != CINT_SIZE {
-		panic("unsupported int size!")
+		panic("int size mismatch!")
 	}
 	if self.readByte() != CSZIET_SIZE {
-		panic("unsupported size_t size!")
+		panic("size_t size mismatch!")
 	}
 	if self.readByte() != INSTRUCTION_SIZE {
 		panic("instruction size mismatch!")
