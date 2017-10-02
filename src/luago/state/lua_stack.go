@@ -19,21 +19,16 @@ type luaStack struct {
 func newLuaStack(size int, state *luaState) *luaStack {
 	return &luaStack{
 		slots: make([]luaValue, size),
+		top:   0,
 		state: state,
 	}
 }
 
-func (self *luaStack) check(n int) bool {
+func (self *luaStack) check(n int) {
 	free := len(self.slots) - self.top
-	if free >= n {
-		return true
+	for i := free; i < n; i++ {
+		self.slots = append(self.slots, nil)
 	}
-	// grow
-	slots := make([]luaValue, len(self.slots)+n+4)
-	copy(slots, self.slots)
-	self.slots = slots
-	// never fails
-	return true
 }
 
 func (self *luaStack) push(val luaValue) {

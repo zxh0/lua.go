@@ -20,7 +20,8 @@ func (self *luaState) AbsIndex(idx int) int {
 // http://www.lua.org/manual/5.3/manual.html#lua_checkstack
 // lua-5.3.4/src/lapi.c#lua_checkstack()
 func (self *luaState) CheckStack(n int) bool {
-	return self.stack.check(n)
+	self.stack.check(n)
+	return true // never fails
 }
 
 // [-n, +0, –]
@@ -52,8 +53,8 @@ func (self *luaState) PushValue(idx int) {
 // http://www.lua.org/manual/5.3/manual.html#lua_replace
 // lua-5.3.4/src/lua.h#lua_replace()
 func (self *luaState) Replace(idx int) {
-	self.Copy(-1, idx)
-	self.Pop(1)
+	val := self.stack.pop()
+	self.stack.set(idx, val)
 }
 
 // [-1, +1, –]
@@ -92,9 +93,12 @@ func (self *luaState) Rotate(idx, n int) {
 // http://www.lua.org/manual/5.3/manual.html#lua_settop
 // lua-5.3.4/src/lapi.c#lua_settop()
 func (self *luaState) SetTop(idx int) {
-	absIdx := self.stack.absIndex(idx)
-	n := self.stack.top - absIdx
+	newTop := self.stack.absIndex(idx)
+	if newTop < 0 {
+		panic("stack underflow!")
+	}
 
+	n := self.stack.top - newTop
 	if n > 0 {
 		for i := 0; i < n; i++ {
 			self.stack.pop()
