@@ -1,7 +1,7 @@
 package state
 
 import . "luago/api"
-import "luago/luanum"
+import "luago/number"
 
 type luaValue interface{}
 
@@ -51,7 +51,7 @@ func convertToNumber(val luaValue) (float64, bool) {
 	case float64:
 		return x, true
 	case string:
-		return luanum.ParseFloat(x)
+		return number.ParseFloat(x)
 	default:
 		return 0, false
 	}
@@ -63,7 +63,7 @@ func convertToInteger(val luaValue) (int64, bool) {
 	case int64:
 		return x, true
 	case float64:
-		return luanum.FloatToInteger(x)
+		return number.FloatToInteger(x)
 	case string:
 		return _stringToInteger(x)
 	default:
@@ -72,11 +72,11 @@ func convertToInteger(val luaValue) (int64, bool) {
 }
 
 func _stringToInteger(s string) (int64, bool) {
-	if i, ok := luanum.ParseInteger(s, 10); ok {
+	if i, ok := number.ParseInteger(s, 10); ok {
 		return i, true
 	}
-	if f, ok := luanum.ParseFloat(s); ok {
-		return luanum.FloatToInteger(f)
+	if f, ok := number.ParseFloat(s); ok {
+		return number.FloatToInteger(f)
 	}
 	return 0, false
 }

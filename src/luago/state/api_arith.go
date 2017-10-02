@@ -2,7 +2,7 @@ package state
 
 import "math"
 import . "luago/api"
-import "luago/luanum"
+import "luago/number"
 
 // [-(2|1), +1, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_arith
@@ -87,9 +87,9 @@ func (self *luaState) mul(a, b luaValue) {
 
 func (self *luaState) idiv(a, b luaValue) {
 	if x, y, ok := _castToInt64s(a, b); ok {
-		self.stack.push(luanum.IFloorDiv(x, y))
+		self.stack.push(number.IFloorDiv(x, y))
 	} else if x, y, ok := _convertToFloat64s(a, b); ok {
-		self.stack.push(luanum.FFloorDiv(x, y))
+		self.stack.push(number.FFloorDiv(x, y))
 	} else if result, ok := callMetamethod(a, b, "__idiv", self); ok {
 		self.stack.push(result)
 	} else {
@@ -99,9 +99,9 @@ func (self *luaState) idiv(a, b luaValue) {
 
 func (self *luaState) mod(a, b luaValue) {
 	if x, y, ok := _castToInt64s(a, b); ok {
-		self.stack.push(luanum.IMod(x, y))
+		self.stack.push(number.IMod(x, y))
 	} else if x, y, ok := _convertToFloat64s(a, b); ok {
-		self.stack.push(luanum.FMod(x, y))
+		self.stack.push(number.FMod(x, y))
 	} else if result, ok := callMetamethod(a, b, "__mod", self); ok {
 		self.stack.push(result)
 	} else {
@@ -177,7 +177,7 @@ func (self *luaState) bxor(a, b luaValue) {
 
 func (self *luaState) shl(a, b luaValue) {
 	if x, y, ok := _convertToInt64s(a, b); ok {
-		self.stack.push(luanum.ShiftLeft(x, y))
+		self.stack.push(number.ShiftLeft(x, y))
 	} else if result, ok := callMetamethod(a, b, "__shl", self); ok {
 		self.stack.push(result)
 	} else {
@@ -187,7 +187,7 @@ func (self *luaState) shl(a, b luaValue) {
 
 func (self *luaState) shr(a, b luaValue) {
 	if x, y, ok := _convertToInt64s(a, b); ok {
-		self.stack.push(luanum.ShiftRight(x, y))
+		self.stack.push(number.ShiftRight(x, y))
 	} else if result, ok := callMetamethod(a, b, "__shr", self); ok {
 		self.stack.push(result)
 	} else {

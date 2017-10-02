@@ -1,7 +1,7 @@
 package vm
 
 import . "luago/api"
-import "luago/luanum"
+import "luago/number"
 
 // R(A) := {} (size = B,C)
 func newTable(i Instruction, vm LuaVM) {
@@ -9,7 +9,7 @@ func newTable(i Instruction, vm LuaVM) {
 	a += 1
 
 	//vm.CheckStack(1)
-	vm.CreateTable(luanum.Fb2int(b), luanum.Fb2int(c)) // ~/{}
+	vm.CreateTable(number.Fb2int(b), number.Fb2int(c)) // ~/{}
 	vm.Replace(a)                                      // ~
 }
 

@@ -1,4 +1,4 @@
-package luanum
+package number
 
 /*
 ** converts an integer to a "floating point byte", represented as

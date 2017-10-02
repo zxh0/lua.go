@@ -2,7 +2,7 @@ package state
 
 import "runtime"
 import "strings"
-import "luago/luanum"
+import "luago/number"
 import . "luago/api"
 
 // [-0, +0, –]
@@ -46,11 +46,11 @@ func (self *luaState) GC(what, data int) int {
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_stringtonumber
 func (self *luaState) StringToNumber(s string) bool {
-	if n, ok := luanum.ParseInteger(s, 10); ok {
+	if n, ok := number.ParseInteger(s, 10); ok {
 		self.PushInteger(n)
 		return true
 	}
-	if n, ok := luanum.ParseFloat(s); ok {
+	if n, ok := number.ParseFloat(s); ok {
 		self.PushNumber(n)
 		return true
 	}

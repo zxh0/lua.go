@@ -1,6 +1,6 @@
 package state
 
-import "luago/luanum"
+import "luago/number"
 
 type pair struct {
 	key luaValue
@@ -139,7 +139,7 @@ func (self *luaTable) initPairs() {
 
 func _floatToIntger(key luaValue) luaValue {
 	if f, ok := key.(float64); ok {
-		if i, ok := luanum.FloatToInteger(f); ok {
+		if i, ok := number.FloatToInteger(f); ok {
 			return i
 		}
 	}

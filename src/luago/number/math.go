@@ -1,4 +1,4 @@
-package luanum
+package number
 
 import "math"
 

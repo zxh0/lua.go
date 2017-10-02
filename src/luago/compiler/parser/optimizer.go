@@ -1,7 +1,7 @@
 package parser
 
 import "math"
-import "luago/luanum"
+import "luago/number"
 import . "luago/compiler/ast"
 import . "luago/compiler/lexer"
 
@@ -37,9 +37,9 @@ func optimizeBitwiseBinaryOp(exp *BinopExp) Exp {
 			case TOKEN_OP_BXOR:
 				return &IntegerExp{exp.Line, i ^ j}
 			case TOKEN_OP_SHL:
-				return &IntegerExp{exp.Line, luanum.ShiftLeft(i, j)}
+				return &IntegerExp{exp.Line, number.ShiftLeft(i, j)}
 			case TOKEN_OP_SHR:
-				return &IntegerExp{exp.Line, luanum.ShiftRight(i, j)}
+				return &IntegerExp{exp.Line, number.ShiftRight(i, j)}
 			}
 		}
 	}
@@ -58,11 +58,11 @@ func optimizeArithBinaryOp(exp *BinopExp) Exp {
 				return &IntegerExp{exp.Line, x.Val * y.Val}
 			case TOKEN_OP_IDIV:
 				if y.Val != 0 {
-					return &IntegerExp{exp.Line, luanum.IFloorDiv(x.Val, y.Val)}
+					return &IntegerExp{exp.Line, number.IFloorDiv(x.Val, y.Val)}
 				}
 			case TOKEN_OP_MOD:
 				if y.Val != 0 {
-					return &IntegerExp{exp.Line, luanum.IMod(x.Val, y.Val)}
+					return &IntegerExp{exp.Line, number.IMod(x.Val, y.Val)}
 				}
 			}
 		}
@@ -82,11 +82,11 @@ func optimizeArithBinaryOp(exp *BinopExp) Exp {
 				}
 			case TOKEN_OP_IDIV:
 				if g != 0 {
-					return &FloatExp{exp.Line, luanum.FFloorDiv(f, g)}
+					return &FloatExp{exp.Line, number.FFloorDiv(f, g)}
 				}
 			case TOKEN_OP_MOD:
 				if g != 0 {
-					return &FloatExp{exp.Line, luanum.FMod(f, g)}
+					return &FloatExp{exp.Line, number.FMod(f, g)}
 				}
 			case TOKEN_OP_POW:
 				return &FloatExp{exp.Line, math.Pow(f, g)}
@@ -149,7 +149,7 @@ func optimizeBnot(exp *UnopExp) Exp {
 		x.Val = ^x.Val
 		return x
 	case *FloatExp:
-		if i, ok := luanum.FloatToInteger(x.Val); ok {
+		if i, ok := number.FloatToInteger(x.Val); ok {
 			return &IntegerExp{x.Line, ^i}
 		}
 	}
@@ -179,7 +179,7 @@ func castToInt(exp Exp) (int64, bool) {
 	case *IntegerExp:
 		return x.Val, true
 	case *FloatExp:
-		return luanum.FloatToInteger(x.Val)
+		return number.FloatToInteger(x.Val)
 	default:
 		return 0, false
 	}

@@ -1,4 +1,4 @@
-package luanum
+package number
 
 import "fmt"
 import "testing"

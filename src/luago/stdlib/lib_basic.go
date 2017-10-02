@@ -2,7 +2,7 @@ package stdlib
 
 import "fmt"
 import . "luago/api"
-import "luago/luanum"
+import "luago/number"
 
 var baseFuncs = map[string]GoFunction{
 	"print":          basePrint,
@@ -331,7 +331,7 @@ func baseToNumber(ls LuaState) int {
 		s, _ := ls.ToString(1)
 		base := int(ls.CheckInteger(2))
 		ls.ArgCheck(2 <= base && base <= 36, 2, "base out of range")
-		if n, ok := luanum.ParseInteger(s, base); ok {
+		if n, ok := number.ParseInteger(s, base); ok {
 			ls.PushInteger(n)
 			return 1
 		} /* else not a number */
