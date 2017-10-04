@@ -2,46 +2,46 @@ package number
 
 import "math"
 
-func ShiftLeft(x, y int64) int64 {
-	if y >= 0 {
-		return x << uint64(y)
+func FloatToInteger(f float64) (int64, bool) {
+	i := math.Floor(f)
+	ok := i == f && i >= math.MinInt64 && i <= math.MaxInt64
+	return int64(i), ok
+}
+
+// a % b == a - ((a // b) * b)
+func IMod(a, b int64) int64 {
+	return a - IFloorDiv(a, b)*b
+}
+
+// a % b == a - ((a // b) * b)
+func FMod(a, b float64) float64 {
+	return a - math.Floor(a/b)*b
+}
+
+func IFloorDiv(a, b int64) int64 {
+	if a > 0 && b > 0 || a < 0 && b < 0 || a%b == 0 {
+		return a / b
 	} else {
-		return int64(uint64(x) >> uint64(-y))
+		return a/b - 1
 	}
 }
 
-func ShiftRight(x, y int64) int64 {
-	if y >= 0 {
-		return int64(uint64(x) >> uint64(y))
+func FFloorDiv(a, b float64) float64 {
+	return math.Floor(a / b)
+}
+
+func ShiftLeft(a, n int64) int64 {
+	if n >= 0 {
+		return a << uint64(n)
 	} else {
-		return x << uint64(-y)
+		return ShiftRight(a, -n)
 	}
 }
 
-func IMod(x, y int64) int64 {
-	if x > 0 && y < 0 || x < 0 && y > 0 {
-		return x%y + y
+func ShiftRight(a, n int64) int64 {
+	if n >= 0 {
+		return int64(uint64(a) >> uint64(n))
 	} else {
-		return x % y
+		return ShiftLeft(a, -n)
 	}
-}
-
-func FMod(x, y float64) float64 {
-	if x > 0 && y < 0 || x < 0 && y > 0 {
-		return math.Mod(x, y) + y
-	} else {
-		return math.Mod(x, y)
-	}
-}
-
-func IFloorDiv(x, y int64) int64 {
-	if x > 0 && y > 0 || x < 0 && y < 0 || x%y == 0 {
-		return x / y
-	} else {
-		return x/y - 1
-	}
-}
-
-func FFloorDiv(x, y float64) float64 {
-	return math.Floor(x / y)
 }

@@ -11,37 +11,37 @@ func (self *luaState) RawEqual(idx1, idx2 int) bool {
 		return false
 	}
 
-	val1 := self.stack.get(idx1)
-	val2 := self.stack.get(idx2)
-	return self.eq(val1, val2, true)
+	a := self.stack.get(idx1)
+	b := self.stack.get(idx2)
+	return self.eq(a, b, true)
 }
 
 // [-0, +0, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_compare
 func (self *luaState) Compare(idx1, idx2 int, op CompareOp) bool {
-	val1 := self.stack.get(idx1)
-	val2 := self.stack.get(idx2)
+	a := self.stack.get(idx1)
+	b := self.stack.get(idx2)
 	switch op {
 	case LUA_OPEQ:
-		return self.eq(val1, val2, false)
+		return self.eq(a, b, false)
 	case LUA_OPLT:
-		return self.lt(val1, val2)
+		return self.lt(a, b)
 	case LUA_OPLE:
-		return self.le(val1, val2)
+		return self.le(a, b)
 	default:
 		panic("invalid compare op!")
 	}
 }
 
-func (self *luaState) eq(val1, val2 luaValue, raw bool) bool {
-	switch x := val1.(type) {
+func (self *luaState) eq(a, b luaValue, raw bool) bool {
+	switch x := a.(type) {
 	case nil:
-		return val2 == nil
+		return b == nil
 	case bool:
-		y, ok := val2.(bool)
+		y, ok := b.(bool)
 		return ok && x == y
 	case int64:
-		switch y := val2.(type) {
+		switch y := b.(type) {
 		case int64:
 			return x == y
 		case float64:
@@ -50,7 +50,7 @@ func (self *luaState) eq(val1, val2 luaValue, raw bool) bool {
 			return false
 		}
 	case float64:
-		switch y := val2.(type) {
+		switch y := b.(type) {
 		case float64:
 			return x == y
 		case int64:
@@ -59,20 +59,20 @@ func (self *luaState) eq(val1, val2 luaValue, raw bool) bool {
 			return false
 		}
 	case string:
-		y, ok := val2.(string)
+		y, ok := b.(string)
 		return ok && x == y
 	case GoFunction:
 		// todo: funcs are uncomparable!
-		if y, ok := val2.(GoFunction); ok {
+		if y, ok := b.(GoFunction); ok {
 			return fmt.Sprintf("%p", x) == fmt.Sprintf("%p", y)
 		} else {
 			return false
 		}
 	case *luaTable:
 		if raw {
-			return val1 == val2
+			return a == b
 		}
-		if y, ok := val2.(*luaTable); ok {
+		if y, ok := b.(*luaTable); ok {
 			if x == y {
 				return true
 			} else if result, ok := callMetamethod(x, y, "__eq", self); ok {
@@ -84,14 +84,14 @@ func (self *luaState) eq(val1, val2 luaValue, raw bool) bool {
 			return false
 		}
 	default:
-		return val1 == val2
+		return a == b
 	}
 }
 
-func (self *luaState) lt(val1, val2 luaValue) bool {
-	switch x := val1.(type) {
+func (self *luaState) lt(a, b luaValue) bool {
+	switch x := a.(type) {
 	case int64:
-		switch y := val2.(type) {
+		switch y := b.(type) {
 		case int64:
 			return x < y
 		case float64:
@@ -100,7 +100,7 @@ func (self *luaState) lt(val1, val2 luaValue) bool {
 			return false
 		}
 	case float64:
-		switch y := val2.(type) {
+		switch y := b.(type) {
 		case float64:
 			return x < y
 		case int64:
@@ -109,10 +109,10 @@ func (self *luaState) lt(val1, val2 luaValue) bool {
 			return false
 		}
 	case string:
-		y, ok := val2.(string)
+		y, ok := b.(string)
 		return ok && x < y
 	default:
-		if result, ok := callMetamethod(val1, val2, "__lt", self); ok {
+		if result, ok := callMetamethod(a, b, "__lt", self); ok {
 			return convertToBoolean(result)
 		} else {
 			panic("todo: __lt!")
@@ -120,10 +120,10 @@ func (self *luaState) lt(val1, val2 luaValue) bool {
 	}
 }
 
-func (self *luaState) le(val1, val2 luaValue) bool {
-	switch x := val1.(type) {
+func (self *luaState) le(a, b luaValue) bool {
+	switch x := a.(type) {
 	case int64:
-		switch y := val2.(type) {
+		switch y := b.(type) {
 		case int64:
 			return x <= y
 		case float64:
@@ -132,7 +132,7 @@ func (self *luaState) le(val1, val2 luaValue) bool {
 			return false
 		}
 	case float64:
-		switch y := val2.(type) {
+		switch y := b.(type) {
 		case float64:
 			return x <= y
 		case int64:
@@ -141,12 +141,12 @@ func (self *luaState) le(val1, val2 luaValue) bool {
 			return false
 		}
 	case string:
-		y, ok := val2.(string)
+		y, ok := b.(string)
 		return ok && x <= y
 	default:
-		if result, ok := callMetamethod(val1, val2, "__le", self); ok {
+		if result, ok := callMetamethod(a, b, "__le", self); ok {
 			return convertToBoolean(result)
-		} else if result, ok := callMetamethod(val2, val1, "__lt", self); ok {
+		} else if result, ok := callMetamethod(b, a, "__lt", self); ok {
 			return !convertToBoolean(result)
 		} else {
 			panic("todo: __le!")

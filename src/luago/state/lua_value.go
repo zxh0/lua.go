@@ -44,7 +44,7 @@ func convertToBoolean(val luaValue) bool {
 }
 
 // http://www.lua.org/manual/5.3/manual.html#3.4.3
-func convertToNumber(val luaValue) (float64, bool) {
+func convertToFloat(val luaValue) (float64, bool) {
 	switch x := val.(type) {
 	case int64:
 		return float64(x), true
