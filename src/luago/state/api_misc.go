@@ -1,7 +1,6 @@
 package state
 
 import "runtime"
-import "strings"
 import "luago/number"
 import . "luago/api"
 
@@ -86,11 +85,9 @@ func (self *luaState) Len(idx int) {
 
 	switch x := val.(type) {
 	case string:
-		length := int64(len(x))
-		self.stack.push(length)
+		self.stack.push(int64(len(x)))
 	case *luaTable:
-		length := int64(x.len())
-		self.stack.push(length)
+		self.stack.push(int64(x.len()))
 	default:
 		panic("todo: len!")
 	}
@@ -101,25 +98,17 @@ func (self *luaState) Len(idx int) {
 func (self *luaState) Concat(n int) {
 	if n == 0 {
 		self.stack.push("")
-	} else if n == 1 {
-		// do nothing
-	} else if n > 1 {
-		a := make([]string, n)
+	} else if n >= 2 {
+		result := ""
 		for i := 0; i < n; i++ {
-			a[n-1-i] = popString(self)
+			if s, ok := self.ToString(-1); ok {
+				result = s + result
+				self.stack.pop()
+			} else {
+				panic("todo: __concat!")
+			}
 		}
-		s := strings.Join(a, "")
-		self.stack.push(s)
-	} else {
-		panic("todo!")
+		self.stack.push(result)
 	}
-}
-
-func popString(ls *luaState) string {
-	if s, ok := ls.ToString(-1); ok {
-		ls.Pop(1)
-		return s
-	} else {
-		panic("todo: __concat")
-	}
+	// n == 1, do nothing	
 }
