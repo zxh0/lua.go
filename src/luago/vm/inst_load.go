@@ -2,33 +2,6 @@ package vm
 
 import . "luago/api"
 
-// R(A) := Kst(Bx)
-func loadK(i Instruction, vm LuaVM) {
-	a, bx := i.ABx()
-	a += 1
-
-	//vm.CheckStack(1)
-	vm.GetConst(bx) // ~/k[bx]
-	vm.Replace(a)   // ~
-}
-
-// R(A) := Kst(extra arg)
-func loadKx(i Instruction, vm LuaVM) {
-	//vm.CheckStack(1)
-	if i.Opcode() == OP_LOADKX {
-		a, _, _ := i.ABC()
-		vm.PushInteger(int64(a)) // ~/a
-	} else { // OP_EXTRAARG
-		a := int(vm.ToInteger(-1))
-		a += 1
-		vm.Pop(1) // ~
-
-		ax := i.Ax()
-		vm.GetConst(ax) // ~/k[ax]
-		vm.Replace(a)   // ~
-	}
-}
-
 // R(A), R(A+1), ..., R(A+B) := nil
 func loadNil(i Instruction, vm LuaVM) {
 	a, b, _ := i.ABC()
@@ -36,8 +9,8 @@ func loadNil(i Instruction, vm LuaVM) {
 
 	//vm.CheckStack(1)
 	vm.PushNil() // ~/nil
-	for r := a; r <= a+b; r++ {
-		vm.Copy(-1, r)
+	for i := a; i <= a+b; i++ {
+		vm.Copy(-1, i)
 	}
 	vm.Pop(1) // ~
 }
@@ -54,4 +27,27 @@ func loadBool(i Instruction, vm LuaVM) {
 	if c != 0 {
 		vm.AddPC(1)
 	}
+}
+
+// R(A) := Kst(Bx)
+func loadK(i Instruction, vm LuaVM) {
+	a, bx := i.ABx()
+	a += 1
+
+	//vm.CheckStack(1)
+	vm.GetConst(bx) // ~/k[bx]
+	vm.Replace(a)   // ~
+}
+
+// R(A) := Kst(extra arg)
+func loadKx(i Instruction, vm LuaVM) {
+	a, _ := i.ABx()
+	a += 1
+
+	vm.AddPC(1)
+	ax := Instruction(vm.Instruction()).Ax()
+
+	//vm.CheckStack(1)
+	vm.GetConst(ax) // ~/k[ax]
+	vm.Replace(a)   // ~
 }

@@ -131,5 +131,5 @@ var opcodes = []opcode{
 	opcode{0, 0, OpArgU, OpArgU, IABC /* */, "SETLIST ", setList},  // R(A)[(C-1)*FPF+i] := R(A+i), 1 <= i <= B
 	opcode{0, 1, OpArgU, OpArgN, IABx /* */, "CLOSURE ", closure},  // R(A) := closure(KPROTO[Bx])
 	opcode{0, 1, OpArgU, OpArgN, IABC /* */, "VARARG  ", vararg},   // R(A), R(A+1), ..., R(A+B-2) = vararg
-	opcode{0, 0, OpArgU, OpArgU, IAx /*  */, "EXTRAARG", loadKx},   // extra (larger) argument for previous opcode
+	opcode{0, 0, OpArgU, OpArgU, IAx /*  */, "EXTRAARG", nil},      // extra (larger) argument for previous opcode
 }

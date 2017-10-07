@@ -42,7 +42,8 @@ func setList(i Instruction, vm LuaVM) {
 	a += 1
 
 	if c == 0 {
-		panic("todo: c == 0") // #list > 25550
+		vm.AddPC(1)
+		c = Instruction(vm.Instruction()).Ax()
 	}
 
 	bIsZero := b == 0
