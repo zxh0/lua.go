@@ -60,7 +60,7 @@ func (self *luaState) callGoClosure(nArgs, nResults int, c *goClosure) {
 	}
 	callerStack.pop()
 
-	// call func
+	// run closure
 	self.pushLuaStack(calleeStack)
 	r := c.goFunc(self)
 	self.popLuaStack()
@@ -83,13 +83,13 @@ func (self *luaState) callLuaClosure(nArgs, nResults int, c *luaClosure) {
 	callerStack := self.stack
 	if nArgs > 0 {
 		args := callerStack.popN(nArgs)
-		_passArgs(calleeStack, args, c)
+		_passArgs(calleeStack, args)
 	}
 	callerStack.pop()
 
-	// call func
+	// run closure
 	self.pushLuaStack(calleeStack)
-	self.runLuaClosure(c)
+	self.runLuaClosure()
 	self.popLuaStack()
 
 	// return results
@@ -99,9 +99,9 @@ func (self *luaState) callLuaClosure(nArgs, nResults int, c *luaClosure) {
 	}
 }
 
-func (self *luaState) runLuaClosure(c *luaClosure) {
+func (self *luaState) runLuaClosure() {
 	// fmt.Printf("call %s\n", c.toString())
-	code := c.proto.Code
+	code := self.stack.luaCl.proto.Code
 	for {
 		pc := self.stack.pc
 		inst := vm.Instruction(code[pc])
@@ -119,15 +119,18 @@ func (self *luaState) runLuaClosure(c *luaClosure) {
 	}
 }
 
-func _passArgs(calleeStack *luaStack, args []luaValue, c *luaClosure) {
-	nParams := int(c.proto.NumParams)
+func _passArgs(calleeStack *luaStack, args []luaValue) {
+	nParams := int(calleeStack.luaCl.proto.NumParams)
+	isVararg := calleeStack.luaCl.proto.IsVararg == 1
+
 	for i, arg := range args {
 		if i < nParams {
 			calleeStack.slots[i] = arg
 		}
 	}
-	if len(args) > nParams && c.proto.IsVararg == 1 {
-		calleeStack.xArgs = args[nParams:]
+
+	if len(args) > nParams && isVararg {
+		calleeStack.vargs = args[nParams:]
 	}
 }
 

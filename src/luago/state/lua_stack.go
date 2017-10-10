@@ -9,7 +9,7 @@ type luaStack struct {
 	state *luaState
 	luaCl *luaClosure
 	goCl  *goClosure
-	xArgs []luaValue // extraArgs
+	vargs []luaValue // varargs
 	pc    int
 	/* virtual stack */
 	slots []luaValue
