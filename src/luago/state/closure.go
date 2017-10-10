@@ -3,20 +3,24 @@ package state
 import . "luago/api"
 import "luago/binchunk"
 
-type goClosure struct {
-	goFunc GoFunction
-	upvals []luaValue
-}
-
-type luaClosure struct {
-	proto  *binchunk.Prototype
+type closure struct {
+	proto  *binchunk.Prototype // lua closure
+	goFunc GoFunction          // go closure
 	upvals []*luaValue
 }
 
-func newLuaClosure(proto *binchunk.Prototype) *luaClosure {
+func newLuaClosure(proto *binchunk.Prototype) *closure {
 	upvals := make([]*luaValue, len(proto.Upvalues))
-	return &luaClosure{
+	return &closure{
 		proto:  proto,
+		upvals: upvals,
+	}
+}
+
+func newGoClosure(f GoFunction, nUpvals int) *closure {
+	upvals := make([]*luaValue, nUpvals)
+	return &closure{
+		goFunc: f,
 		upvals: upvals,
 	}
 }

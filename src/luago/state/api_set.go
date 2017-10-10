@@ -104,7 +104,7 @@ func (self *luaState) setTable(t, k, v luaValue, raw bool) {
 		case *luaTable:
 			self.setTable(x, k, v, true)
 			return
-		case *luaClosure, GoFunction:
+		case *closure, GoFunction:
 			self.stack.push(mf)
 			self.stack.push(t)
 			self.stack.push(k)

@@ -3,17 +3,16 @@ package state
 import . "luago/api"
 
 type luaStack struct {
-	/* linked list */
-	prev *luaStack
-	/* call info */
-	state *luaState
-	luaCl *luaClosure
-	goCl  *goClosure
-	vargs []luaValue // varargs
-	pc    int
 	/* virtual stack */
 	slots []luaValue
 	top   int
+	/* call info */
+	state   *luaState
+	closure *closure
+	varargs []luaValue
+	pc      int
+	/* linked list */
+	prev *luaStack
 }
 
 func newLuaStack(size int, state *luaState) *luaStack {
@@ -75,7 +74,8 @@ func (self *luaStack) absIndex(idx int) int {
 func (self *luaStack) isValid(idx int) bool {
 	if idx < LUA_REGISTRYINDEX { /* upvalues */
 		uvIdx := LUA_REGISTRYINDEX - idx
-		return self.goCl != nil && uvIdx <= len(self.goCl.upvals)
+		c := self.closure
+		return c != nil && c.goFunc != nil && uvIdx <= len(c.upvals)
 	}
 	if idx == LUA_REGISTRYINDEX {
 		return true
@@ -90,10 +90,11 @@ func (self *luaStack) get(idx int) luaValue {
 		//if uvIdx > MAXUPVAL + 1 {
 		//	panic("upvalue index too large!")
 		//}
-		if self.goCl == nil || len(self.goCl.upvals) < uvIdx {
+		c := self.closure
+		if c == nil || c.goFunc == nil || len(c.upvals) < uvIdx {
 			return nil
 		}
-		return self.goCl.upvals[uvIdx-1]
+		return self.closure.upvals[uvIdx-1]
 	}
 
 	if idx == LUA_REGISTRYINDEX {

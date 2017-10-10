@@ -101,7 +101,7 @@ func (self *luaState) getTable(t, k luaValue, raw bool) LuaType {
 		switch x := mf.(type) {
 		case *luaTable:
 			return self.getTable(x, k, true)
-		case *luaClosure, GoFunction:
+		case *closure, GoFunction:
 			self.stack.push(mf)
 			self.stack.push(t)
 			self.stack.push(k)

@@ -144,8 +144,10 @@ func (self *luaState) IsInteger(idx int) bool {
 // lua-5.3.4/src/lapi.c#lua_iscfunction()
 func (self *luaState) IsGoFunction(idx int) bool {
 	val := self.stack.get(idx)
-	switch val.(type) {
-	case *goClosure, GoFunction:
+	switch x := val.(type) {
+	case *closure:
+		return x.goFunc != nil
+	case GoFunction:
 		return true
 	default:
 		return false
@@ -216,6 +218,8 @@ func (self *luaState) ToString(idx int) (string, bool) {
 func (self *luaState) ToGoFunction(idx int) GoFunction {
 	val := self.stack.get(idx)
 	switch x := val.(type) {
+	case *closure:
+		return x.goFunc
 	case GoFunction:
 		return x
 	default:

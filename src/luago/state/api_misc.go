@@ -110,5 +110,5 @@ func (self *luaState) Concat(n int) {
 		}
 		self.stack.push(result)
 	}
-	// n == 1, do nothing	
+	// n == 1, do nothing
 }

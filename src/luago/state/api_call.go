@@ -21,12 +21,12 @@ func (self *luaState) Load(chunk []byte, chunkName, mode string) ThreadStatus {
 		proto = compiler.Compile(chunkName, string(chunk))
 	}
 
-	cl := newLuaClosure(proto)
+	c := newLuaClosure(proto)
 	if len(proto.Upvalues) > 0 { // todo
 		env := self.registry.get(LUA_RIDX_GLOBALS)
-		cl.upvals[0] = &env
+		c.upvals[0] = &env
 	}
-	self.stack.push(cl)
+	self.stack.push(c)
 	return LUA_OK
 }
 
@@ -36,21 +36,23 @@ func (self *luaState) Call(nArgs, nResults int) {
 	val := self.stack.get(-(nArgs + 1))
 
 	switch x := val.(type) {
-	case *luaClosure:
-		self.callLuaClosure(nArgs, nResults, x)
-	case *goClosure:
-		self.callGoClosure(nArgs, nResults, x)
+	case *closure:
+		if x.proto != nil {
+			self.callLuaClosure(nArgs, nResults, x)
+		} else {
+			self.callGoClosure(nArgs, nResults, x)
+		}
 	case GoFunction: // todo
-		self.callGoClosure(nArgs, nResults, &goClosure{goFunc: x})
+		self.callGoClosure(nArgs, nResults, &closure{goFunc: x})
 	default:
 		panic("not a function!")
 	}
 }
 
-func (self *luaState) callGoClosure(nArgs, nResults int, c *goClosure) {
+func (self *luaState) callGoClosure(nArgs, nResults int, c *closure) {
 	// create new lua stack
 	calleeStack := newLuaStack(nArgs+LUA_MINSTACK, self)
-	calleeStack.goCl = c
+	calleeStack.closure = c
 
 	// pass args, pop func
 	callerStack := self.stack
@@ -72,12 +74,12 @@ func (self *luaState) callGoClosure(nArgs, nResults int, c *goClosure) {
 	}
 }
 
-func (self *luaState) callLuaClosure(nArgs, nResults int, c *luaClosure) {
+func (self *luaState) callLuaClosure(nArgs, nResults int, c *closure) {
 	// create new lua stack
 	nRegs := int(c.proto.MaxStackSize)
 	calleeStack := newLuaStack(nRegs+LUA_MINSTACK, self)
 	calleeStack.top = nRegs
-	calleeStack.luaCl = c
+	calleeStack.closure = c
 
 	// pass args, pop func
 	callerStack := self.stack
@@ -101,7 +103,7 @@ func (self *luaState) callLuaClosure(nArgs, nResults int, c *luaClosure) {
 
 func (self *luaState) runLuaClosure() {
 	// fmt.Printf("call %s\n", c.toString())
-	code := self.stack.luaCl.proto.Code
+	code := self.stack.closure.proto.Code
 	for {
 		pc := self.stack.pc
 		inst := vm.Instruction(code[pc])
@@ -120,8 +122,8 @@ func (self *luaState) runLuaClosure() {
 }
 
 func _passArgs(calleeStack *luaStack, args []luaValue) {
-	nParams := int(calleeStack.luaCl.proto.NumParams)
-	isVararg := calleeStack.luaCl.proto.IsVararg == 1
+	nParams := int(calleeStack.closure.proto.NumParams)
+	isVararg := calleeStack.closure.proto.IsVararg == 1
 
 	for i, arg := range args {
 		if i < nParams {
@@ -130,7 +132,7 @@ func _passArgs(calleeStack *luaStack, args []luaValue) {
 	}
 
 	if len(args) > nParams && isVararg {
-		calleeStack.vargs = args[nParams:]
+		calleeStack.varargs = args[nParams:]
 	}
 }
 

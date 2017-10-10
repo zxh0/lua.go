@@ -45,8 +45,11 @@ func (self *luaState) PushGoClosure(f GoFunction, n int) {
 	if n == 0 {
 		self.stack.push(f)
 	} else { // closure
-		vals := self.stack.popN(n)
-		closure := &goClosure{f, vals}
+		closure := newGoClosure(f, n)
+		for i := n; i > 0; i-- {
+			val := self.stack.pop()
+			closure.upvals[n-1] = &val
+		}
 		self.stack.push(closure)
 	}
 }

@@ -5,16 +5,16 @@ func (self *luaState) AddPC(n int) {
 }
 
 func (self *luaState) Instruction() uint32 {
-	return self.stack.luaCl.proto.Code[self.stack.pc]
+	return self.stack.closure.proto.Code[self.stack.pc]
 }
 
 // todo
 func (self *luaState) MaxStackSize() int {
-	return int(self.stack.luaCl.proto.MaxStackSize)
+	return int(self.stack.closure.proto.MaxStackSize)
 }
 
 func (self *luaState) GetConst(idx int) {
-	c := self.stack.luaCl.proto.Constants[idx]
+	c := self.stack.closure.proto.Constants[idx]
 	self.stack.push(c)
 }
 
@@ -27,17 +27,17 @@ func (self *luaState) GetRK(rk int) {
 }
 
 func (self *luaState) GetUpvalue2(idx int) {
-	upval := self.stack.luaCl.upvals[idx]
+	upval := self.stack.closure.upvals[idx]
 	self.stack.push(*upval)
 }
 
 func (self *luaState) SetUpvalue2(idx int) {
-	upval := self.stack.luaCl.upvals[idx]
+	upval := self.stack.closure.upvals[idx]
 	*upval = self.stack.pop()
 }
 
 func (self *luaState) LoadProto(idx int) {
-	proto := self.stack.luaCl.proto.Protos[idx]
+	proto := self.stack.closure.proto.Protos[idx]
 	closure := newLuaClosure(proto)
 
 	// todo
@@ -45,7 +45,7 @@ func (self *luaState) LoadProto(idx int) {
 		if uvInfo.Instack == 1 {
 			closure.upvals[i] = &(self.stack.slots[uvInfo.Idx])
 		} else {
-			closure.upvals[i] = self.stack.luaCl.upvals[uvInfo.Idx]
+			closure.upvals[i] = self.stack.closure.upvals[uvInfo.Idx]
 		}
 	}
 
@@ -54,7 +54,7 @@ func (self *luaState) LoadProto(idx int) {
 
 func (self *luaState) LoadVararg(n int) {
 	stack := self.stack
-	vargs := stack.vargs
+	vargs := stack.varargs
 
 	if n < 0 {
 		n = len(vargs)

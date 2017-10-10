@@ -23,7 +23,7 @@ func typeOf(val luaValue) LuaType {
 		return LUA_TTHREAD
 	case *userData:
 		return LUA_TUSERDATA
-	case *luaClosure, *goClosure, GoFunction:
+	case *closure, GoFunction:
 		return LUA_TFUNCTION
 	default:
 		panic("unkonwn type!")
@@ -93,7 +93,7 @@ func getMetatable(val luaValue, ls *luaState) *luaTable {
 		return ls.mtOfNumber
 	case string:
 		return ls.mtOfString
-	case *luaClosure, *goClosure, GoFunction:
+	case *closure, GoFunction:
 		return ls.mtOfFunc
 	case *luaTable:
 		return x.metatable
@@ -114,7 +114,7 @@ func setMetatable(val luaValue, mt *luaTable, ls *luaState) {
 		ls.mtOfNumber = mt
 	case string:
 		ls.mtOfString = mt
-	case *luaClosure, *goClosure, GoFunction:
+	case *closure, GoFunction:
 		ls.mtOfFunc = mt
 	case *luaTable:
 		x.metatable = mt

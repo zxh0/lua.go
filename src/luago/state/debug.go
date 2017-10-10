@@ -35,10 +35,12 @@ func valToString(val luaValue) string {
 		return fmt.Sprintf("{@%p}", val)
 	case *luaState:
 		return "thread"
-	case *luaClosure:
-		return luaClosureToString(x)
-	case *goClosure:
-		return goFuncToString(x.goFunc) + "!"
+	case *closure:
+		if x.proto != nil {
+			return luaClosureToString(x)
+		} else {
+			return goFuncToString(x.goFunc) + "!"
+		}
 	case GoFunction:
 		return goFuncToString(val)
 	default:
@@ -47,7 +49,7 @@ func valToString(val luaValue) string {
 	}
 }
 
-func luaClosureToString(c *luaClosure) string {
+func luaClosureToString(c *closure) string {
 	return fmt.Sprintf("<%s:%d,%d>",
 		c.proto.Source, // todo
 		c.proto.LineDefined,
