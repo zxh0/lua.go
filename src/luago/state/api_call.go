@@ -1,5 +1,6 @@
 package state
 
+// import "fmt"
 import . "luago/api"
 import "luago/binchunk"
 import "luago/compiler"
@@ -117,9 +118,9 @@ func (self *luaState) runLuaClosure() {
 
 		inst.Execute(self)
 
-		// indent := fmt.Sprintf("%%%ds", ls.callDepth*2)
+		// indent := fmt.Sprintf("%%%ds", self.callDepth*2)
 		// fmt.Printf(indent+"[%02d: %s] => %s\n",
-		// 	"", pc+1, inst.OpName(), ls)
+		// 	"", pc+1, inst.OpName(), self)
 
 		if inst.Opcode() == vm.OP_RETURN {
 			break

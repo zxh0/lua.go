@@ -59,37 +59,26 @@ func call(i Instruction, vm LuaVM) {
 }
 
 func _pushFuncAndArgs(a, b int, vm LuaVM) (nArgs int) {
-	if b == 1 {
-		nArgs = 0
-		vm.CheckStack(1)
-		vm.PushValue(a)
-	} else if b > 1 {
-		nArgs = b - 1
+	if b >= 1 {
 		vm.CheckStack(b)
 		for i := a; i < a+b; i++ {
 			vm.PushValue(i)
 		}
+		return b - 1
 	} else {
-		lastArgIdx := int(vm.ToInteger(-1))
-		vm.Pop(1)
-
-		nArgs = lastArgIdx - a
-		nRegs := vm.MaxStackSize()
-
-		if lastArgIdx <= nRegs {
-			vm.CheckStack(nArgs + 1)
-			for i := a; i <= lastArgIdx; i++ {
-				vm.PushValue(i)
-			}
-		} else {
-			vm.CheckStack(nRegs - a + 1)
-			vm.SetTop(nRegs + nArgs + 1)
-			for i := lastArgIdx; i >= a; i-- {
-				vm.Copy(i, nRegs-a+1+i)
-			}
-		}
+		_fixStack(a, vm)
+		return vm.GetTop() - vm.MaxStackSize() - 1
 	}
-	return
+}
+
+func _fixStack(a int, vm LuaVM) {
+	x := int(vm.ToInteger(-1))
+	vm.Pop(1)
+
+	for i := a; i < x; i++ {
+		vm.PushValue(i)
+	}
+	vm.Rotate(vm.MaxStackSize()+1, x-a)
 }
 
 func _popResults(a, c int, vm LuaVM) {
@@ -100,20 +89,8 @@ func _popResults(a, c int, vm LuaVM) {
 			vm.Replace(i)
 		}
 	} else {
-		nRegs := vm.MaxStackSize()
-		nRets := vm.GetTop() - nRegs
-		if nRets > 0 {
-			//vm.Rotate(a, a-nRegs-1)
-			for i := 0; i < nRets; i++ {
-				vm.Copy(nRegs+1+i, a+i)
-			}
-			if nRegs-a+1 >= nRets {
-				vm.Pop(nRets)
-			} else {
-				vm.Pop(nRegs - a + 1)
-			}
-		}
-		vm.PushInteger(int64(a + nRets - 1))
+		// leave results on stack
+		vm.PushInteger(int64(a))
 	}
 }
 
@@ -131,23 +108,6 @@ func _return(i Instruction, vm LuaVM) {
 			vm.PushValue(i)
 		}
 	} else {
-		lastRetIdx := int(vm.ToInteger(-1))
-		vm.Pop(1)
-
-		nRets := lastRetIdx - a + 1
-		nRegs := vm.MaxStackSize()
-
-		if lastRetIdx <= nRegs {
-			vm.CheckStack(nRets)
-			for i := a; i <= lastRetIdx; i++ {
-				vm.PushValue(i)
-			}
-		} else {
-			vm.CheckStack(nRegs - a + 1)
-			vm.SetTop(nRegs + nRets)
-			for i := lastRetIdx; i >= a; i-- {
-				vm.Copy(i, nRegs-a+1+i)
-			}
-		}
+		_fixStack(a, vm)
 	}
 }
