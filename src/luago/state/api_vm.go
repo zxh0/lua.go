@@ -53,19 +53,10 @@ func (self *luaState) LoadProto(idx int) {
 }
 
 func (self *luaState) LoadVararg(n int) {
-	stack := self.stack
-	vargs := stack.varargs
-
 	if n < 0 {
-		n = len(vargs)
+		n = len(self.stack.varargs)
 	}
 
-	stack.check(n)
-	for i := 0; i < n; i++ {
-		if i < len(vargs) {
-			stack.push(vargs[i])
-		} else {
-			stack.push(nil)
-		}
-	}
+	self.stack.check(n)
+	self.stack.pushN(self.stack.varargs, n)
 }

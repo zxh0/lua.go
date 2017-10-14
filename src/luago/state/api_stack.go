@@ -118,5 +118,5 @@ func (self *luaState) XMove(to LuaState, n int) {
 	lsTo := to.(*luaState)
 
 	elems := lsFrom.stack.popN(n)
-	lsTo.stack.pushN(elems)
+	lsTo.stack.pushN(elems, n)
 }

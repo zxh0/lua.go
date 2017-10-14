@@ -48,9 +48,18 @@ func (self *luaStack) pop() luaValue {
 	return val
 }
 
-func (self *luaStack) pushN(vals []luaValue) {
-	for _, val := range vals {
-		self.push(val)
+func (self *luaStack) pushN(vals []luaValue, n int) {
+	nVals := len(vals)
+	if n < 0 {
+		n = nVals
+	}
+
+	for i := 0; i < n; i++ {
+		if i < nVals {
+			self.push(vals[i])
+		} else {
+			self.push(nil)
+		}
 	}
 }
 

@@ -58,7 +58,7 @@ func (self *luaState) callGoClosure(nArgs, nResults int, c *closure) {
 	callerStack := self.stack
 	if nArgs > 0 {
 		args := callerStack.popN(nArgs)
-		calleeStack.pushN(args)
+		calleeStack.pushN(args, nArgs)
 	}
 	callerStack.pop()
 
@@ -70,7 +70,7 @@ func (self *luaState) callGoClosure(nArgs, nResults int, c *closure) {
 	// return results
 	if nResults != 0 {
 		results := calleeStack.popN(r)
-		_getResults(callerStack, results, nResults)
+		callerStack.pushN(results, nResults)
 	}
 }
 
@@ -78,16 +78,22 @@ func (self *luaState) callLuaClosure(nArgs, nResults int, c *closure) {
 	// create new lua stack
 	nRegs := int(c.proto.MaxStackSize)
 	calleeStack := newLuaStack(nRegs+LUA_MINSTACK, self)
-	calleeStack.top = nRegs
 	calleeStack.closure = c
 
 	// pass args, pop func
 	callerStack := self.stack
 	if nArgs > 0 {
 		args := callerStack.popN(nArgs)
-		_passArgs(calleeStack, args)
+		calleeStack.pushN(args, nArgs)
+
+		nParams := int(c.proto.NumParams)
+		isVararg := c.proto.IsVararg == 1
+		if nArgs > nParams && isVararg {
+			calleeStack.varargs = args[nParams:]
+		}
 	}
 	callerStack.pop()
+	calleeStack.top = nRegs
 
 	// run closure
 	self.pushLuaStack(calleeStack)
@@ -97,7 +103,7 @@ func (self *luaState) callLuaClosure(nArgs, nResults int, c *closure) {
 	// return results
 	if nResults != 0 {
 		results := calleeStack.popN(calleeStack.top - nRegs)
-		_getResults(callerStack, results, nResults)
+		callerStack.pushN(results, nResults)
 	}
 }
 
@@ -117,34 +123,6 @@ func (self *luaState) runLuaClosure() {
 
 		if inst.Opcode() == vm.OP_RETURN {
 			break
-		}
-	}
-}
-
-func _passArgs(calleeStack *luaStack, args []luaValue) {
-	nParams := int(calleeStack.closure.proto.NumParams)
-	isVararg := calleeStack.closure.proto.IsVararg == 1
-
-	for i, arg := range args {
-		if i < nParams {
-			calleeStack.slots[i] = arg
-		}
-	}
-
-	if len(args) > nParams && isVararg {
-		calleeStack.varargs = args[nParams:]
-	}
-}
-
-func _getResults(callerStack *luaStack, results []luaValue, nResults int) {
-	if nResults < 0 || nResults == len(results) {
-		callerStack.pushN(results)
-	} else if nResults < len(results) {
-		callerStack.pushN(results[0:nResults])
-	} else { // nResults > len(results)
-		callerStack.pushN(results)
-		for i := len(results); i < nResults; i++ {
-			callerStack.push(nil)
 		}
 	}
 }
