@@ -78,18 +78,14 @@ func (self *luaState) Next(idx int) bool {
 // http://www.lua.org/manual/5.3/manual.html#lua_len
 func (self *luaState) Len(idx int) {
 	val := self.stack.get(idx)
-	if result, ok := callMetamethod(val, val, "__len", self); ok {
+	if str, ok := val.(string); ok {
+		self.stack.push(int64(len(str)))
+	} else if result, ok := callMetamethod(val, val, "__len", self); ok {
 		self.stack.push(result)
-		return
-	}
-
-	switch x := val.(type) {
-	case string:
-		self.stack.push(int64(len(x)))
-	case *luaTable:
-		self.stack.push(int64(x.len()))
-	default:
-		panic("todo: len!")
+	} else if t, ok := val.(*luaTable); ok {
+		self.stack.push(int64(t.len()))
+	} else {
+		panic("todo: __len!")
 	}
 }
 
@@ -99,16 +95,24 @@ func (self *luaState) Concat(n int) {
 	if n == 0 {
 		self.stack.push("")
 	} else if n >= 2 {
-		result := ""
-		for i := 0; i < n; i++ {
-			if s, ok := self.ToString(-1); ok {
-				result = s + result
-				self.stack.pop()
+		for i := 1; i < n; i++ {
+			if s2, ok := self.ToString(-1); ok {
+				if s1, ok := self.ToString(-2); ok {
+					self.stack.pop()
+					self.stack.pop()
+					self.stack.push(s1 + s2)
+					continue
+				}
+			}
+
+			b := self.stack.pop()
+			a := self.stack.pop()
+			if result, ok := callMetamethod(a, b, "__concat", self); ok {
+				self.stack.push(result)
 			} else {
 				panic("todo: __concat!")
 			}
 		}
-		self.stack.push(result)
 	}
 	// n == 1, do nothing
 }

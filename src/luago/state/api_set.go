@@ -91,26 +91,26 @@ func (self *luaState) SetUserValue(idx int) {
 // t[k]=v
 func (self *luaState) setTable(t, k, v luaValue, raw bool) {
 	if tbl, ok := t.(*luaTable); ok {
-		if raw || !tbl.hasMetafield("__newindex") || tbl.get(k) != nil {
+		if raw || tbl.get(k) != nil || !tbl.hasMetafield("__newindex") {
 			tbl.put(k, v)
 			return
 		}
-	} else if raw {
-		panic("not table!")
 	}
 
-	if mf := getMetafield(t, "__newindex", self); mf != nil {
-		switch x := mf.(type) {
-		case *luaTable:
-			self.setTable(x, k, v, true)
-			return
-		case *closure, GoFunction:
-			self.stack.push(mf)
-			self.stack.push(t)
-			self.stack.push(k)
-			self.stack.push(v)
-			self.Call(3, 0)
-			return
+	if !raw {
+		if mf := getMetafield(t, "__newindex", self); mf != nil {
+			switch x := mf.(type) {
+			case *luaTable:
+				self.setTable(x, k, v, true)
+				return
+			case *closure:
+				self.stack.push(mf)
+				self.stack.push(t)
+				self.stack.push(k)
+				self.stack.push(v)
+				self.Call(3, 0)
+				return
+			}
 		}
 	}
 

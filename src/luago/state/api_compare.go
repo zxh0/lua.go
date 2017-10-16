@@ -6,8 +6,7 @@ import . "luago/api"
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_rawequal
 func (self *luaState) RawEqual(idx1, idx2 int) bool {
-	if self.stack.absIndex(idx1) == 0 ||
-		self.stack.absIndex(idx2) == 0 {
+	if !self.stack.isValid(idx1) || !self.stack.isValid(idx2) {
 		return false
 	}
 
@@ -19,6 +18,10 @@ func (self *luaState) RawEqual(idx1, idx2 int) bool {
 // [-0, +0, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_compare
 func (self *luaState) Compare(idx1, idx2 int, op CompareOp) bool {
+	if !self.stack.isValid(idx1) || !self.stack.isValid(idx2) {
+		return false
+	}
+
 	a := self.stack.get(idx1)
 	b := self.stack.get(idx2)
 	switch op {
@@ -61,13 +64,6 @@ func (self *luaState) eq(a, b luaValue, raw bool) bool {
 	case string:
 		y, ok := b.(string)
 		return ok && x == y
-	case GoFunction:
-		// todo: funcs are uncomparable!
-		if y, ok := b.(GoFunction); ok {
-			return fmt.Sprintf("%p", x) == fmt.Sprintf("%p", y)
-		} else {
-			return false
-		}
 	case *luaTable:
 		if raw {
 			return a == b

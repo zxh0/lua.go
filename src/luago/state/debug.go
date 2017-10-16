@@ -5,7 +5,6 @@ import "fmt"
 import "reflect"
 import "runtime"
 import "strings"
-import . "luago/api"
 
 func stackToString(stack *luaStack) string {
 	var buf bytes.Buffer
@@ -41,8 +40,6 @@ func valToString(val luaValue) string {
 		} else {
 			return goFuncToString(x.goFunc) + "!"
 		}
-	case GoFunction:
-		return goFuncToString(val)
 	default:
 		fmt.Printf("%T\n", val)
 		panic("todo!")
