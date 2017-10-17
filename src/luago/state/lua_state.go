@@ -4,14 +4,8 @@ import . "luago/api"
 
 type luaState struct {
 	/* global state */
-	panicf     GoFunction
-	registry   *luaTable
-	mtOfNil    *luaTable // ?
-	mtOfBool   *luaTable
-	mtOfNumber *luaTable
-	mtOfString *luaTable
-	mtOfFunc   *luaTable
-	mtOfThread *luaTable
+	panicf   GoFunction
+	registry *luaTable
 	/* stack */
 	stack     *luaStack
 	callDepth int

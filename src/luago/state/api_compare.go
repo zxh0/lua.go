@@ -64,20 +64,15 @@ func (self *luaState) eq(a, b luaValue, raw bool) bool {
 		y, ok := b.(string)
 		return ok && x == y
 	case *luaTable:
-		if raw {
-			return a == b
-		}
 		if y, ok := b.(*luaTable); ok {
-			if x == y {
-				return true
-			} else if result, ok := callMetamethod(x, y, "__eq", self); ok {
-				return convertToBoolean(result)
-			} else {
-				return false
+			if x == y || raw {
+				return x == y
 			}
-		} else {
-			return false
+			if result, ok := callMetamethod(x, y, "__eq", self); ok {
+				return convertToBoolean(result)
+			}
 		}
+		return false
 	default:
 		return a == b
 	}
@@ -109,9 +104,10 @@ func (self *luaState) lt(a, b luaValue) bool {
 	default:
 		if result, ok := callMetamethod(a, b, "__lt", self); ok {
 			return convertToBoolean(result)
-		} else {
-			panic("todo: __lt!")
 		}
+		typeName1 := self.TypeName(typeOf(a))
+		typeName2 := self.TypeName(typeOf(b))
+		panic("attempt to compare " + typeName1 + " with " + typeName2)
 	}
 }
 
@@ -141,10 +137,12 @@ func (self *luaState) le(a, b luaValue) bool {
 	default:
 		if result, ok := callMetamethod(a, b, "__le", self); ok {
 			return convertToBoolean(result)
-		} else if result, ok := callMetamethod(b, a, "__lt", self); ok {
+		} 
+		if result, ok := callMetamethod(b, a, "__lt", self); ok {
 			return !convertToBoolean(result)
-		} else {
-			panic("todo: __le!")
 		}
+		typeName1 := self.TypeName(typeOf(a))
+		typeName2 := self.TypeName(typeOf(b))
+		panic("attempt to compare " + typeName1 + " with " + typeName2)
 	}
 }

@@ -62,7 +62,13 @@ func (self *luaState) Arith(op ArithOp) {
 		if result, ok := callMetamethod(a, b, mm, self); ok {
 			self.stack.push(result)
 		} else {
-			panic("todo: " + mm)
+			var typeName string
+			if _, ok := convertToFloat(a); !ok {
+				typeName = self.TypeName(typeOf(a))
+			} else {
+				typeName = self.TypeName(typeOf(b))
+			}
+			panic("attempt to perform arithmetic on a " + typeName + " value")
 		}
 	}
 }

@@ -111,5 +111,5 @@ func (self *luaState) getTable(t, k luaValue, raw bool) LuaType {
 		}
 	}
 
-	panic("not table!") // todo
+	panic("not a table!") // todo
 }

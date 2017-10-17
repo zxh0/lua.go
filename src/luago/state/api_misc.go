@@ -71,7 +71,7 @@ func (self *luaState) Next(idx int) bool {
 			return false
 		}
 	}
-	panic("not table!")
+	panic("not a table!")
 }
 
 // [-0, +1, e]
@@ -85,7 +85,8 @@ func (self *luaState) Len(idx int) {
 	} else if t, ok := val.(*luaTable); ok {
 		self.stack.push(int64(t.len()))
 	} else {
-		panic("todo: __len!")
+		typeName := self.TypeName(typeOf(val))
+		panic("attempt to get length of a " + typeName + " value")
 	}
 }
 
@@ -110,7 +111,13 @@ func (self *luaState) Concat(n int) {
 			if result, ok := callMetamethod(a, b, "__concat", self); ok {
 				self.stack.push(result)
 			} else {
-				panic("todo: __concat!")
+				var typeName string
+				if _, ok := convertToFloat(a); !ok {
+					typeName = self.TypeName(typeOf(a))
+				} else {
+					typeName = self.TypeName(typeOf(b))
+				}
+				panic("attempt to concatenate a " + typeName + " value")
 			}
 		}
 	}

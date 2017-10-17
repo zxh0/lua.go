@@ -1,5 +1,6 @@
 package state
 
+import "fmt"
 import . "luago/api"
 import "luago/number"
 
@@ -85,43 +86,28 @@ func _stringToInteger(s string) (int64, bool) {
 
 func getMetatable(val luaValue, ls *luaState) *luaTable {
 	switch x := val.(type) {
-	case nil:
-		return ls.mtOfNil
-	case bool:
-		return ls.mtOfBool
-	case int64, float64:
-		return ls.mtOfNumber
-	case string:
-		return ls.mtOfString
-	case *closure:
-		return ls.mtOfFunc
 	case *luaTable:
 		return x.metatable
 	case *userData:
 		return x.metatable
-	default: // todo
+	default:
+		key := fmt.Sprintf("_MT%d", typeOf(val))
+		if mt := ls.registry.get(key); mt != nil {
+			return mt.(*luaTable)
+		}
 		return nil
 	}
 }
 
 func setMetatable(val luaValue, mt *luaTable, ls *luaState) {
 	switch x := val.(type) {
-	case nil:
-		ls.mtOfNil = mt
-	case bool:
-		ls.mtOfBool = mt
-	case int64, float64:
-		ls.mtOfNumber = mt
-	case string:
-		ls.mtOfString = mt
-	case *closure:
-		ls.mtOfFunc = mt
 	case *luaTable:
 		x.metatable = mt
 	case *userData:
 		x.metatable = mt
 	default:
-		// todo
+		key := fmt.Sprintf("_MT%d", typeOf(val))
+		ls.registry.put(key, mt)
 	}
 }
 

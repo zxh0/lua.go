@@ -36,30 +36,23 @@ func (self *luaState) Load(chunk []byte, chunkName, mode string) ThreadStatus {
 func (self *luaState) Call(nArgs, nResults int) {
 	val := self.stack.get(-(nArgs + 1))
 
-	if c := _getClosure(val, self); c != nil {
+	c, ok := val.(*closure)
+	if !ok {
+		if mf := getMetafield(val, "__call", self); mf != nil {
+			c, ok = mf.(*closure)
+		}
+	}
+
+	if ok {
 		if c.proto != nil {
 			self.callLuaClosure(nArgs, nResults, c)
 		} else {
 			self.callGoClosure(nArgs, nResults, c)
 		}
 	} else {
-		panic("not a function!")
+		typeName := self.TypeName(typeOf(val))
+		panic("attempt to call a " + typeName + " value")
 	}
-}
-
-func _getClosure(val luaValue, ls *luaState) *closure {
-	if c, ok := val.(*closure); ok {
-		return c
-	}
-
-	mf := getMetafield(val, "__call", ls)
-	if mf == nil {
-		return nil
-	}
-	if c, ok := mf.(*closure); ok {
-		return c
-	}
-	return _getClosure(mf, ls)
 }
 
 func (self *luaState) callGoClosure(nArgs, nResults int, c *closure) {

@@ -76,7 +76,7 @@ func (self *luaState) SetMetatable(idx int) {
 	if mt, ok := mtVal.(*luaTable); ok {
 		setMetatable(val, mt, self)
 	} else {
-		panic("not table: " + valToString(mtVal)) // todo
+		panic("not a table!") // todo
 	}
 }
 
@@ -114,5 +114,5 @@ func (self *luaState) setTable(t, k, v luaValue, raw bool) {
 		}
 	}
 
-	panic("not table!")
+	panic("not a table!") // todo
 }
