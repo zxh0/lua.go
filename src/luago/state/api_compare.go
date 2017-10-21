@@ -137,7 +137,7 @@ func (self *luaState) le(a, b luaValue) bool {
 	default:
 		if result, ok := callMetamethod(a, b, "__le", self); ok {
 			return convertToBoolean(result)
-		} 
+		}
 		if result, ok := callMetamethod(b, a, "__lt", self); ok {
 			return !convertToBoolean(result)
 		}

@@ -39,7 +39,11 @@ func (self *luaState) Call(nArgs, nResults int) {
 	c, ok := val.(*closure)
 	if !ok {
 		if mf := getMetafield(val, "__call", self); mf != nil {
-			c, ok = mf.(*closure)
+			if c, ok = mf.(*closure); ok {
+				self.stack.push(val)
+				self.Insert(-(nArgs + 2))
+				nArgs += 1
+			}
 		}
 	}
 
@@ -136,7 +140,7 @@ func (self *luaState) runLuaClosure() {
 // Calls a function in protected mode.
 // http://www.lua.org/manual/5.3/manual.html#lua_pcall
 func (self *luaState) PCall(nArgs, nResults, msgh int) (status ThreadStatus) {
-	callDepth := self.callDepth
+	caller := self.stack
 
 	// catch error
 	defer func() {
@@ -146,10 +150,10 @@ func (self *luaState) PCall(nArgs, nResults, msgh int) (status ThreadStatus) {
 			} else if msgh > 0 {
 				panic("todo: msgh > 0")
 			} else {
-				for self.callDepth > callDepth {
+				for self.stack != caller {
 					self.popLuaStack()
 				}
-				self.stack.push(_getErrMsg(r))
+				self.stack.push(_getErrObj(r))
 				status = LUA_ERRRUN
 			}
 		}
@@ -160,7 +164,12 @@ func (self *luaState) PCall(nArgs, nResults, msgh int) (status ThreadStatus) {
 	return
 }
 
-func _getErrMsg(err interface{}) string {
+func _getErrObj(err interface{}) luaValue {
+	if t, ok := err.(*luaTable); ok {
+		return t.get("_ERR")
+	}
+
+	// runtime error
 	switch x := err.(type) {
 	case string:
 		return x

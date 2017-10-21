@@ -30,8 +30,8 @@ func (self *luaState) Version() float64 {
 // [-1, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#lua_error
 func (self *luaState) Error() int {
-	// todo
-	err := self.stack.get(-1)
+	err := newLuaTable(0, 1)
+	err.put("_ERR", self.stack.pop())
 	panic(err)
 }
 
@@ -59,11 +59,10 @@ func (self *luaState) StringToNumber(s string) bool {
 // [-1, +(2|0), e]
 // http://www.lua.org/manual/5.3/manual.html#lua_next
 func (self *luaState) Next(idx int) bool {
-	t := self.stack.get(idx)
-	if tbl, ok := t.(*luaTable); ok {
+	val := self.stack.get(idx)
+	if t, ok := val.(*luaTable); ok {
 		key := self.stack.pop()
-		nextKey, nextVal := tbl.next(key)
-		if nextKey != nil {
+		if nextKey, nextVal := t.next(key); nextKey != nil {
 			self.stack.push(nextKey)
 			self.stack.push(nextVal)
 			return true

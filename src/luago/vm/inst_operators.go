@@ -101,7 +101,7 @@ func testSet(i Instruction, vm LuaVM) {
 /* len & concat */
 
 // R(A) := length of R(B)
-func _len(i Instruction, vm LuaVM) {
+func length(i Instruction, vm LuaVM) {
 	a, b, _ := i.ABC()
 	a += 1
 	b += 1

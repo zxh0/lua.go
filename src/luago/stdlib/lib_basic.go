@@ -202,12 +202,8 @@ func baseDoFile(ls LuaState) int {
 func basePCall(ls LuaState) int {
 	nArgs := ls.GetTop() - 1
 	status := ls.PCall(nArgs, -1, 0)
-	if status == LUA_OK {
-		ls.PushBoolean(true)
-	} else {
-		ls.PushBoolean(false)
-	}
-	ls.Rotate(1, 1)
+	ls.PushBoolean(status == LUA_OK)
+	ls.Insert(1)
 	return ls.GetTop()
 }
 

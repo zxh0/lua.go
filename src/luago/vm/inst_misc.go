@@ -22,7 +22,7 @@ func jmp(i Instruction, vm LuaVM) {
 }
 
 // R(A+1) := R(B); R(A) := R(B)[RK(C)]
-func _self(i Instruction, vm LuaVM) {
+func self(i Instruction, vm LuaVM) {
 	a, b, c := i.ABC()
 	a += 1
 	b += 1
