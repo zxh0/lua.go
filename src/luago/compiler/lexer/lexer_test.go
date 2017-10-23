@@ -137,20 +137,21 @@ func TestNextToken_comments(t *testing.T) {
 func TestNextToken_strings(t *testing.T) {
 	strs := `
 	[[]] [[ long string ]]
-	[===[long
+	[===[long\z
 	string]===]
 	'' '"' 'short string'
 	"" "'" "short string"
 	'\a\b\f\n\r\t\v\\\"\''
-	'\8 \64 \122 \x08 \x7a \x7A \u{6211} zzz'
+	'\8 \08 \64 \122 \x08 \x7a \x7A \u{6211} zzz'
 	'foo \z  
 	
+
 	bar'
 	`
 	lexer := NewLexer("str", strs)
 	assertNextString(t, lexer, "")
 	assertNextString(t, lexer, " long string ")
-	assertNextString(t, lexer, "long\n\tstring")
+	assertNextString(t, lexer, "long\\z\n\tstring")
 	assertNextString(t, lexer, "")
 	assertNextString(t, lexer, "\"")
 	assertNextString(t, lexer, "short string")
@@ -158,9 +159,17 @@ func TestNextToken_strings(t *testing.T) {
 	assertNextString(t, lexer, "'")
 	assertNextString(t, lexer, "short string")
 	assertNextString(t, lexer, "\a\b\f\n\r\t\v\\\"'")
-	assertNextString(t, lexer, "\b @ z \b z z 我 zzz")
+	assertNextString(t, lexer, "\b \b @ z \b z z 我 zzz")
 	assertNextString(t, lexer, "foo bar")
 	assertNextTokenKind(t, lexer, TOKEN_EOF)
+	assert.IntEqual(t, lexer.line, 13)
+}
+
+func TestNextToken_whiteSpaces(t *testing.T) {
+	strs := "\r\n \r\n \n\r \n \r \n \t\v\f"
+	lexer := NewLexer("str", strs)
+	assertNextTokenKind(t, lexer, TOKEN_EOF)
+	assert.IntEqual(t, lexer.line, 8)
 }
 
 func TestNextToken_hw(t *testing.T) {
@@ -189,6 +198,21 @@ func TestLookAhead(t *testing.T) {
 	assert.IntEqual(t, lexer.LookAhead(1), TOKEN_EOF)
 }
 
+func TestErrors(t *testing.T) {
+	testError(t, "?", "src:1: unexpected symbol near '?'")
+	testError(t, "[===", "src:1: invalid long string delimiter near '[='")
+	testError(t, "[==[xx", "src:1: unfinished long string or comment")
+	testError(t, "'abc\\defg", "src:1: unfinished string")
+	testError(t, "'abc\\defg'", "src:1: invalid escape sequence near '\\d'")
+	testError(t, "'\\256'", "src:1: decimal escape too large near '\\256'")
+	testError(t, "'\\u{11FFFF}'", "src:1: UTF-8 value too large near '\\u{11FFFF}'")
+}
+
+func testError(t *testing.T, chunk, expectedErr string) {
+	err := safeNextToken(NewLexer("src", chunk))
+	assert.StringEqual(t, err, expectedErr)
+}
+
 func assertNextTokenKind(t *testing.T, lexer *Lexer, expectedKind int) {
 	_, kind, _ := lexer.NextToken()
 	assert.IntEqual(t, kind, expectedKind)
@@ -210,4 +234,15 @@ func assertNextString(t *testing.T, lexer *Lexer, expectedToken string) {
 	_, kind, token := lexer.NextToken()
 	assert.IntEqual(t, kind, TOKEN_STRING)
 	assert.StringEqual(t, token, expectedToken)
+}
+
+func safeNextToken(lexer *Lexer) (err string) {
+	// catch error
+	defer func() {
+		if r := recover(); r != nil {
+			err = r.(string)
+		}
+	}()
+	_, _, err = lexer.NextToken()
+	return
 }

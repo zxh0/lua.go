@@ -3,9 +3,9 @@ package number
 import "math"
 
 func FloatToInteger(f float64) (int64, bool) {
-	i := math.Floor(f)
-	ok := i == f && i >= math.MinInt64 && i <= math.MaxInt64
-	return int64(i), ok
+	// todo: correct?
+	i := int64(f)
+	return i, float64(i) == f
 }
 
 // a % b == a - ((a // b) * b)
