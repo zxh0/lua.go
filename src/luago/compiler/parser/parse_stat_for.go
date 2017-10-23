@@ -7,7 +7,7 @@ import . "luago/compiler/lexer"
 // for namelist in explist do block end
 func parseStatFor(lexer *Lexer) Stat {
 	line, _ := lexer.NextTokenOfKind(TOKEN_KW_FOR)
-	if lexer.LookAhead(2) == TOKEN_ASSIGN {
+	if lexer.LookAhead(2) == TOKEN_OP_ASSIGN {
 		return parseForNumStat(lexer, line)
 	} else {
 		return parseForInStat(lexer, line)
@@ -17,7 +17,7 @@ func parseStatFor(lexer *Lexer) Stat {
 // for Name ‘=’ exp ‘,’ exp [‘,’ exp] do block end
 func parseForNumStat(lexer *Lexer, lineOfFor int) *ForNumStat {
 	_, varName := lexer.NextIdentifier()
-	lexer.NextTokenOfKind(TOKEN_ASSIGN)
+	lexer.NextTokenOfKind(TOKEN_OP_ASSIGN)
 	initExp := parseExp(lexer)
 
 	lexer.NextTokenOfKind(TOKEN_SEP_COMMA)

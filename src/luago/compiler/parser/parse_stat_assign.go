@@ -8,7 +8,7 @@ func parseLocalAssignStat(lexer *Lexer) *LocalAssignStat {
 	/* keyword local is scanned */
 	stat := &LocalAssignStat{}
 	stat.NameList = parseNameList(lexer)
-	if lexer.LookAhead(1) == TOKEN_ASSIGN {
+	if lexer.LookAhead(1) == TOKEN_OP_ASSIGN {
 		lexer.NextToken()
 		stat.ExpList = parseExpList(lexer)
 	}
@@ -20,7 +20,7 @@ func parseLocalAssignStat(lexer *Lexer) *LocalAssignStat {
 func parseAssignStat(lexer *Lexer) *AssignStat {
 	stat := &AssignStat{}
 	stat.VarList = parseVarList(lexer)
-	lexer.NextTokenOfKind(TOKEN_ASSIGN)
+	lexer.NextTokenOfKind(TOKEN_OP_ASSIGN)
 	stat.ExpList = parseExpList(lexer)
 	stat.LastLine = lexer.Line()
 	return stat

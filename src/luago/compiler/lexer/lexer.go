@@ -96,7 +96,7 @@ func (self *Lexer) NextToken() (line, kind int, token string) {
 		return line, TOKEN_OP_ADD, ""
 	case '-':
 		self.next(1)
-		return line, TOKEN_MINUS, ""
+		return line, TOKEN_OP_MINUS, ""
 	case '*':
 		self.next(1)
 		return line, TOKEN_OP_MUL, ""
@@ -148,7 +148,7 @@ func (self *Lexer) NextToken() (line, kind int, token string) {
 			return line, TOKEN_OP_NE, ""
 		} else {
 			self.next(1)
-			return line, TOKEN_WAVE, ""
+			return line, TOKEN_OP_WAVE, ""
 		}
 	case '=':
 		if self.test("==") {
@@ -156,7 +156,7 @@ func (self *Lexer) NextToken() (line, kind int, token string) {
 			return line, TOKEN_OP_EQ, ""
 		} else {
 			self.next(1)
-			return line, TOKEN_ASSIGN, ""
+			return line, TOKEN_OP_ASSIGN, ""
 		}
 	case '<':
 		if self.test("<<") {
@@ -192,6 +192,10 @@ func (self *Lexer) NextToken() (line, kind int, token string) {
 	}
 
 	c := self.chunk[0]
+	if isDigit(c) {
+		token := self.scanNumber()
+		return line, TOKEN_NUMBER, token
+	}
 	if c == '_' || isLatter(c) {
 		token := self.scanIdentifier()
 		if kind, found := keywords[token]; found {
@@ -199,9 +203,6 @@ func (self *Lexer) NextToken() (line, kind int, token string) {
 		} else {
 			return line, TOKEN_IDENTIFIER, token
 		}
-	} else if isDigit(c) {
-		token := self.scanNumber()
-		return line, TOKEN_NUMBER, token
 	}
 
 	self.error("unexpected symbol near %q", c)
@@ -226,13 +227,13 @@ func (self *Lexer) skipWhiteSpaces() {
 	for len(self.chunk) > 0 {
 		if self.test("--") {
 			self.skipComment()
-		} else if c := self.chunk[0]; isSpace(c) {
+		} else if c := self.chunk[0]; isWhiteSpace(c) {
 			if self.test("\r\n") {
 				self.next(2)
 				self.line += 1
 			} else {
 				self.next(1)
-				if c == '\r' || c == '\n' {
+				if isNewLine(c) {
 					self.line += 1
 				}
 			}
@@ -244,22 +245,17 @@ func (self *Lexer) skipWhiteSpaces() {
 
 func (self *Lexer) skipComment() {
 	self.next(2) // skip --
-	if len(self.chunk) == 0 {
-		return
-	}
 
-	// long comment
-	if self.chunk[0] == '[' {
+	// long comment ?
+	if self.test("[") {
 		if reLongStrStart.FindString(self.chunk) != "" {
-			self.scanLongString() // todo
+			self.scanLongString()
 			return
 		}
 	}
 
 	// short comment
-	for len(self.chunk) > 0 &&
-		self.chunk[0] != '\n' && self.chunk[0] != '\r' {
-
+	for len(self.chunk) > 0 && !isNewLine(self.chunk[0]) {
 		self.next(1)
 	}
 }
@@ -392,7 +388,7 @@ func (self *Lexer) escape(str string) string {
 				}
 			case 'z':
 				str = str[2:]
-				for len(str) > 0 && isSpace(str[0]) {
+				for len(str) > 0 && isWhiteSpace(str[0]) {
 					if str[0] == '\n' {
 						self.line += 1
 					}
@@ -407,8 +403,8 @@ func (self *Lexer) escape(str string) string {
 	return buf.String()
 }
 
-func isSpace(x byte) bool {
-	switch x {
+func isWhiteSpace(c byte) bool {
+	switch c {
 	case '\t', '\n', '\v', '\f', '\r', ' ':
 		return true
 	default:
@@ -416,10 +412,14 @@ func isSpace(x byte) bool {
 	}
 }
 
-func isDigit(x byte) bool {
-	return x >= '0' && x <= '9'
+func isNewLine(c byte) bool {
+	return c == '\r' || c == '\n'
 }
 
-func isLatter(x byte) bool {
-	return x >= 'a' && x <= 'z' || x >= 'A' && x <= 'Z'
+func isDigit(c byte) bool {
+	return c >= '0' && c <= '9'
+}
+
+func isLatter(c byte) bool {
+	return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'
 }

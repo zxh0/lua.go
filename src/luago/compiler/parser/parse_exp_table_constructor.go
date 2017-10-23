@@ -50,13 +50,13 @@ func parseField(lexer *Lexer, tc *TableConstructorExp) {
 		lexer.NextToken() // TOKEN_SEP_LBRACK
 		k = parseExp(lexer)
 		lexer.NextTokenOfKind(TOKEN_SEP_RBRACK)
-		lexer.NextTokenOfKind(TOKEN_ASSIGN)
+		lexer.NextTokenOfKind(TOKEN_OP_ASSIGN)
 		v = parseExp(lexer)
 	case TOKEN_IDENTIFIER:
-		if lexer.LookAhead(2) == TOKEN_ASSIGN { // name=exp
+		if lexer.LookAhead(2) == TOKEN_OP_ASSIGN { // name=exp
 			line, name := lexer.NextIdentifier()
 			k = &StringExp{line, name}
-			lexer.NextToken() // TOKEN_ASSIGN
+			lexer.NextToken() // TOKEN_OP_ASSIGN
 			v = parseExp(lexer)
 		} else { // name
 			tc.NArr++
