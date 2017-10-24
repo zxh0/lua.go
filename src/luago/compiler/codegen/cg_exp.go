@@ -72,7 +72,7 @@ func (self *codeGen) cgTableConstructorExp(exp *TableConstructorExp, a int) {
 
 		if nArr > 0 {
 			if idx, ok := keyExp.(int); ok {
-				tmp := self.allocTmp()
+				tmp := self.allocReg()
 				if i == nExps-1 && lastExpIsVarargOrFuncCall {
 					self.cgExp(valExp, tmp, -1)
 				} else {
@@ -80,7 +80,7 @@ func (self *codeGen) cgTableConstructorExp(exp *TableConstructorExp, a int) {
 				}
 
 				if idx%50 == 0 {
-					self.freeTmps(50)
+					self.freeRegs(50)
 					line := lineOfExp(valExp)
 					if i == nExps-1 && lastExpIsVarargOrFuncCall {
 						self.emitSetList(line, a, 0, idx/50) // todo
@@ -96,23 +96,23 @@ func (self *codeGen) cgTableConstructorExp(exp *TableConstructorExp, a int) {
 		nTmps := 0
 		iKey, tKey := self.toOpArg(keyExp)
 		if tKey != ARG_CONST && tKey != ARG_REG {
-			iKey = self.allocTmp()
+			iKey = self.allocReg()
 			nTmps++
 			self.cgExp(keyExp, iKey, 1)
 		}
 
 		iVal, tVal := self.toOpArg(valExp)
 		if tVal != ARG_CONST && tVal != ARG_REG {
-			iVal = self.allocTmp()
+			iVal = self.allocReg()
 			nTmps++
 			self.cgExp(valExp, iVal, 1)
 		}
-		self.freeTmps(nTmps)
+		self.freeRegs(nTmps)
 		self.emitSetTable(lastLineOfExp(valExp), a, iKey, iVal)
 	}
 
 	if nArr > 0 {
-		self.freeTmps(nArr)
+		self.freeRegs(nArr)
 		if lastExpIsVarargOrFuncCall {
 			self.emitSetList(exp.LastLine, a, 0, 1) // todo
 		} else {
@@ -145,12 +145,12 @@ func (self *codeGen) prepFuncCall(exp *FuncCallExp, a int) int {
 
 	self.cgExp(exp.PrefixExp, a, 1)
 	if exp.MethodName != "" {
-		self.allocTmp()
+		self.allocReg()
 		idx := self.indexOfConstant(exp.MethodName)
 		self.emitSelf(exp.Line, a, a, idx)
 	}
 	for i, arg := range exp.Args {
-		tmp := self.allocTmp()
+		tmp := self.allocReg()
 		if i == nArgs-1 && isVarargOrFuncCallExp(arg) {
 			lastArgIsVarargOrFuncCall = true
 			self.cgExp(arg, tmp, -1)
@@ -158,13 +158,13 @@ func (self *codeGen) prepFuncCall(exp *FuncCallExp, a int) int {
 			self.cgExp(arg, tmp, 1)
 		}
 	}
-	self.freeTmps(nArgs)
+	self.freeRegs(nArgs)
 
 	if lastArgIsVarargOrFuncCall {
 		nArgs = -1
 	}
 	if exp.MethodName != "" {
-		self.freeTmp()
+		self.freeReg()
 		nArgs++
 	}
 
@@ -245,7 +245,7 @@ func (self *codeGen) cgConcatExp(exp *BinopExp, a int) {
 	line, b, c := exp.Line, -1, -1
 
 	for {
-		tmp := allocator.allocTmp()
+		tmp := allocator.allocReg()
 		self.cgExp(exp.Exp1, tmp, 1)
 		if b < 0 {
 			b = tmp
@@ -257,7 +257,7 @@ func (self *codeGen) cgConcatExp(exp *BinopExp, a int) {
 		if exp2, ok := castToConcatExp(exp.Exp2); ok {
 			exp = exp2
 		} else {
-			tmp := allocator.allocTmp()
+			tmp := allocator.allocReg()
 			self.cgExp(exp.Exp2, tmp, 1)
 			c++
 			break
@@ -286,7 +286,7 @@ func (self *codeGen) exp2OpArg(exp Exp, argKinds int,
 	arg, argKind = self._toOpArg(exp, argKinds)
 	if arg < 0 {
 		argKind = ARG_REG
-		arg = allocator.allocTmp()
+		arg = allocator.allocReg()
 		self.cgExp(exp, arg, 1)
 	}
 	return

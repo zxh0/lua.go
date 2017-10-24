@@ -121,11 +121,11 @@ func (self *scope) isTmpVar(slot int) bool {
 
 /* stack */
 
-func (self *scope) allocTmps(n int) int {
+func (self *scope) allocRegs(n int) int {
 	if n > 0 {
-		slot := self.allocTmp()
+		slot := self.allocReg()
 		for i := 1; i < n; i++ {
-			self.allocTmp()
+			self.allocReg()
 		}
 		return slot
 	} else {
@@ -133,7 +133,7 @@ func (self *scope) allocTmps(n int) int {
 	}
 }
 
-func (self *scope) allocTmp() int {
+func (self *scope) allocReg() int {
 	if self.stackSize < self.nLocals {
 		self.stackSize = self.nLocals
 	}
@@ -144,13 +144,13 @@ func (self *scope) allocTmp() int {
 	return self.stackSize - 1
 }
 
-func (self *scope) freeTmp() {
+func (self *scope) freeReg() {
 	if self.stackSize > self.nLocals {
 		self.stackSize--
 	}
 }
 
-func (self *scope) freeTmps(n int) {
+func (self *scope) freeRegs(n int) {
 	if n >= 0 {
 		self.stackSize -= n
 	} else {

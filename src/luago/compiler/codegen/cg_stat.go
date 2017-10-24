@@ -31,9 +31,9 @@ func (self *codeGen) cgStat(node Stat) {
 
 func (self *codeGen) cgFuncCallStat(node FuncCallStat) {
 	fcExp := (*FuncCallExp)(node)
-	tmp := self.allocTmp()
-	self.cgExp(fcExp, tmp, 0)
-	self.freeTmp()
+	a := self.allocReg()
+	self.cgExp(fcExp, a, 0)
+	self.freeReg()
 }
 
 func (self *codeGen) cgBreakStat(node *BreakStat) {
@@ -49,22 +49,17 @@ repeat block until exp
 */
 func (self *codeGen) cgRepeatStat(node *RepeatStat) {
 	self.enterScope(true)
+
 	pcBeforeBlock := self.pc()
 	self.cgBlock(node.Block)
 
-	exp := node.Exp
-	if !isTrueAtCompileTime(exp) {
-		exp = castNilToFalse(exp)
-		tmp, _ := self.exp2OpArgX(exp, ARG_REG)
-		line := lastLineOfExp(exp)
+	a := self.allocReg()
+	self.cgExp(node.Exp, a, 1)
+	self.freeReg()
 
-		self.emitTest(line, tmp, 0)
-		self.emitJmp(line, pcBeforeBlock-self.pc()-1)
-	} else {
-		if strExp, ok := exp.(*StringExp); ok {
-			self.indexOfConstant(strExp.Str)
-		}
-	}
+	line := lastLineOfExp(node.Exp)
+	self.emitTest(line, a, 0)
+	self.emitJmp(line, pcBeforeBlock-self.pc()-1)
 
 	self.exitScope(self.pc() + 1)
 }
@@ -80,30 +75,21 @@ while exp do block end <-'
 */
 func (self *codeGen) cgWhileStat(node *WhileStat) {
 	pcBeforeExp := self.pc()
-	pcOfJmpToEnd := -1
 
-	exp := node.Exp
-	if !isTrueAtCompileTime(exp) {
-		exp = castNilToFalse(exp)
-		tmp, _ := self.exp2OpArgX(exp, ARG_REG)
-		line := lastLineOfExp(exp)
+	a := self.allocReg()
+	self.cgExp(node.Exp, a, 1)
+	self.freeReg()
 
-		self.emitTest(line, tmp, 0)
-		pcOfJmpToEnd = self.emitJmp(line, 0)
-	} else {
-		if strExp, ok := exp.(*StringExp); ok {
-			self.indexOfConstant(strExp.Str)
-		}
-	}
+	line := lastLineOfExp(node.Exp)
+	self.emitTest(line, a, 0)
+	pcJmpToEnd := self.emitJmp(line, 0)
 
 	self.enterScope(true)
 	self.cgBlock(node.Block)
 	self.emitJmp(node.Block.LastLine, pcBeforeExp-self.pc()-1)
 	self.exitScope(self.pc())
 
-	if pcOfJmpToEnd >= 0 {
-		self.fixSbx(pcOfJmpToEnd, self.pc()-pcOfJmpToEnd)
-	}
+	self.fixSbx(pcJmpToEnd, self.pc()-pcJmpToEnd)
 }
 
 /*
@@ -116,54 +102,46 @@ if exp1 then block1 elseif exp2 then block2 elseif true then block3 end <-.
                     jmp                     jmp                     jmp
 */
 func (self *codeGen) cgIfStat(node *IfStat) {
-	pcOfJmpToEnds := make([]int, 0, len(node.Exps))
-	pcOfJmpToElseif := -1
+	pcJmpToEnds := make([]int, len(node.Exps))
+	pcJmpToElseif := -1
 
-	for i := 0; i < len(node.Exps); i++ {
-		exp := node.Exps[i]
+	for i, exp := range node.Exps {
+		if pcJmpToElseif >= 0 {
+			self.fixSbx(pcJmpToElseif, self.pc()-pcJmpToElseif)
+		}
+
+		a := self.allocReg()
+		self.cgExp(exp, a, 1)
+		self.freeReg()
+
+		line := lastLineOfExp(exp)
+		self.emitTest(line, a, 0)
+		pcJmpToElseif = self.emitJmp(line, 0)
+
 		block := node.Blocks[i]
-
-		if pcOfJmpToElseif >= 0 {
-			self.fixSbx(pcOfJmpToElseif, self.pc()-pcOfJmpToElseif)
-		}
-		if !isTrueAtCompileTime(exp) {
-			tmp, _ := self.exp2OpArgX(exp, ARG_REG)
-			line := lastLineOfExp(exp)
-
-			self.emitTest(line, tmp, 0)
-			pcOfJmpToElseif = self.emitJmp(line, 0)
-		} else {
-			pcOfJmpToElseif = -1
-			if strExp, ok := exp.(*StringExp); ok {
-				self.indexOfConstant(strExp.Str)
-			}
-		}
-
 		self.cgBlockWithNewScope(block, false)
 		if i < len(node.Exps)-1 {
-			pc := self.emitJmp(block.LastLine, 0)
-			pcOfJmpToEnds = append(pcOfJmpToEnds, pc)
+			pcJmpToEnds[i] = self.emitJmp(block.LastLine, 0)
+		} else {
+			pcJmpToEnds[i] = pcJmpToElseif
 		}
 	}
 
-	if pcOfJmpToElseif >= 0 {
-		self.fixSbx(pcOfJmpToElseif, self.pc()-pcOfJmpToElseif)
-	}
-	for _, pc := range pcOfJmpToEnds {
+	for _, pc := range pcJmpToEnds {
 		self.fixSbx(pc, self.pc() - pc)
 	}
 }
 
 func (self *codeGen) cgForNumStat(node *ForNumStat) {
-	forIdxVar := "(for index)"
-	forLmtVar := "(for limit)"
-	forStpVar := "(for step)"
+	forIndexVar := "(for index)"
+	forLimitVar := "(for limit)"
+	forStepVar := "(for step)"
 
 	self.enterScope(true)
 
 	self.cgStat(&LocalAssignStat{
 		LastLine: node.LineOfFor,
-		NameList: []string{forIdxVar, forLmtVar, forStpVar},
+		NameList: []string{forIndexVar, forLimitVar, forStepVar},
 		ExpList:  []Exp{node.InitExp, node.LimitExp, node.StepExp},
 	})
 	self.addLocVar(node.VarName, self.pc()+2)
@@ -177,9 +155,9 @@ func (self *codeGen) cgForNumStat(node *ForNumStat) {
 	self.fixSbx(loopPc, prepPc-loopPc)
 
 	self.exitScope(self.pc())
-	self.fixEndPc(forIdxVar, 1)
-	self.fixEndPc(forLmtVar, 1)
-	self.fixEndPc(forStpVar, 1)
+	self.fixEndPc(forIndexVar, 1)
+	self.fixEndPc(forLimitVar, 1)
+	self.fixEndPc(forStepVar, 1)
 }
 
 func (self *codeGen) cgForInStat(node *ForInStat) {
@@ -201,8 +179,8 @@ func (self *codeGen) cgForInStat(node *ForInStat) {
 	// todo: ???
 	if len(node.NameList) < 3 {
 		n := 3 - len(node.NameList)
-		self.allocTmps(n)
-		self.freeTmps(n)
+		self.allocRegs(n)
+		self.freeRegs(n)
 	}
 
 	jmpToTFC := self.emitJmp(node.LineOfDo, 0)
@@ -237,35 +215,35 @@ func (self *codeGen) cgLocalAssignStat(node *LocalAssignStat) {
 
 	if nExps == nNames {
 		for _, exp := range exps {
-			a := self.allocTmp()
+			a := self.allocReg()
 			self.cgExp(exp, a, 1)
 		}
 	} else if nExps > nNames {
 		for i, exp := range exps {
-			a := self.allocTmp()
+			a := self.allocReg()
 			if i == nExps-1 && isVarargOrFuncCallExp(exp) {
 				self.cgExp(exp, a, 0)
 			} else {
 				self.cgExp(exp, a, 1)
 			}
 		}
-		self.freeTmps(nExps - nNames)
+		self.freeRegs(nExps - nNames)
 	} else { // nNames > nExps
 		lastExpIsVarargOrFuncCall := false
 		for i, exp := range exps {
-			a := self.allocTmp()
+			a := self.allocReg()
 			if i == nExps-1 && isVarargOrFuncCallExp(exp) {
 				lastExpIsVarargOrFuncCall = true
 				n := nNames - nExps + 1
 				self.cgExp(exp, a, n)
-				self.allocTmps(n-1)
+				self.allocRegs(n-1)
 			} else {
 				self.cgExp(exp, a, 1)
 			}
 		}
 		if !lastExpIsVarargOrFuncCall {
 			n := nNames - nExps
-			a := self.allocTmps(n)
+			a := self.allocRegs(n)
 			self.emitLoadNil(node.LastLine, a, n)
 		}
 	}
@@ -288,9 +266,9 @@ func (self *codeGen) cgAssignStat(node *AssignStat) {
 
 	for i, exp := range node.VarList {
 		if bexp, ok := exp.(*BracketsExp); ok {
-			ts[i] = self.allocTmp()
+			ts[i] = self.allocReg()
 			self.cgExp(bexp.PrefixExp, ts[i], 1)
-			ks[i] = self.allocTmp()
+			ks[i] = self.allocReg()
 			self.cgExp(bexp.KeyExp, ks[i], 1)
 		}
 	}
@@ -300,7 +278,7 @@ func (self *codeGen) cgAssignStat(node *AssignStat) {
 
 	if nExps >= nVars {
 		for i, exp := range exps {
-			a := self.allocTmp()
+			a := self.allocReg()
 			if i >= nVars && i == nExps-1 && isVarargOrFuncCallExp(exp) {
 				self.cgExp(exp, a, 0)
 			} else {
@@ -310,19 +288,19 @@ func (self *codeGen) cgAssignStat(node *AssignStat) {
 	} else { // nVars > nExps
 		lastExpIsVarargOrFuncCall := false
 		for i, exp := range exps {
-			a := self.allocTmp()
+			a := self.allocReg()
 			if i == nExps-1 && isVarargOrFuncCallExp(exp) {
 				lastExpIsVarargOrFuncCall = true
 				n := nVars - nExps + 1
 				self.cgExp(exp, a, n)
-				self.allocTmps(n-1)
+				self.allocRegs(n-1)
 			} else {
 				self.cgExp(exp, a, 1)
 			}
 		}
 		if !lastExpIsVarargOrFuncCall {
 			n := nVars - nExps
-			a := self.allocTmps(n)
+			a := self.allocRegs(n)
 			self.emitLoadNil(node.LastLine, a, n)
 		}
 	}

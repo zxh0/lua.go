@@ -83,17 +83,17 @@ func (self *codeGen) newTmpAllocator(a int) *tmpAllocator {
 		return &tmpAllocator{self.scope, -1, 0}
 	}
 }
-func (self *codeGen) allocTmps(n int) int {
-	return self.scope.allocTmps(n)
+func (self *codeGen) allocRegs(n int) int {
+	return self.scope.allocRegs(n)
 }
-func (self *codeGen) allocTmp() int { // allocSlot()? allocReg()?
-	return self.scope.allocTmp()
+func (self *codeGen) allocReg() int { // allocSlot()? allocReg()?
+	return self.scope.allocReg()
 }
-func (self *codeGen) freeTmps(n int) {
-	self.scope.freeTmps(n)
+func (self *codeGen) freeRegs(n int) {
+	self.scope.freeRegs(n)
 }
-func (self *codeGen) freeTmp() {
-	self.scope.freeTmp()
+func (self *codeGen) freeReg() {
+	self.scope.freeReg()
 }
 func (self *codeGen) isLocVarSlot(slot int) bool {
 	return self.scope.isLocVarSlot(slot)

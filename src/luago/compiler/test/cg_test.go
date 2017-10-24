@@ -1,9 +1,74 @@
 package test
 
 import "fmt"
+import "strings"
 import "testing"
 import "assert"
 import "luago/compiler"
+
+func TestFuncCall(t *testing.T) {
+	testInsts(t, "f()", "[2/0] gettabup(0,0,-1); call(0,1,1)")
+	testInsts(t, "f(1,2)", "[3/0] gettabup(0,0,-1); loadk(1,-2); loadk(2,-3); call(0,3,1)")
+	testInsts(t, "f(1,g(2,h(3)))",
+`[6/0]
+gettabup(0,0,-1); loadk(1,-2);
+gettabup(2,0,-3); loadk(3,-4);
+gettabup(4,0,-5); loadk(5,-6);
+call(4,2,0); call(2,0,0); call(0,0,1)`)
+}
+
+func TestRepeat(t *testing.T) {
+	testInsts(t, "repeat f() until g()",
+`[2/0]
+gettabup(0,0,-1); call(0,1,1);
+gettabup(0,0,-2); call(0,1,2);
+test(0,_,0); jmp(0,-6)`)
+}
+
+func TestWhile(t *testing.T) {
+	testInsts(t, "while f() do g() end",
+`[2/0]
+gettabup(0,0,-1); call(0,1,2);
+test(0,_,0); jmp(0,3);
+gettabup(0,0,-2); call(0,1,1);
+jmp(0,-7)`)
+}
+
+func TestIf(t *testing.T) {
+	testInsts(t, "if a then f() elseif b then g() end",
+`[2/0]
+gettabup(0,0,-1); test(0,_,0); jmp(0,3);
+gettabup(0,0,-2); call(0,1,1); jmp(0,5);
+gettabup(0,0,-3); test(0,_,0); jmp(0,2);
+gettabup(0,0,-4); call(0,1,1)`)
+}
+
+func TestForNum(t *testing.T) {
+	testInsts(t, "for i=1,100,2 do f() end",
+`[5/4]
+loadk(0,-1);
+loadk(1,-2);
+loadk(2,-3);
+forprep(0,2);
+gettabup(4,0,-4);
+call(4,1,1);
+forloop(0,-3)`)
+}
+
+func TestForIn(t *testing.T) {
+	testInsts(t, "for k,v in pairs(t) do print(k,v) end",
+`[8/5]
+gettabup(0,0,-1);
+gettabup(1,0,-2);
+call(0,2,4);
+jmp(0,4);
+gettabup(5,0,-3);
+move(6,3,_);
+move(7,4,_);
+call(5,3,1);
+tforcall(0,_,2);
+tforloop(2,-6)`)
+}
 
 func TestLocalAssign(t *testing.T) {
 	testInsts(t, "local a", "[2/1] loadnil(0,0,_)")
@@ -32,7 +97,9 @@ func TestAssign(t *testing.T) {
 
 func testInsts(t *testing.T, chunk, expected string) {
 	insts := compile(chunk)
-	assert.StringEqual(t, insts, expected + "; return(0,1,_)")
+	expected = strings.Replace(expected, "\n", " ", -1)
+	expected += "; return(0,1,_)"
+	assert.StringEqual(t, insts, expected)
 }
 
 func compile(chunk string) string {

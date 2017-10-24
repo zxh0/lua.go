@@ -34,9 +34,9 @@ func (self *codeGen) retStat(node *RetStat) {
 				return
 			}
 		case *FuncCallExp:
-			tmp := self.allocTmp()
+			tmp := self.allocReg()
 			self.cgTailCallExp(exp, tmp)
-			self.freeTmp()
+			self.freeReg()
 			self.emitReturn(node.LastLine, tmp, -1)
 			return
 		}
@@ -44,7 +44,7 @@ func (self *codeGen) retStat(node *RetStat) {
 
 	lastExpIsVarargOrFuncCall := false
 	for i, exp := range node.ExpList {
-		tmp := self.allocTmp()
+		tmp := self.allocReg()
 		if i == nExps-1 && isVarargOrFuncCallExp(exp) {
 			lastExpIsVarargOrFuncCall = true
 			self.cgExp(exp, tmp, -1)
@@ -52,7 +52,7 @@ func (self *codeGen) retStat(node *RetStat) {
 			self.cgExp(exp, tmp, 1)
 		}
 	}
-	self.freeTmps(nExps)
+	self.freeRegs(nExps)
 
 	a := self.scope.nLocals // correct?
 	if lastExpIsVarargOrFuncCall {
