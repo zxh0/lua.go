@@ -61,11 +61,7 @@ func (self *codeGen) cgTableConstructorExp(exp *TableConstructorExp, a int) {
 	lastExpIsVarargOrFuncCall := nExps > 0 &&
 		isVarargOrFuncCallExp(exp.ValExps[nExps-1])
 
-	if lastExpIsVarargOrFuncCall {
-		self.emitNewTable(exp.Line, a, nArr-1, nRec)
-	} else {
-		self.emitNewTable(exp.Line, a, nArr, nRec)
-	}
+	self.emitNewTable(exp.Line, a, nArr, nRec)
 
 	for i, keyExp := range exp.KeyExps {
 		valExp := exp.ValExps[i]

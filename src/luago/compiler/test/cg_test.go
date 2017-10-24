@@ -6,6 +6,22 @@ import "testing"
 import "assert"
 import "luago/compiler"
 
+func TestTcExp(t *testing.T) {
+	testInsts(t, "local a={1,2}",
+`[3/1]
+newtable(0,2,0);
+loadk(1,-1);
+loadk(2,-2);
+setlist(0,2,1)`)
+// 	testInsts(t, "local a={1,f()}",
+// `[3/1]
+// newtable(0,1,0);
+// loadk(1,-1);
+// gettabup(2,0,-2);
+// call(2,1,0);
+// setlist(0,0,1)`)
+}
+
 func TestFuncCallStat(t *testing.T) {
 	testInsts(t, "f()", "[2/0] gettabup(0,0,-1); call(0,1,1)")
 	testInsts(t, "f(1,2)", "[3/0] gettabup(0,0,-1); loadk(1,-2); loadk(2,-3); call(0,3,1)")
