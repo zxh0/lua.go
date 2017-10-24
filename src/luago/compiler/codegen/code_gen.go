@@ -54,10 +54,10 @@ func (self *codeGen) exitScope(endPc int) {
 func (self *codeGen) addLocVar(name string, startPc int) int {
 	return self.scope.addLocVar(name, startPc)
 }
-func (self *codeGen) slotOf(name string) int {
+func (self *codeGen) slotOf(name string) int { // localVarIdx()?
 	return self.scope.slotOf(name)
 }
-func (self *codeGen) lookupUpval(name string) int {
+func (self *codeGen) lookupUpval(name string) int { // upvalIdx()?
 	return self.scope.lookupUpval(name)
 }
 
@@ -86,7 +86,7 @@ func (self *codeGen) newTmpAllocator(a int) *tmpAllocator {
 func (self *codeGen) allocTmps(n int) int {
 	return self.scope.allocTmps(n)
 }
-func (self *codeGen) allocTmp() int {
+func (self *codeGen) allocTmp() int { // allocSlot()? allocReg()?
 	return self.scope.allocTmp()
 }
 func (self *codeGen) freeTmps(n int) {
