@@ -6,7 +6,7 @@ import "testing"
 import "assert"
 import "luago/compiler"
 
-func TestFuncCall(t *testing.T) {
+func TestFuncCallStat(t *testing.T) {
 	testInsts(t, "f()", "[2/0] gettabup(0,0,-1); call(0,1,1)")
 	testInsts(t, "f(1,2)", "[3/0] gettabup(0,0,-1); loadk(1,-2); loadk(2,-3); call(0,3,1)")
 	testInsts(t, "f(1,g(2,h(3)))",
@@ -17,7 +17,7 @@ gettabup(4,0,-5); loadk(5,-6);
 call(4,2,0); call(2,0,0); call(0,0,1)`)
 }
 
-func TestRepeat(t *testing.T) {
+func TestRepeatStat(t *testing.T) {
 	testInsts(t, "repeat f() until g()",
 `[2/0]
 gettabup(0,0,-1); call(0,1,1);
@@ -25,7 +25,7 @@ gettabup(0,0,-2); call(0,1,2);
 test(0,_,0); jmp(0,-6)`)
 }
 
-func TestWhile(t *testing.T) {
+func TestWhileStat(t *testing.T) {
 	testInsts(t, "while f() do g() end",
 `[2/0]
 gettabup(0,0,-1); call(0,1,2);
@@ -34,7 +34,7 @@ gettabup(0,0,-2); call(0,1,1);
 jmp(0,-7)`)
 }
 
-func TestIf(t *testing.T) {
+func TestIfStat(t *testing.T) {
 	testInsts(t, "if a then f() elseif b then g() end",
 `[2/0]
 gettabup(0,0,-1); test(0,_,0); jmp(0,3);
@@ -43,7 +43,7 @@ gettabup(0,0,-3); test(0,_,0); jmp(0,2);
 gettabup(0,0,-4); call(0,1,1)`)
 }
 
-func TestForNum(t *testing.T) {
+func TestForNumStat(t *testing.T) {
 	testInsts(t, "for i=1,100,2 do f() end",
 `[5/4]
 loadk(0,-1);
@@ -55,7 +55,7 @@ call(4,1,1);
 forloop(0,-3)`)
 }
 
-func TestForIn(t *testing.T) {
+func TestForInStat(t *testing.T) {
 	testInsts(t, "for k,v in pairs(t) do print(k,v) end",
 `[8/5]
 gettabup(0,0,-1);
@@ -70,7 +70,7 @@ tforcall(0,_,2);
 tforloop(2,-6)`)
 }
 
-func TestLocalAssign(t *testing.T) {
+func TestLocalAssignStat(t *testing.T) {
 	testInsts(t, "local a", "[2/1] loadnil(0,0,_)")
 	testInsts(t, "local a=nil", "[2/1] loadnil(0,0,_)")
 	testInsts(t, "local a=true", "[2/1] loadbool(0,1,0)")
@@ -84,7 +84,7 @@ func TestLocalAssign(t *testing.T) {
 	testInsts(t, "local a,b,c", "[3/3] loadnil(0,2,_)")
 }
 
-func TestAssign(t *testing.T) {
+func TestAssignStat(t *testing.T) {
 	testInsts(t, "local a; a=nil", "[2/1] loadnil(0,0,_); loadnil(1,0,_); move(0,1,_)")
 	testInsts(t, "local a; a=1", "[2/1] loadnil(0,0,_); loadk(1,-1); move(0,1,_)")
 	testInsts(t, "local a; a=f()", "[2/1] loadnil(0,0,_); gettabup(1,0,-1); call(1,1,2); move(0,1,_)")
