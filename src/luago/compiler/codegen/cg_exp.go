@@ -55,33 +55,36 @@ func (self *codeGen) cgExp(node Exp, a, n int) {
 }
 
 func (self *codeGen) cgTableConstructorExp(exp *TableConstructorExp, a int) {
-	nExps := len(exp.KeyExps)
 	nArr := exp.NArr
-	nRec := nExps - nArr
+	nExps := len(exp.KeyExps)
 	lastExpIsVarargOrFuncCall := nExps > 0 &&
 		isVarargOrFuncCallExp(exp.ValExps[nExps-1])
 
-	self.emitNewTable(exp.Line, a, nArr, nRec)
+	self.emitNewTable(exp.Line, a, nArr, nExps - nArr)
 
 	for i, keyExp := range exp.KeyExps {
 		valExp := exp.ValExps[i]
 
 		if nArr > 0 {
 			if idx, ok := keyExp.(int); ok {
-				tmp := self.allocReg()
+				_a := self.allocReg()
 				if i == nExps-1 && lastExpIsVarargOrFuncCall {
-					self.cgExp(valExp, tmp, -1)
+					self.cgExp(valExp, _a, -1)
 				} else {
-					self.cgExp(valExp, tmp, 1)
+					self.cgExp(valExp, _a, 1)
 				}
 
-				if idx%50 == 0 {
-					self.freeRegs(50)
-					line := lineOfExp(valExp)
-					if i == nExps-1 && lastExpIsVarargOrFuncCall {
-						self.emitSetList(line, a, 0, idx/50) // todo
+				if idx%50 == 0 || idx == nArr { // LFIELDS_PER_FLUSH
+					if idx%50 == 0 {
+						self.freeRegs(50)
 					} else {
-						self.emitSetList(line, a, 50, idx/50) // todo
+						self.freeRegs(idx%50)
+					}
+					line := lastLineOfExp(valExp)
+					if i == nExps-1 && lastExpIsVarargOrFuncCall {
+						self.emitSetList(line, a, 0, idx/50 + 1)
+					} else {
+						self.emitSetList(line, a, idx%50, idx/50 + 1)
 					}
 				}
 
@@ -89,31 +92,14 @@ func (self *codeGen) cgTableConstructorExp(exp *TableConstructorExp, a int) {
 			}
 		}
 
-		nTmps := 0
-		iKey, tKey := self.toOpArg(keyExp)
-		if tKey != ARG_CONST && tKey != ARG_REG {
-			iKey = self.allocReg()
-			nTmps++
-			self.cgExp(keyExp, iKey, 1)
-		}
+		b := self.allocReg()
+		self.cgExp(keyExp, b, 1)
+		c := self.allocReg()
+		self.cgExp(valExp, c, 1)
 
-		iVal, tVal := self.toOpArg(valExp)
-		if tVal != ARG_CONST && tVal != ARG_REG {
-			iVal = self.allocReg()
-			nTmps++
-			self.cgExp(valExp, iVal, 1)
-		}
-		self.freeRegs(nTmps)
-		self.emitSetTable(lastLineOfExp(valExp), a, iKey, iVal)
-	}
-
-	if nArr > 0 {
-		self.freeRegs(nArr)
-		if lastExpIsVarargOrFuncCall {
-			self.emitSetList(exp.LastLine, a, 0, 1) // todo
-		} else {
-			self.emitSetList(exp.LastLine, a, nArr%50, nArr/50+1) // todo
-		}
+		line := lastLineOfExp(valExp)
+		self.emitSetTable(line, a, b, c)
+		self.freeRegs(2)
 	}
 }
 

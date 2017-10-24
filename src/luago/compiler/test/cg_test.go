@@ -13,13 +13,21 @@ newtable(0,2,0);
 loadk(1,-1);
 loadk(2,-2);
 setlist(0,2,1)`)
-// 	testInsts(t, "local a={1,f()}",
-// `[3/1]
-// newtable(0,1,0);
-// loadk(1,-1);
-// gettabup(2,0,-2);
-// call(2,1,0);
-// setlist(0,0,1)`)
+	testInsts(t, "local a={1,f()}",
+`[3/1]
+newtable(0,2,0);
+loadk(1,-1);
+gettabup(2,0,-2);
+call(2,1,0);
+setlist(0,0,1)`)
+	testInsts(t, "local a={1,f(),2}",
+`[4/1]
+newtable(0,3,0);
+loadk(1,-1);
+gettabup(2,0,-2);
+call(2,1,2);
+loadk(3,-3);
+setlist(0,3,1)`)
 }
 
 func TestFuncCallStat(t *testing.T) {
