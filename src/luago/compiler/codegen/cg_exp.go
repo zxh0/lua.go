@@ -250,18 +250,6 @@ func (self *codeGen) cgConcatExp(exp *BinopExp, a int) {
 	self.emit(line, OP_CONCAT, a, b, c)
 }
 
-func (self *codeGen) toOpArg(exp Exp) (int, int) {
-	return self._toOpArg(exp, ARG_CONST|ARG_REG|ARG_UPVAL)
-}
-
-// todo: rename
-func (self *codeGen) exp2OpArgX(exp Exp, argKinds int) (arg, argKind int) {
-	allocator := self.newTmpAllocator(-1)
-	arg, argKind = self.exp2OpArg(exp, argKinds, allocator)
-	allocator.freeAll()
-	return
-}
-
 func (self *codeGen) exp2OpArg(exp Exp, argKinds int,
 	allocator *tmpAllocator) (arg, argKind int) {
 
