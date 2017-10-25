@@ -40,7 +40,7 @@ func TestExpBinOp(t *testing.T) {
 	testExp2(t, `a * b + c / d`, `((a * b) + (c / d))`)
 	testExp2(t, `a + b - c + d`, `(((a + b) - c) + d)`)
 	testExp2(t, `a ^ b ^ c ^ d`, `(a ^ (b ^ (c ^ d)))`)
-	testExp2(t, `a .. b .. c .. d`, `(a .. (b .. (c .. d)))`)
+	testExp2(t, `a .. b .. c .. d`, `a .. b .. c .. d`)
 	testExp2(t, `(a + b) // (c - d)`, `((a + b) // (c - d))`)
 	testExp2(t, `((a ^ b) ^ c) ^ d`, `(((((a ^ b)) ^ c)) ^ d)`)
 	testExp2(t, `n - 1`, `(n - 1)`)

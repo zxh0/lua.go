@@ -6,6 +6,38 @@ import "testing"
 import "assert"
 import "luago/compiler"
 
+func TestConcat(t *testing.T) {
+	testInsts(t, "x = a .. b .. c; local d",
+`[4/1]
+gettabup(1,0,-1);
+gettabup(2,0,-2);
+gettabup(3,0,-3);
+concat(0,1,3);
+settabup(0,-4,0);
+loadnil(0,0,_)`)
+}
+
+func TestOP(t *testing.T) {
+	testInsts(t, "local a,b; c=-b", "[3/2] loadnil(0,1,_); unm(2,1,_); settabup(0,-1,2)")
+	testInsts(t, "local a,b; c=a+b", "[3/2] loadnil(0,1,_); add(2,0,1); settabup(0,-1,2)")
+	testInsts(t, "local a,b; c=a+1", "[3/2] loadnil(0,1,_); add(2,0,-1); settabup(0,-2,2)")
+	testInsts(t, "x=a+b", "[3/0] gettabup(1,0,-1); gettabup(2,0,-2); add(0,1,2); settabup(0,-3,0)")
+	testInsts(t, "x=a+b+c", "[4/0] gettabup(2,0,-1); gettabup(3,0,-2); add(1,2,3); gettabup(2,0,-3); add(0,1,2); settabup(0,-4,0)")
+	testInsts(t, "local a,b; c = a and b", "[3/2] loadnil(0,1,_); testset(2,0,0); jmp(0,1); move(2,1,_); settabup(0,-1,2)")
+	testInsts(t, "x = a and b and c",
+`[3/0]
+gettabup(2,0,-1); testset(1,2,0); jmp(0,2);
+gettabup(2,0,-2); move(1,2,_); testset(0,1,0); jmp(0,2);
+gettabup(1,0,-3); move(0,1,_);
+settabup(0,-4,0)`)
+	testInsts(t, "x = a or b or c",
+`[3/0]
+gettabup(2,0,-1); testset(1,2,1); jmp(0,2);
+gettabup(2,0,-2); move(1,2,_); testset(0,1,1); jmp(0,2);
+gettabup(1,0,-3); move(0,1,_);
+settabup(0,-4,0)`)
+}
+
 func TestTcExp(t *testing.T) {
 	testInsts(t, "local a={1,2}",
 `[3/1]

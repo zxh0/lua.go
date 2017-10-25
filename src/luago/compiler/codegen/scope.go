@@ -30,8 +30,8 @@ type scope struct {
 	locNames  map[string]*locVarInfo
 	upvalues  map[string]upvalInfo
 	constants map[interface{}]int
-	stackSize int
-	stackMax  int
+	stackSize int // usedRegs
+	stackMax  int // maxRegs
 	breaks    []*breakInfo
 }
 
@@ -54,7 +54,7 @@ func (self *scope) incrLevel() {
 }
 
 func (self *scope) decrLevel(endPc int) []int {
-	self.stackSize = 0
+	self.stackSize = self.nLocals
 	self.level--
 	for _, locVar := range self.locNames {
 		if locVar.level > self.level { // out of scope
@@ -132,6 +132,15 @@ func (self *scope) allocRegs(n int) int {
 		panic("n <= 0 !")
 	}
 }
+func (self *scope) freeRegs(n int) {
+	if n >= 0 {
+		for i := 0; i < n; i++ {
+			self.freeReg()
+		}
+	} else {
+		panic("n < 0!")
+	}
+}
 
 func (self *scope) allocReg() int {
 	if self.stackSize < self.nLocals {
@@ -147,14 +156,6 @@ func (self *scope) allocReg() int {
 func (self *scope) freeReg() {
 	if self.stackSize > self.nLocals {
 		self.stackSize--
-	}
-}
-
-func (self *scope) freeRegs(n int) {
-	if n >= 0 {
-		self.stackSize -= n
-	} else {
-		panic("n < 0!")
 	}
 }
 

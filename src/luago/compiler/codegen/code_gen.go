@@ -76,12 +76,8 @@ func (self *codeGen) fixEndPc(name string, delta int) {
 	}
 }
 
-func (self *codeGen) newTmpAllocator(a int) *tmpAllocator {
-	if self.isTmpVar(a) {
-		return &tmpAllocator{self.scope, a, 0}
-	} else {
-		return &tmpAllocator{self.scope, -1, 0}
-	}
+func (self *codeGen) usedRegs() int {
+	return self.scope.stackSize
 }
 func (self *codeGen) allocRegs(n int) int {
 	return self.scope.allocRegs(n)

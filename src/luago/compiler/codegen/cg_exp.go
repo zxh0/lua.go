@@ -47,6 +47,8 @@ func (self *codeGen) cgExp(node Exp, a, n int) {
 		self.cgFuncCallExp(exp, a, n)
 	case *BracketsExp:
 		self.cgBracketsExp(exp, a)
+	case *ConcatExp:
+		self.cgConcatExp(exp, a)
 	case *UnopExp:
 		self.cgUnopExp(exp, a)
 	case *BinopExp:
@@ -96,10 +98,10 @@ func (self *codeGen) cgTableConstructorExp(exp *TableConstructorExp, a int) {
 		self.cgExp(keyExp, b, 1)
 		c := self.allocReg()
 		self.cgExp(valExp, c, 1)
+		self.freeRegs(2)
 
 		line := lastLineOfExp(valExp)
 		self.emitSetTable(line, a, b, c)
-		self.freeRegs(2)
 	}
 }
 
@@ -171,10 +173,10 @@ func (self *codeGen) cgNameExp(exp *NameExp, a int) {
 
 // r[a] := prefix[key]
 func (self *codeGen) cgBracketsExp(exp *BracketsExp, a int) {
-	allocator := self.newTmpAllocator(a)
-	b, kindB := self.exp2OpArg(exp.PrefixExp, ARG_RU, allocator)
-	c, _ := self.exp2OpArg(exp.KeyExp, ARG_RK, allocator)
-	allocator.freeAll()
+	oldRegs := self.usedRegs()
+	b, kindB := self.expToOpArg(exp.PrefixExp, ARG_RU)
+	c, _ := self.expToOpArg(exp.KeyExp, ARG_RK)
+	self.freeRegs(self.usedRegs() - oldRegs)
 
 	if kindB == ARG_UPVAL {
 		self.emitGetTabUp(exp.Line, a, b, c)
@@ -185,85 +187,54 @@ func (self *codeGen) cgBracketsExp(exp *BracketsExp, a int) {
 
 // r[a] := op exp
 func (self *codeGen) cgUnopExp(exp *UnopExp, a int) {
-	allocator := self.newTmpAllocator(a)
-	b, _ := self.exp2OpArg(exp.Exp, ARG_REG, allocator)
+	oldRegs := self.usedRegs()
+	b, _ := self.expToOpArg(exp.Exp, ARG_REG)
 	self.emitUnaryOp(exp.Line, exp.Op, a, b)
-	allocator.freeAll()
+	self.freeRegs(self.usedRegs() - oldRegs)
 }
 
 // r[a] := exp1 op exp2
 func (self *codeGen) cgBinopExp(exp *BinopExp, a int) {
 	switch exp.Op {
-	case TOKEN_OP_CONCAT:
-		self.cgConcatExp(exp, a)
 	case TOKEN_OP_AND, TOKEN_OP_OR:
-		allocator := self.newTmpAllocator(a)
+		oldRegs := self.usedRegs()
 
-		rb, _ := self.exp2OpArg(exp.Exp1, ARG_REG, allocator)
+		b, _ := self.expToOpArg(exp.Exp1, ARG_REG)
+		self.freeRegs(self.usedRegs() - oldRegs)
 		if exp.Op == TOKEN_OP_AND {
-			self.emitTestSet(exp.Line, a, rb, 0)
+			self.emitTestSet(exp.Line, a, b, 0)
 		} else {
-			self.emitTestSet(exp.Line, a, rb, 1)
+			self.emitTestSet(exp.Line, a, b, 1)
 		}
 		pcOfJmp := self.emitJmp(exp.Line, 0)
 
-		rc, _ := self.exp2OpArg(exp.Exp2, ARG_REG, allocator)
-		self.emitMove(exp.Line, a, rc)
-
-		allocator.freeAll()
+		b, _ = self.expToOpArg(exp.Exp2, ARG_REG)
+		self.freeRegs(self.usedRegs() - oldRegs)
+		self.emitMove(exp.Line, a, b)		
 		self.fixSbx(pcOfJmp, self.pc()-pcOfJmp)
 	default:
-		allocator := self.newTmpAllocator(a)
-		rkb, _ := self.exp2OpArg(exp.Exp1, ARG_RK, allocator)
-		rkc, _ := self.exp2OpArg(exp.Exp2, ARG_RK, allocator)
-		self.emitBinaryOp(exp.Line, exp.Op, a, rkb, rkc)
-		allocator.freeAll()
+		oldRegs := self.usedRegs()
+		b, _ := self.expToOpArg(exp.Exp1, ARG_RK)
+		c, _ := self.expToOpArg(exp.Exp2, ARG_RK)
+		self.emitBinaryOp(exp.Line, exp.Op, a, b, c)
+		self.freeRegs(self.usedRegs() - oldRegs)
 	}
 }
 
 // r[a] := exp1 .. exp2
-func (self *codeGen) cgConcatExp(exp *BinopExp, a int) {
-	allocator := self.newTmpAllocator(a)
-	line, b, c := exp.Line, -1, -1
-
-	for {
-		tmp := allocator.allocReg()
-		self.cgExp(exp.Exp1, tmp, 1)
-		if b < 0 {
-			b = tmp
-			c = b
-		} else {
-			c++
-		}
-
-		if exp2, ok := castToConcatExp(exp.Exp2); ok {
-			exp = exp2
-		} else {
-			tmp := allocator.allocReg()
-			self.cgExp(exp.Exp2, tmp, 1)
-			c++
-			break
-		}
+func (self *codeGen) cgConcatExp(exp *ConcatExp, a int) {
+	for _, subExp := range exp.Exps {
+		a := self.allocReg()
+		self.cgExp(subExp, a, 1)
 	}
 
-	allocator.freeAll()
-	self.emit(line, OP_CONCAT, a, b, c)
+	c := self.usedRegs() - 1
+	b := c - len(exp.Exps) + 1
+	self.freeRegs(c - b + 1)
+	self.emit(exp.Line, OP_CONCAT, a, b, c)
 }
 
-func (self *codeGen) exp2OpArg(exp Exp, argKinds int,
-	allocator *tmpAllocator) (arg, argKind int) {
-
-	arg, argKind = self._toOpArg(exp, argKinds)
-	if arg < 0 {
-		argKind = ARG_REG
-		arg = allocator.allocReg()
-		self.cgExp(exp, arg, 1)
-	}
-	return
-}
-
-// todo: rename
-func (self *codeGen) _toOpArg(exp Exp, argKinds int) (arg, argKind int) {
+func (self *codeGen) expToOpArg(exp Exp, argKinds int) (arg, argKind int) {
 	if argKinds&ARG_CONST > 0 {
 		switch x := exp.(type) {
 		case *NilExp:
@@ -294,22 +265,7 @@ func (self *codeGen) _toOpArg(exp Exp, argKinds int) (arg, argKind int) {
 			}
 		}
 	}
-	// if argKinds&(ARG_REG|ARG_UPVAL|ARG_GLOBAL) > 0 {
-	// 	if nameExp, ok := exp.(*NameExp); ok {
-	// 		if slot := self.slotOf(nameExp.Name); slot >= 0 {
-	// 			if argKinds&ARG_REG > 0 {
-	// 				return slot, ARG_REG
-	// 			}
-	// 		} else if idx := self.lookupUpval(nameExp.Name); idx >= 0 {
-	// 			if argKinds&ARG_UPVAL > 0 {
-	// 				return idx, ARG_UPVAL
-	// 			}
-	// 		} else {
-	// 			if argKinds&ARG_GLOBAL > 0 {
-	// 				return self.indexOfConstant(nameExp.Name), ARG_GLOBAL
-	// 			}
-	// 		}
-	// 	}
-	// }
-	return -1, 0 // todo
+	a := self.allocReg()
+	self.cgExp(exp, a, 1)
+	return a, ARG_REG
 }

@@ -49,6 +49,11 @@ type UnopExp struct {
 	Exp  Exp
 }
 
+type ConcatExp struct {
+	Line int // line of last ..
+	Exps []Exp
+}
+
 // tableconstructor ::= ‘{’ [fieldlist] ‘}’
 // fieldlist ::= field {fieldsep field} [fieldsep]
 // field ::= ‘[’ exp ‘]’ ‘=’ exp | Name ‘=’ exp | exp

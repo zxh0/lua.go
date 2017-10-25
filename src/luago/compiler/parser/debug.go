@@ -128,6 +128,13 @@ func expToString(exp Exp) string {
 		return fmt.Sprintf("%f", x.Val)
 	case *StringExp:
 		return "'" + x.Str + "'"
+	case *ConcatExp:
+		str := ""
+		for _, exp := range x.Exps {
+			str += " .. "
+			str += expToString(exp)
+		}
+		return str[4:]
 	case *UnopExp:
 		return unopToString(x.Op) + "(" + expToString(x.Exp) + ")"
 	case *BinopExp:
