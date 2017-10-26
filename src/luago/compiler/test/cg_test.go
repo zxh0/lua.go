@@ -6,6 +6,10 @@ import "testing"
 import "assert"
 import "luago/compiler"
 
+func TestReturn(t *testing.T) {
+	testInsts(t, "return", "[2/0] return(0,1,_)")
+}
+
 func TestConcat(t *testing.T) {
 	testInsts(t, "x = a .. b .. c; local d",
 `[4/1]

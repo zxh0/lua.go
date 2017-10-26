@@ -27,12 +27,6 @@ func (self *codeGen) emit(line, opcode, a, b, c int) int {
 	return len(self.insts) - 1
 }
 
-func (self *codeGen) fixA(pc, a int) {
-	i := self.insts[pc]
-	i.a = a
-	self.insts[pc] = i
-}
-
 func (self *codeGen) fixSbx(pc, sbx int) {
 	i := self.insts[pc]
 	i.b = sbx
@@ -82,7 +76,7 @@ func (self *codeGen) usedRegs() int {
 func (self *codeGen) allocRegs(n int) int {
 	return self.scope.allocRegs(n)
 }
-func (self *codeGen) allocReg() int { // allocSlot()? allocReg()?
+func (self *codeGen) allocReg() int {
 	return self.scope.allocReg()
 }
 func (self *codeGen) freeRegs(n int) {
@@ -90,21 +84,6 @@ func (self *codeGen) freeRegs(n int) {
 }
 func (self *codeGen) freeReg() {
 	self.scope.freeReg()
-}
-func (self *codeGen) isLocVarSlot(slot int) bool {
-	return self.scope.isLocVarSlot(slot)
-}
-func (self *codeGen) isTmpVar(slot int) bool {
-	return self.scope.isTmpVar(slot)
-}
-func (self *codeGen) isGlobalVar(name string) (int, int, bool) {
-	if self.slotOf(name) < 0 && self.lookupUpval(name) < 0 {
-		envIdx := self.lookupUpval("_ENV")
-		nameIdx := self.indexOfConstant(name)
-		return envIdx, nameIdx, true
-	} else {
-		return -1, -1, false
-	}
 }
 func (self *codeGen) indexOfConstant(k interface{}) int {
 	return self.scope.indexOfConstant(k)

@@ -111,14 +111,6 @@ func (self *scope) slotOf(name string) int {
 	}
 }
 
-func (self *scope) isLocVarSlot(slot int) bool {
-	return slot >= 0 && slot < self.nLocals
-}
-
-func (self *scope) isTmpVar(slot int) bool {
-	return slot >= self.nLocals && slot < 0x100
-}
-
 /* stack */
 
 func (self *scope) allocRegs(n int) int {

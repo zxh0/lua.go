@@ -9,13 +9,9 @@ const (
 	ARG_CONST  = 1 // const index
 	ARG_REG    = 2 // register index
 	ARG_UPVAL  = 4 // upvalue index
-	ARG_GLOBAL = 8 // ?
 	ARG_RK     = ARG_REG | ARG_CONST
 	ARG_RU     = ARG_REG | ARG_UPVAL
 	ARG_RUK    = ARG_REG | ARG_UPVAL | ARG_CONST
-	//ARG_RUG    = ARG_REG | ARG_UPVAL | ARG_GLOBAL
-	// ARG_LOCAL ?
-	// ARG_TMP ?
 )
 
 // todo: rename to evalExp()?
@@ -56,16 +52,16 @@ func (self *codeGen) cgExp(node Exp, a, n int) {
 	}
 }
 
-func (self *codeGen) cgTableConstructorExp(exp *TableConstructorExp, a int) {
-	nArr := exp.NArr
-	nExps := len(exp.KeyExps)
+func (self *codeGen) cgTableConstructorExp(node *TableConstructorExp, a int) {
+	nArr := node.NArr
+	nExps := len(node.KeyExps)
 	lastExpIsVarargOrFuncCall := nExps > 0 &&
-		isVarargOrFuncCallExp(exp.ValExps[nExps-1])
+		isVarargOrFuncCallExp(node.ValExps[nExps-1])
 
-	self.emitNewTable(exp.Line, a, nArr, nExps - nArr)
+	self.emitNewTable(node.Line, a, nArr, nExps - nArr)
 
-	for i, keyExp := range exp.KeyExps {
-		valExp := exp.ValExps[i]
+	for i, keyExp := range node.KeyExps {
+		valExp := node.ValExps[i]
 
 		if nArr > 0 {
 			if idx, ok := keyExp.(int); ok {
@@ -106,34 +102,34 @@ func (self *codeGen) cgTableConstructorExp(exp *TableConstructorExp, a int) {
 }
 
 // f[a] := function(args) body end
-func (self *codeGen) cgFuncDefExp(exp *FuncDefExp, a int) {
-	bx := self.genSubProto(exp)
-	self.emitClosure(exp.LastLine, a, bx)
+func (self *codeGen) cgFuncDefExp(node *FuncDefExp, a int) {
+	bx := self.genSubProto(node)
+	self.emitClosure(node.LastLine, a, bx)
 }
 
 // r[a] := f(args)
-func (self *codeGen) cgFuncCallExp(exp *FuncCallExp, a, n int) {
-	nArgs := self.prepFuncCall(exp, a)
-	self.emitCall(exp.Line, a, nArgs, n)
+func (self *codeGen) cgFuncCallExp(node *FuncCallExp, a, n int) {
+	nArgs := self.prepFuncCall(node, a)
+	self.emitCall(node.Line, a, nArgs, n)
 }
 
 // return f(args)
-func (self *codeGen) cgTailCallExp(exp *FuncCallExp, a int) {
-	nArgs := self.prepFuncCall(exp, a)
-	self.emitTailCall(exp.Line, a, nArgs)
+func (self *codeGen) cgTailCallExp(node *FuncCallExp, a int) {
+	nArgs := self.prepFuncCall(node, a)
+	self.emitTailCall(node.Line, a, nArgs)
 }
 
-func (self *codeGen) prepFuncCall(exp *FuncCallExp, a int) int {
-	nArgs := len(exp.Args)
+func (self *codeGen) prepFuncCall(node *FuncCallExp, a int) int {
+	nArgs := len(node.Args)
 	lastArgIsVarargOrFuncCall := false
 
-	self.cgExp(exp.PrefixExp, a, 1)
-	if exp.MethodName != "" {
+	self.cgExp(node.PrefixExp, a, 1)
+	if node.MethodName != "" {
 		self.allocReg()
-		idx := self.indexOfConstant(exp.MethodName)
-		self.emitSelf(exp.Line, a, a, idx)
+		idx := self.indexOfConstant(node.MethodName)
+		self.emitSelf(node.Line, a, a, idx)
 	}
-	for i, arg := range exp.Args {
+	for i, arg := range node.Args {
 		tmp := self.allocReg()
 		if i == nArgs-1 && isVarargOrFuncCallExp(arg) {
 			lastArgIsVarargOrFuncCall = true
@@ -147,7 +143,7 @@ func (self *codeGen) prepFuncCall(exp *FuncCallExp, a int) int {
 	if lastArgIsVarargOrFuncCall {
 		nArgs = -1
 	}
-	if exp.MethodName != "" {
+	if node.MethodName != "" {
 		self.freeReg()
 		nArgs++
 	}
@@ -156,87 +152,87 @@ func (self *codeGen) prepFuncCall(exp *FuncCallExp, a int) int {
 }
 
 // r[a] := name
-func (self *codeGen) cgNameExp(exp *NameExp, a int) {
-	if slot := self.slotOf(exp.Name); slot >= 0 {
-		self.emitMove(exp.Line, a, slot)
-	} else if idx := self.lookupUpval(exp.Name); idx >= 0 {
-		self.emitGetUpval(exp.Line, a, idx)
+func (self *codeGen) cgNameExp(node *NameExp, a int) {
+	if slot := self.slotOf(node.Name); slot >= 0 {
+		self.emitMove(node.Line, a, slot)
+	} else if idx := self.lookupUpval(node.Name); idx >= 0 {
+		self.emitGetUpval(node.Line, a, idx)
 	} else { // x => _ENV['x']
 		bracketsExp := &BracketsExp{
-			Line:      exp.Line,
-			PrefixExp: &NameExp{exp.Line, "_ENV"},
-			KeyExp:    &StringExp{exp.Line, exp.Name},
+			Line:      node.Line,
+			PrefixExp: &NameExp{node.Line, "_ENV"},
+			KeyExp:    &StringExp{node.Line, node.Name},
 		}
 		self.cgBracketsExp(bracketsExp, a)
 	}
 }
 
 // r[a] := prefix[key]
-func (self *codeGen) cgBracketsExp(exp *BracketsExp, a int) {
+func (self *codeGen) cgBracketsExp(node *BracketsExp, a int) {
 	oldRegs := self.usedRegs()
-	b, kindB := self.expToOpArg(exp.PrefixExp, ARG_RU)
-	c, _ := self.expToOpArg(exp.KeyExp, ARG_RK)
+	b, kindB := self.expToOpArg(node.PrefixExp, ARG_RU)
+	c, _ := self.expToOpArg(node.KeyExp, ARG_RK)
 	self.freeRegs(self.usedRegs() - oldRegs)
 
 	if kindB == ARG_UPVAL {
-		self.emitGetTabUp(exp.Line, a, b, c)
+		self.emitGetTabUp(node.Line, a, b, c)
 	} else {
-		self.emitGetTable(exp.Line, a, b, c)
+		self.emitGetTable(node.Line, a, b, c)
 	}
 }
 
 // r[a] := op exp
-func (self *codeGen) cgUnopExp(exp *UnopExp, a int) {
+func (self *codeGen) cgUnopExp(node *UnopExp, a int) {
 	oldRegs := self.usedRegs()
-	b, _ := self.expToOpArg(exp.Exp, ARG_REG)
-	self.emitUnaryOp(exp.Line, exp.Op, a, b)
+	b, _ := self.expToOpArg(node.Exp, ARG_REG)
+	self.emitUnaryOp(node.Line, node.Op, a, b)
 	self.freeRegs(self.usedRegs() - oldRegs)
 }
 
 // r[a] := exp1 op exp2
-func (self *codeGen) cgBinopExp(exp *BinopExp, a int) {
-	switch exp.Op {
+func (self *codeGen) cgBinopExp(node *BinopExp, a int) {
+	switch node.Op {
 	case TOKEN_OP_AND, TOKEN_OP_OR:
 		oldRegs := self.usedRegs()
 
-		b, _ := self.expToOpArg(exp.Exp1, ARG_REG)
+		b, _ := self.expToOpArg(node.Exp1, ARG_REG)
 		self.freeRegs(self.usedRegs() - oldRegs)
-		if exp.Op == TOKEN_OP_AND {
-			self.emitTestSet(exp.Line, a, b, 0)
+		if node.Op == TOKEN_OP_AND {
+			self.emitTestSet(node.Line, a, b, 0)
 		} else {
-			self.emitTestSet(exp.Line, a, b, 1)
+			self.emitTestSet(node.Line, a, b, 1)
 		}
-		pcOfJmp := self.emitJmp(exp.Line, 0)
+		pcOfJmp := self.emitJmp(node.Line, 0)
 
-		b, _ = self.expToOpArg(exp.Exp2, ARG_REG)
+		b, _ = self.expToOpArg(node.Exp2, ARG_REG)
 		self.freeRegs(self.usedRegs() - oldRegs)
-		self.emitMove(exp.Line, a, b)		
+		self.emitMove(node.Line, a, b)		
 		self.fixSbx(pcOfJmp, self.pc()-pcOfJmp)
 	default:
 		oldRegs := self.usedRegs()
-		b, _ := self.expToOpArg(exp.Exp1, ARG_RK)
-		c, _ := self.expToOpArg(exp.Exp2, ARG_RK)
-		self.emitBinaryOp(exp.Line, exp.Op, a, b, c)
+		b, _ := self.expToOpArg(node.Exp1, ARG_RK)
+		c, _ := self.expToOpArg(node.Exp2, ARG_RK)
+		self.emitBinaryOp(node.Line, node.Op, a, b, c)
 		self.freeRegs(self.usedRegs() - oldRegs)
 	}
 }
 
 // r[a] := exp1 .. exp2
-func (self *codeGen) cgConcatExp(exp *ConcatExp, a int) {
-	for _, subExp := range exp.Exps {
+func (self *codeGen) cgConcatExp(node *ConcatExp, a int) {
+	for _, subExp := range node.Exps {
 		a := self.allocReg()
 		self.cgExp(subExp, a, 1)
 	}
 
 	c := self.usedRegs() - 1
-	b := c - len(exp.Exps) + 1
+	b := c - len(node.Exps) + 1
 	self.freeRegs(c - b + 1)
-	self.emit(exp.Line, OP_CONCAT, a, b, c)
+	self.emit(node.Line, OP_CONCAT, a, b, c)
 }
 
-func (self *codeGen) expToOpArg(exp Exp, argKinds int) (arg, argKind int) {
+func (self *codeGen) expToOpArg(node Exp, argKinds int) (arg, argKind int) {
 	if argKinds&ARG_CONST > 0 {
-		switch x := exp.(type) {
+		switch x := node.(type) {
 		case *NilExp:
 			return self.indexOfConstant(nil), ARG_CONST
 		case *FalseExp:
@@ -252,20 +248,20 @@ func (self *codeGen) expToOpArg(exp Exp, argKinds int) (arg, argKind int) {
 		}
 	}
 	if argKinds&ARG_REG > 0 {
-		if nameExp, ok := exp.(*NameExp); ok {
+		if nameExp, ok := node.(*NameExp); ok {
 			if slot := self.slotOf(nameExp.Name); slot >= 0 {
 				return slot, ARG_REG
 			}
 		}
 	}
 	if argKinds&ARG_UPVAL > 0 {
-		if nameExp, ok := exp.(*NameExp); ok {
+		if nameExp, ok := node.(*NameExp); ok {
 			if idx := self.lookupUpval(nameExp.Name); idx >= 0 {
 				return idx, ARG_UPVAL
 			}
 		}
 	}
 	a := self.allocReg()
-	self.cgExp(exp, a, 1)
+	self.cgExp(node, a, 1)
 	return a, ARG_REG
 }
