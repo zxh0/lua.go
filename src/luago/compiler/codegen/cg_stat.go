@@ -146,7 +146,7 @@ func (self *codeGen) cgForNumStat(node *ForNumStat) {
 	})
 	self.addLocVar(node.VarName, self.pc()+2)
 
-	a := self.scope.stackSize - 3
+	a := self.usedRegs() - 4
 	prepPc := self.emitForPrep(node.LineOfDo, a, 0)
 	self.cgBlock(node.Block)
 	loopPc := self.emitForLoop(node.LineOfFor, a, 0)
@@ -188,9 +188,9 @@ func (self *codeGen) cgForInStat(node *ForInStat) {
 	self.fixSbx(jmpToTFC, self.pc()-jmpToTFC)
 
 	line := lineOfExp(node.ExpList[0])
-	slotOfGeneratorVar := self.slotOf(forGeneratorVar)
-	self.emitTForCall(line, slotOfGeneratorVar, len(node.NameList))
-	self.emitTForLoop(line, slotOfGeneratorVar+2, jmpToTFC-self.pc()-1)
+	rGenerator := self.indexOfLocVar(forGeneratorVar)
+	self.emitTForCall(line, rGenerator, len(node.NameList))
+	self.emitTForLoop(line, rGenerator+2, jmpToTFC-self.pc()-1)
 
 	self.exitScope(self.pc() - 1)
 	self.fixEndPc(forGeneratorVar, 2)
@@ -229,11 +229,11 @@ func (self *codeGen) cgLocalAssignStat(node *LocalAssignStat) {
 		}
 		self.freeRegs(nExps - nNames)
 	} else { // nNames > nExps
-		lastExpIsVarargOrFuncCall := false
+		multRet := false
 		for i, exp := range exps {
 			a := self.allocReg()
 			if i == nExps-1 && isVarargOrFuncCallExp(exp) {
-				lastExpIsVarargOrFuncCall = true
+				multRet = true
 				n := nNames - nExps + 1
 				self.cgExp(exp, a, n)
 				self.allocRegs(n-1)
@@ -241,7 +241,7 @@ func (self *codeGen) cgLocalAssignStat(node *LocalAssignStat) {
 				self.cgExp(exp, a, 1)
 			}
 		}
-		if !lastExpIsVarargOrFuncCall {
+		if !multRet {
 			n := nNames - nExps
 			a := self.allocRegs(n)
 			self.emitLoadNil(node.LastLine, a, n)
@@ -262,7 +262,7 @@ func (self *codeGen) cgAssignStat(node *AssignStat) {
 	ts := make([]int, nVars)
 	ks := make([]int, nVars)
 	vs := make([]int, nVars)
-	oldStackSize := self.scope.stackSize
+	oldRegs := self.usedRegs()
 
 	for i, exp := range node.VarList {
 		if bexp, ok := exp.(*BracketsExp); ok {
@@ -273,7 +273,7 @@ func (self *codeGen) cgAssignStat(node *AssignStat) {
 		}
 	}
 	for i := 0; i < nVars; i++ {
-		vs[i] = self.scope.stackSize + i
+		vs[i] = self.usedRegs() + i
 	}
 
 	if nExps >= nVars {
@@ -286,11 +286,11 @@ func (self *codeGen) cgAssignStat(node *AssignStat) {
 			}
 		}
 	} else { // nVars > nExps
-		lastExpIsVarargOrFuncCall := false
+		multRet := false
 		for i, exp := range exps {
 			a := self.allocReg()
 			if i == nExps-1 && isVarargOrFuncCallExp(exp) {
-				lastExpIsVarargOrFuncCall = true
+				multRet = true
 				n := nVars - nExps + 1
 				self.cgExp(exp, a, n)
 				self.allocRegs(n-1)
@@ -298,7 +298,7 @@ func (self *codeGen) cgAssignStat(node *AssignStat) {
 				self.cgExp(exp, a, 1)
 			}
 		}
-		if !lastExpIsVarargOrFuncCall {
+		if !multRet {
 			n := nVars - nExps
 			a := self.allocRegs(n)
 			self.emitLoadNil(node.LastLine, a, n)
@@ -308,12 +308,12 @@ func (self *codeGen) cgAssignStat(node *AssignStat) {
 	for i, exp := range node.VarList {
 		if nameExp, ok := exp.(*NameExp); ok {
 			varName := nameExp.Name
-			if a := self.slotOf(varName); a >= 0 {
+			if a := self.indexOfLocVar(varName); a >= 0 {
 				self.emitMove(0, a, vs[i])
-			} else if a := self.lookupUpval(varName); a >= 0 {
+			} else if a := self.indexOfUpval(varName); a >= 0 {
 				self.emitSetUpval(0, a, vs[i])
 			} else {
-				envIdx := self.lookupUpval("_ENV")
+				envIdx := self.indexOfUpval("_ENV")
 				strIdx := self.indexOfConstant(varName)
 				self.emitSetTabUp(0, envIdx, strIdx, vs[i])
 			}
@@ -323,5 +323,5 @@ func (self *codeGen) cgAssignStat(node *AssignStat) {
 	}
 
 	// todo
-	self.scope.stackSize = oldStackSize
+	self.freeRegs(self.usedRegs() - oldRegs)
 }

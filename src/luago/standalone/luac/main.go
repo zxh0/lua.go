@@ -51,8 +51,8 @@ func main() {
 		fmt.Println(output)
 	} else {
 		// write to disk
-		println(proto)
-		println(_o)
+		data := binchunk.Dump(proto)
+		ioutil.WriteFile(*_o, data, 0644) // todo
 	}
 }
 

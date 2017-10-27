@@ -48,11 +48,11 @@ func (self *codeGen) exitScope(endPc int) {
 func (self *codeGen) addLocVar(name string, startPc int) int {
 	return self.scope.addLocVar(name, startPc)
 }
-func (self *codeGen) slotOf(name string) int { // localVarIdx()?
-	return self.scope.slotOf(name)
+func (self *codeGen) indexOfLocVar(name string) int {
+	return self.scope.indexOfLocVar(name)
 }
-func (self *codeGen) lookupUpval(name string) int { // upvalIdx()?
-	return self.scope.lookupUpval(name)
+func (self *codeGen) indexOfUpval(name string) int {
+	return self.scope.indexOfUpval(name)
 }
 
 func (self *codeGen) addBreakJmp(pc int) {
@@ -70,8 +70,13 @@ func (self *codeGen) fixEndPc(name string, delta int) {
 	}
 }
 
+// todo
 func (self *codeGen) usedRegs() int {
-	return self.scope.stackSize
+	if self.scope.stackSize > self.scope.nLocals {
+		return self.scope.stackSize
+	} else {
+		return self.scope.nLocals
+	}
 }
 func (self *codeGen) allocRegs(n int) int {
 	return self.scope.allocRegs(n)

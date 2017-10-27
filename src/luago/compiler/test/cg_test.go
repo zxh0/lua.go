@@ -8,6 +8,10 @@ import "luago/compiler"
 
 func TestReturn(t *testing.T) {
 	testInsts(t, "return", "[2/0] return(0,1,_)")
+	testInsts(t, "local a,b,c; return a", "[3/3] loadnil(0,2,_); return(0,2,_)")
+	testInsts(t, "local a,b,c; return b,c", "[5/3] loadnil(0,2,_); move(3,1,_); move(4,2,_); return(3,3,_)")
+	testInsts(t, "return f(),1", "[2/0] gettabup(0,0,-1); call(0,1,2); loadk(1,-2); return(0,3,_)")
+	testInsts(t, "return 1,f()", "[2/0] loadk(0,-1); gettabup(1,0,-2); call(1,1,0); return(0,0,_)")
 }
 
 func TestConcat(t *testing.T) {
@@ -104,20 +108,21 @@ gettabup(0,0,-4); call(0,1,1)`)
 }
 
 func TestForNumStat(t *testing.T) {
-	testInsts(t, "for i=1,100,2 do f() end",
-`[5/4]
+	testInsts(t, "for i=1,100,2 do f() end; local a",
+`[5/5]
 loadk(0,-1);
 loadk(1,-2);
 loadk(2,-3);
 forprep(0,2);
 gettabup(4,0,-4);
 call(4,1,1);
-forloop(0,-3)`)
+forloop(0,-3);
+loadnil(0,0,_)`)
 }
 
 func TestForInStat(t *testing.T) {
-	testInsts(t, "for k,v in pairs(t) do print(k,v) end",
-`[8/5]
+	testInsts(t, "for k,v in pairs(t) do print(k,v) end; local a",
+`[8/6]
 gettabup(0,0,-1);
 gettabup(1,0,-2);
 call(0,2,4);
@@ -127,7 +132,8 @@ move(6,3,_);
 move(7,4,_);
 call(5,3,1);
 tforcall(0,_,2);
-tforloop(2,-6)`)
+tforloop(2,-6);
+loadnil(0,0,_)`)
 }
 
 func TestLocalAssignStat(t *testing.T) {
@@ -153,6 +159,7 @@ func TestAssignStat(t *testing.T) {
 	testInsts(t, "local a; a[1]=2", "[4/1] loadnil(0,0,_); move(1,0,_); loadk(2,-1); loadk(3,-2); settable(1,2,3)")
 	testInsts(t, "a=nil", "[2/0] loadnil(0,0,_); settabup(0,-1,0)")
 	testInsts(t, "a=1", "[2/0] loadk(0,-1); settabup(0,-2,0)")
+	//testInsts(t, "local a; a=a+1", "")
 }
 
 func testInsts(t *testing.T, chunk, expected string) {

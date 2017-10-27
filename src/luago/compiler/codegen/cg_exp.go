@@ -55,7 +55,7 @@ func (self *codeGen) cgExp(node Exp, a, n int) {
 func (self *codeGen) cgTableConstructorExp(node *TableConstructorExp, a int) {
 	nArr := node.NArr
 	nExps := len(node.KeyExps)
-	lastExpIsVarargOrFuncCall := nExps > 0 &&
+	multRet := nExps > 0 &&
 		isVarargOrFuncCallExp(node.ValExps[nExps-1])
 
 	self.emitNewTable(node.Line, a, nArr, nExps - nArr)
@@ -66,7 +66,7 @@ func (self *codeGen) cgTableConstructorExp(node *TableConstructorExp, a int) {
 		if nArr > 0 {
 			if idx, ok := keyExp.(int); ok {
 				_a := self.allocReg()
-				if i == nExps-1 && lastExpIsVarargOrFuncCall {
+				if i == nExps-1 && multRet {
 					self.cgExp(valExp, _a, -1)
 				} else {
 					self.cgExp(valExp, _a, 1)
@@ -79,7 +79,7 @@ func (self *codeGen) cgTableConstructorExp(node *TableConstructorExp, a int) {
 						self.freeRegs(idx%50)
 					}
 					line := lastLineOfExp(valExp)
-					if i == nExps-1 && lastExpIsVarargOrFuncCall {
+					if i == nExps-1 && multRet {
 						self.emitSetList(line, a, 0, idx/50 + 1)
 					} else {
 						self.emitSetList(line, a, idx%50, idx/50 + 1)
@@ -153,9 +153,9 @@ func (self *codeGen) prepFuncCall(node *FuncCallExp, a int) int {
 
 // r[a] := name
 func (self *codeGen) cgNameExp(node *NameExp, a int) {
-	if slot := self.slotOf(node.Name); slot >= 0 {
-		self.emitMove(node.Line, a, slot)
-	} else if idx := self.lookupUpval(node.Name); idx >= 0 {
+	if r := self.indexOfLocVar(node.Name); r >= 0 {
+		self.emitMove(node.Line, a, r)
+	} else if idx := self.indexOfUpval(node.Name); idx >= 0 {
 		self.emitGetUpval(node.Line, a, idx)
 	} else { // x => _ENV['x']
 		bracketsExp := &BracketsExp{
@@ -249,14 +249,14 @@ func (self *codeGen) expToOpArg(node Exp, argKinds int) (arg, argKind int) {
 	}
 	if argKinds&ARG_REG > 0 {
 		if nameExp, ok := node.(*NameExp); ok {
-			if slot := self.slotOf(nameExp.Name); slot >= 0 {
-				return slot, ARG_REG
+			if r := self.indexOfLocVar(nameExp.Name); r >= 0 {
+				return r, ARG_REG
 			}
 		}
 	}
 	if argKinds&ARG_UPVAL > 0 {
 		if nameExp, ok := node.(*NameExp); ok {
-			if idx := self.lookupUpval(nameExp.Name); idx >= 0 {
+			if idx := self.indexOfUpval(nameExp.Name); idx >= 0 {
 				return idx, ARG_UPVAL
 			}
 		}

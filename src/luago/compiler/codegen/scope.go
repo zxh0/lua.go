@@ -54,7 +54,7 @@ func (self *scope) incrLevel() {
 }
 
 func (self *scope) decrLevel(endPc int) []int {
-	self.stackSize = self.nLocals
+	self.stackSize = 0
 	self.level--
 	for _, locVar := range self.locNames {
 		if locVar.level > self.level { // out of scope
@@ -103,7 +103,7 @@ func (self *scope) addLocVar(name string, startPc int) int {
 	return newVar.slot
 }
 
-func (self *scope) slotOf(name string) int {
+func (self *scope) indexOfLocVar(name string) int {
 	if locVar, found := self.locNames[name]; found {
 		return locVar.slot
 	} else {
@@ -161,7 +161,7 @@ func (self *scope) setupEnv() {
 	}
 }
 
-func (self *scope) lookupUpval(name string) int {
+func (self *scope) indexOfUpval(name string) int {
 	if uvInfo, ok := self.upvalues[name]; ok {
 		return uvInfo.seq
 	}
@@ -175,7 +175,7 @@ func (self *scope) lookupUpval(name string) int {
 			}
 			return seq
 		}
-		if idx := self.parent.lookupUpval(name); idx >= 0 {
+		if idx := self.parent.indexOfUpval(name); idx >= 0 {
 			self.upvalues[name] = upvalInfo{
 				instack: false,
 				idx:     idx,
@@ -183,7 +183,7 @@ func (self *scope) lookupUpval(name string) int {
 			}
 			return seq
 		}
-		self.lookupUpval("_ENV")
+		self.indexOfUpval("_ENV")
 		return -1
 	}
 	return -1

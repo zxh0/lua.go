@@ -27,35 +27,34 @@ func (self *codeGen) retStat(node *RetStat) {
 	}
 
 	if nExps == 1 {
-		switch exp := node.ExpList[0].(type) {
-		case *NameExp:
-			if slot := self.slotOf(exp.Name); slot >= 0 {
-				self.emitReturn(node.LastLine, slot, 1)
+		if nameExp, ok := node.ExpList[0].(*NameExp); ok {
+			if r := self.indexOfLocVar(nameExp.Name); r >= 0 {
+				self.emitReturn(node.LastLine, r, 1)
 				return
 			}
-		case *FuncCallExp:
-			tmp := self.allocReg()
-			self.cgTailCallExp(exp, tmp)
+		}
+		if fcExp, ok := node.ExpList[0].(*FuncCallExp); ok {
+			r := self.allocReg()
+			self.cgTailCallExp(fcExp, r)
 			self.freeReg()
-			self.emitReturn(node.LastLine, tmp, -1)
+			self.emitReturn(node.LastLine, r, -1)
 			return
 		}
 	}
 
-	lastExpIsVarargOrFuncCall := false
+	multRet := isVarargOrFuncCallExp(node.ExpList[nExps-1])
 	for i, exp := range node.ExpList {
-		tmp := self.allocReg()
-		if i == nExps-1 && isVarargOrFuncCallExp(exp) {
-			lastExpIsVarargOrFuncCall = true
-			self.cgExp(exp, tmp, -1)
+		r := self.allocReg()
+		if i == nExps-1 && multRet {
+			self.cgExp(exp, r, -1)
 		} else {
-			self.cgExp(exp, tmp, 1)
+			self.cgExp(exp, r, 1)
 		}
 	}
 	self.freeRegs(nExps)
 
 	a := self.scope.nLocals // correct?
-	if lastExpIsVarargOrFuncCall {
+	if multRet {
 		self.emitReturn(node.LastLine, a, -1)
 	} else {
 		self.emitReturn(node.LastLine, a, nExps)

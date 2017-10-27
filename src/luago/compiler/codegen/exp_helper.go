@@ -45,6 +45,8 @@ func lineOfExp(exp Exp) int {
 		return x.Line
 	case *FuncDefExp:
 		return x.Line
+	case *ConcatExp: // todo
+		return x.Line
 	case *BinopExp: // todo
 		return x.Line
 	case *UnopExp: // todo
@@ -81,6 +83,8 @@ func lastLineOfExp(exp Exp) int {
 		return x.Line
 	case *FuncDefExp:
 		return x.LastLine
+	case *ConcatExp: // todo
+		return x.Line
 	case *BinopExp: // todo
 		return x.Line
 	case *UnopExp: // todo
