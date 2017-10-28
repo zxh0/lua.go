@@ -140,7 +140,6 @@ func (self *codeGen) cgForNumStat(node *ForNumStat) {
 	self.enterScope(true)
 
 	self.cgStat(&LocalAssignStat{
-		LastLine: node.LineOfFor,
 		NameList: []string{forIndexVar, forLimitVar, forStepVar},
 		ExpList:  []Exp{node.InitExp, node.LimitExp, node.StepExp},
 	})
@@ -305,20 +304,21 @@ func (self *codeGen) cgAssignStat(node *AssignStat) {
 		}
 	}
 
+	lastLine := node.LastLine
 	for i, exp := range node.VarList {
 		if nameExp, ok := exp.(*NameExp); ok {
 			varName := nameExp.Name
 			if a := self.indexOfLocVar(varName); a >= 0 {
-				self.emitMove(0, a, vs[i])
+				self.emitMove(lastLine, a, vs[i])
 			} else if a := self.indexOfUpval(varName); a >= 0 {
-				self.emitSetUpval(0, a, vs[i])
+				self.emitSetUpval(lastLine, a, vs[i])
 			} else {
 				envIdx := self.indexOfUpval("_ENV")
 				strIdx := self.indexOfConstant(varName)
-				self.emitSetTabUp(0, envIdx, strIdx, vs[i])
+				self.emitSetTabUp(lastLine, envIdx, strIdx, vs[i])
 			}
 		} else {
-			self.emitSetTable(0, ts[i], ks[i], vs[i])
+			self.emitSetTable(lastLine, ts[i], ks[i], vs[i])
 		}
 	}
 

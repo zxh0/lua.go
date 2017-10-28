@@ -56,10 +56,10 @@ func parseParensExp(lexer *Lexer) Exp {
 	switch x := exp.(type) {
 	case *BinopExp:
 		if x.Op == TOKEN_OP_POW || x.Op == TOKEN_OP_CONCAT {
-			return &ParensExp{0, exp} // todo
+			return &ParensExp{exp}
 		}
 	case *VarargExp, *FuncCallExp:
-		return &ParensExp{0, exp} // todo
+		return &ParensExp{exp}
 	}
 
 	// no need to keep parens
@@ -77,6 +77,7 @@ func finishFuncCallExp(lexer *Lexer, prefixExp Exp) *FuncCallExp {
 
 	fc.Line = lexer.Line() // todo
 	fc.Args = parseArgs(lexer)
+	fc.LastLine = lexer.Line()
 	return fc
 }
 

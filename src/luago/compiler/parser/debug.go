@@ -14,9 +14,9 @@ func blockToString(block *Block) string {
 			}
 		}
 	}
-	if block.RetStat != nil {
+	if block.RetExps != nil {
 		str += "return"
-		for _, exp := range block.RetStat.ExpList {
+		for _, exp := range block.RetExps {
 			str += " " + expToString(exp)
 		}
 	}

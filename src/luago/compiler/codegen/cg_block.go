@@ -14,36 +14,36 @@ func (self *codeGen) cgBlock(node *Block) {
 		self.cgStat(stat)
 	}
 
-	if node.RetStat != nil {
-		self.retStat(node.RetStat)
+	if node.RetExps != nil {
+		self.cgRetStat(node.RetExps, node.LastLine)
 	}
 }
 
-func (self *codeGen) retStat(node *RetStat) {
-	nExps := len(node.ExpList)
+func (self *codeGen) cgRetStat(exps []Exp, lastLine int) {
+	nExps := len(exps)
 	if nExps == 0 {
-		self.emitReturn(node.LastLine, 0, 0)
+		self.emitReturn(lastLine, 0, 0)
 		return
 	}
 
 	if nExps == 1 {
-		if nameExp, ok := node.ExpList[0].(*NameExp); ok {
+		if nameExp, ok := exps[0].(*NameExp); ok {
 			if r := self.indexOfLocVar(nameExp.Name); r >= 0 {
-				self.emitReturn(node.LastLine, r, 1)
+				self.emitReturn(lastLine, r, 1)
 				return
 			}
 		}
-		if fcExp, ok := node.ExpList[0].(*FuncCallExp); ok {
+		if fcExp, ok := exps[0].(*FuncCallExp); ok {
 			r := self.allocReg()
 			self.cgTailCallExp(fcExp, r)
 			self.freeReg()
-			self.emitReturn(node.LastLine, r, -1)
+			self.emitReturn(lastLine, r, -1)
 			return
 		}
 	}
 
-	multRet := isVarargOrFuncCallExp(node.ExpList[nExps-1])
-	for i, exp := range node.ExpList {
+	multRet := isVarargOrFuncCallExp(exps[nExps-1])
+	for i, exp := range exps {
 		r := self.allocReg()
 		if i == nExps-1 && multRet {
 			self.cgExp(exp, r, -1)
@@ -55,8 +55,8 @@ func (self *codeGen) retStat(node *RetStat) {
 
 	a := self.scope.nLocals // correct?
 	if multRet {
-		self.emitReturn(node.LastLine, a, -1)
+		self.emitReturn(lastLine, a, -1)
 	} else {
-		self.emitReturn(node.LastLine, a, nExps)
+		self.emitReturn(lastLine, a, nExps)
 	}
 }

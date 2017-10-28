@@ -32,21 +32,18 @@ type BreakStat struct{
 
 // if exp then block {elseif exp then block} [else block] end
 type IfStat struct {
-	Lines  []int // thens+end
 	Exps   []Exp
 	Blocks []*Block
 }
 
 // while exp do block end
 type WhileStat struct {
-	Line  int // todo
 	Exp   Exp
 	Block *Block
 }
 
 // repeat block until exp
 type RepeatStat struct {
-	Line  int // todo
 	Block *Block
 	Exp   Exp
 }

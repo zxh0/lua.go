@@ -78,21 +78,21 @@ func parseDoStat(lexer *Lexer) DoStat {
 
 // while exp do block end
 func parseWhileStat(lexer *Lexer) *WhileStat {
-	line, _ := lexer.NextTokenOfKind(TOKEN_KW_WHILE)
+	lexer.NextTokenOfKind(TOKEN_KW_WHILE)
 	exp := parseExp(lexer)
 	lexer.NextTokenOfKind(TOKEN_KW_DO)
 	block := parseBlock(lexer)
 	lexer.NextTokenOfKind(TOKEN_KW_END)
-	return &WhileStat{line, exp, block}
+	return &WhileStat{exp, block}
 }
 
 // repeat block until exp
 func parseRepeatStat(lexer *Lexer) *RepeatStat {
-	line, _ := lexer.NextTokenOfKind(TOKEN_KW_REPEAT)
+	lexer.NextTokenOfKind(TOKEN_KW_REPEAT)
 	block := parseBlock(lexer)
 	lexer.NextTokenOfKind(TOKEN_KW_UNTIL)
 	exp := parseExp(lexer)
-	return &RepeatStat{line, block, exp}
+	return &RepeatStat{block, exp}
 }
 
 // local function Name funcbody

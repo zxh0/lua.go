@@ -159,7 +159,7 @@ func (self *codeGen) cgNameExp(node *NameExp, a int) {
 		self.emitGetUpval(node.Line, a, idx)
 	} else { // x => _ENV['x']
 		bracketsExp := &BracketsExp{
-			Line:      node.Line,
+			LastLine:  node.Line,
 			PrefixExp: &NameExp{node.Line, "_ENV"},
 			KeyExp:    &StringExp{node.Line, node.Name},
 		}
@@ -175,9 +175,9 @@ func (self *codeGen) cgBracketsExp(node *BracketsExp, a int) {
 	self.freeRegs(self.usedRegs() - oldRegs)
 
 	if kindB == ARG_UPVAL {
-		self.emitGetTabUp(node.Line, a, b, c)
+		self.emitGetTabUp(node.LastLine, a, b, c)
 	} else {
-		self.emitGetTable(node.Line, a, b, c)
+		self.emitGetTable(node.LastLine, a, b, c)
 	}
 }
 

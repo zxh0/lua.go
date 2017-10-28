@@ -45,18 +45,18 @@ func lineOfExp(exp Exp) int {
 		return x.Line
 	case *FuncDefExp:
 		return x.Line
-	case *ConcatExp: // todo
-		return x.Line
-	case *BinopExp: // todo
-		return x.Line
-	case *UnopExp: // todo
-		return x.Line
-	case *TableConstructorExp:
-		return 0 // todo
-	case *BracketsExp:
-		return x.Line
 	case *FuncCallExp:
 		return x.Line
+	case *TableConstructorExp:
+		return x.Line
+	case *UnopExp:
+		return x.Line
+	case *BracketsExp:
+		return lineOfExp(x.PrefixExp)
+	case *ConcatExp:
+		return lineOfExp(x.Exps[0])
+	case *BinopExp:
+		return lineOfExp(x.Exp1)
 	}
 
 	panic("todo!")
@@ -83,18 +83,18 @@ func lastLineOfExp(exp Exp) int {
 		return x.Line
 	case *FuncDefExp:
 		return x.LastLine
-	case *ConcatExp: // todo
-		return x.Line
-	case *BinopExp: // todo
-		return x.Line
-	case *UnopExp: // todo
-		return x.Line
+	case *FuncCallExp:
+		return x.LastLine
 	case *TableConstructorExp:
 		return x.LastLine
 	case *BracketsExp:
-		return x.Line
-	case *FuncCallExp:
-		return x.Line
+		return x.LastLine
+	case *ConcatExp:
+		return lastLineOfExp(x.Exps[len(x.Exps)-1])
+	case *BinopExp:
+		return lastLineOfExp(x.Exp2)
+	case *UnopExp:
+		return lastLineOfExp(x.Exp)
 	}
 
 	panic("todo!")

@@ -7,13 +7,7 @@ package ast
 // retstat ::= return [explist] [‘;’]
 // explist ::= exp {‘,’ exp}
 type Block struct {
-	LastLine int // todo
+	LastLine int
 	Stats    []Stat
-	RetStat  *RetStat
-}
-
-type RetStat struct {
-	Line     int // ?
-	LastLine int // ?
-	ExpList  []Exp
+	RetExps  []Exp
 }

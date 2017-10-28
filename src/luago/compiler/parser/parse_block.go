@@ -6,9 +6,8 @@ import . "luago/compiler/lexer"
 // block ::= {stat} [retstat]
 func parseBlock(lexer *Lexer) *Block {
 	stats := parseStats(lexer)
-	retStat := parseRetStat(lexer)
-	lastLine := lexer.Line()
-	return &Block{lastLine, stats, retStat}
+	retExps := parseRetExps(lexer)
+	return &Block{lexer.Line(), stats, retExps}
 }
 
 func parseStats(lexer *Lexer) []Stat {
@@ -34,25 +33,24 @@ func isReturnOrBlockEnd(tokenKind int) bool {
 
 // retstat ::= return [explist] [‘;’]
 // explist ::= exp {‘,’ exp}
-func parseRetStat(lexer *Lexer) *RetStat {
+func parseRetExps(lexer *Lexer) []Exp {
 	if lexer.LookAhead(1) != TOKEN_KW_RETURN {
 		return nil
 	}
 
-	line, _ := lexer.NextTokenOfKind(TOKEN_KW_RETURN)
+	lexer.NextTokenOfKind(TOKEN_KW_RETURN)
 	switch lexer.LookAhead(1) {
 	case TOKEN_KW_END, TOKEN_EOF,
 		TOKEN_KW_ELSE, TOKEN_KW_ELSEIF, TOKEN_KW_UNTIL:
-		return &RetStat{line, line, nil}
+		return make([]Exp, 0)
 	case TOKEN_SEP_SEMI:
 		lexer.NextToken()
-		return &RetStat{line, line, nil}
+		return make([]Exp, 0)
 	default:
 		exps := parseExpList(lexer)
 		if lexer.LookAhead(1) == TOKEN_SEP_SEMI {
 			lexer.NextToken()
 		}
-		lastLine := lexer.Line()
-		return &RetStat{line, lastLine, exps}
+		return exps
 	}
 }

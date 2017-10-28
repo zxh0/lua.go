@@ -94,18 +94,18 @@ type NameExp struct {
 }
 
 type ParensExp struct {
-	Line int // ?
-	Exp  Exp
+	Exp Exp
 }
 
 type BracketsExp struct {
-	Line      int // line of `]` ?
+	LastLine  int // line of `]` ?
 	PrefixExp Exp
 	KeyExp    Exp
 }
 
 type FuncCallExp struct {
 	Line       int // line of `(` ?
+	LastLine   int // line of ')'
 	PrefixExp  Exp
 	MethodName string
 	Args       []Exp
