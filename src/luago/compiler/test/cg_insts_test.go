@@ -83,6 +83,7 @@ gettabup(0,0,-1); loadk(1,-2);
 gettabup(2,0,-3); loadk(3,-4);
 gettabup(4,0,-5); loadk(5,-6);
 call(4,2,0); call(2,0,0); call(0,0,1)`)
+	testInsts(t, "obj:f()", "[2/0] gettabup(0,0,-1); self(0,0,-2); call(0,2,1)")
 }
 
 func TestRepeatStat(t *testing.T) {

@@ -132,6 +132,7 @@ func TestStatFuncCall(t *testing.T) {
 	testStat(t, `print('hello, world!')`)
 	testStat2(t, `fact(n-1)`, `fact((n - 1))`)
 	testStat2(t, `assert((4 and 5) == 5)`, `assert((5 == 5))`)
+	testStat(t, `obj:f()`)
 }
 
 func TestStatAssign(t *testing.T) {

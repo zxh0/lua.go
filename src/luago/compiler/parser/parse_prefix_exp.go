@@ -39,7 +39,7 @@ func parsePrefixExp(lexer *Lexer) Exp {
 			exp = &TableAccessExp{lexer.Line(), exp, idx}
 		case TOKEN_SEP_COLON, // prefixexp ‘:’ Name args
 			TOKEN_SEP_LPAREN, TOKEN_SEP_LCURLY, TOKEN_STRING: // prefixexp args
-			exp = finishFuncCallExp(lexer, exp)
+			exp = _finishFuncCallExp(lexer, exp)
 		default:
 			return exp
 		}
@@ -67,7 +67,7 @@ func parseParensExp(lexer *Lexer) Exp {
 }
 
 // functioncall ::=  prefixexp args | prefixexp ‘:’ Name args
-func finishFuncCallExp(lexer *Lexer, prefixExp Exp) *FuncCallExp {
+func _finishFuncCallExp(lexer *Lexer, prefixExp Exp) *FuncCallExp {
 	fc := &FuncCallExp{PrefixExp: prefixExp}
 
 	if lexer.LookAhead(1) == TOKEN_SEP_COLON {
@@ -76,13 +76,13 @@ func finishFuncCallExp(lexer *Lexer, prefixExp Exp) *FuncCallExp {
 	}
 
 	fc.Line = lexer.Line() // todo
-	fc.Args = parseArgs(lexer)
+	fc.Args = _parseArgs(lexer)
 	fc.LastLine = lexer.Line()
 	return fc
 }
 
 // args ::=  ‘(’ [explist] ‘)’ | tableconstructor | LiteralString
-func parseArgs(lexer *Lexer) []Exp {
+func _parseArgs(lexer *Lexer) []Exp {
 	var args []Exp = nil
 
 	switch lexer.LookAhead(1) {

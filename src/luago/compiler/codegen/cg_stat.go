@@ -261,11 +261,11 @@ func (self *codeGen) cgAssignStat(node *AssignStat) {
 	oldRegs := self.usedRegs()
 
 	for i, exp := range node.VarList {
-		if bexp, ok := exp.(*TableAccessExp); ok {
+		if taExp, ok := exp.(*TableAccessExp); ok {
 			ts[i] = self.allocReg()
-			self.cgExp(bexp.PrefixExp, ts[i], 1)
+			self.cgExp(taExp.PrefixExp, ts[i], 1)
 			ks[i] = self.allocReg()
-			self.cgExp(bexp.KeyExp, ks[i], 1)
+			self.cgExp(taExp.KeyExp, ks[i], 1)
 		}
 	}
 	for i := 0; i < nVars; i++ {
