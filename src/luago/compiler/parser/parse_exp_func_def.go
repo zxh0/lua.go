@@ -16,7 +16,7 @@ func parseFuncDefExp(lexer *Lexer) *FuncDefExp {
 	lexer.NextTokenOfKind(TOKEN_KW_END)
 	lastLine := lexer.Line()
 
-	return &FuncDefExp{line, lastLine, names, isVararg, true, block}
+	return &FuncDefExp{line, lastLine, names, isVararg, block}
 }
 
 // parlist ::= namelist [‘,’ ‘...’] | ‘...’

@@ -43,7 +43,7 @@ func parseVar(lexer *Lexer) Exp {
 
 	exp := parsePrefixExp(lexer)
 	switch exp.(type) {
-	case *NameExp, *BracketsExp:
+	case *NameExp, *TableAccessExp:
 		return exp
 	default:
 		lexer.Restore(backup)

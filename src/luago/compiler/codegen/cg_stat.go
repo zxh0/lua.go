@@ -20,10 +20,12 @@ func (self *codeGen) cgStat(node Stat) {
 		self.cgForNumStat(stat)
 	case *ForInStat:
 		self.cgForInStat(stat)
-	case *LocalAssignStat:
-		self.cgLocalAssignStat(stat)
 	case *AssignStat:
 		self.cgAssignStat(stat)
+	case *LocalAssignStat:
+		self.cgLocalAssignStat(stat)
+	case *LocalFuncDefStat:
+		self.cgLocalFuncDefStat(stat)
 	case *LabelStat, *GotoStat:
 		panic("label and goto statements are not supported!")
 	}
@@ -197,17 +199,12 @@ func (self *codeGen) cgForInStat(node *ForInStat) {
 	self.fixEndPc(forControlVar, 2)
 }
 
-func (self *codeGen) cgLocalAssignStat(node *LocalAssignStat) {
-	if len(node.ExpList) == 1 {
-		exp := node.ExpList[0]
-		if fd, ok := exp.(*FuncDefExp); ok && !fd.IsAno {
-			name := node.NameList[0]
-			slot := self.addLocVar(name, self.pc()+2)
-			self.cgExp(exp, slot, 1)
-			return
-		}
-	}
+func (self *codeGen) cgLocalFuncDefStat(node *LocalFuncDefStat) {
+	r := self.addLocVar(node.Name, self.pc()+2)
+	self.cgFuncDefExp(node.Exp, r)
+}
 
+func (self *codeGen) cgLocalAssignStat(node *LocalAssignStat) {
 	exps := removeTailNils(node.ExpList)
 	nExps := len(exps)
 	nNames := len(node.NameList)
@@ -264,7 +261,7 @@ func (self *codeGen) cgAssignStat(node *AssignStat) {
 	oldRegs := self.usedRegs()
 
 	for i, exp := range node.VarList {
-		if bexp, ok := exp.(*BracketsExp); ok {
+		if bexp, ok := exp.(*TableAccessExp); ok {
 			ts[i] = self.allocReg()
 			self.cgExp(bexp.PrefixExp, ts[i], 1)
 			ks[i] = self.allocReg()

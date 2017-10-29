@@ -31,12 +31,12 @@ func parsePrefixExp(lexer *Lexer) Exp {
 			lexer.NextToken() // TOKEN_SEP_LBRACK
 			idx := parseExp(lexer)
 			lexer.NextTokenOfKind(TOKEN_SEP_RBRACK)
-			exp = &BracketsExp{lexer.Line(), exp, idx}
+			exp = &TableAccessExp{lexer.Line(), exp, idx}
 		case TOKEN_SEP_DOT: // prefixexp ‘.’ Name
 			lexer.NextToken() // TOKEN_SEP_DOT
 			line, name := lexer.NextIdentifier()
 			idx := &StringExp{line, name}
-			exp = &BracketsExp{lexer.Line(), exp, idx}
+			exp = &TableAccessExp{lexer.Line(), exp, idx}
 		case TOKEN_SEP_COLON, // prefixexp ‘:’ Name args
 			TOKEN_SEP_LPAREN, TOKEN_SEP_LCURLY, TOKEN_STRING: // prefixexp args
 			exp = finishFuncCallExp(lexer, exp)

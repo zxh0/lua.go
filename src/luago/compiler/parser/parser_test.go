@@ -153,7 +153,7 @@ func TestFuncDef(t *testing.T) {
 	testBlock2(t, `function f(...) end`, `f = function(...) end`)
 	testBlock2(t, `function t.a.b.c.f() end`, `t['a']['b']['c']['f'] = function() end`)
 	testBlock2(t, `function t.a.b.c:f() end`, `t['a']['b']['c']['f'] = function(self) end`)
-	// testBlock2(t, `local function f() end`, `local f = function() end`) // todo
+	testBlock2(t, `local function f(a) end`, `local function f(a) end`)
 }
 
 func testExp(t *testing.T, str string) {

@@ -19,17 +19,15 @@ not to `local f = function () body end`
 */
 
 // local function Name funcbody
-func parseLocalFuncDefStat(lexer *Lexer) *LocalAssignStat {
+func parseLocalFuncDefStat(lexer *Lexer) *LocalFuncDefStat {
 	/* keyword local is passed */
 	lexer.NextTokenOfKind(TOKEN_KW_FUNCTION)
 	_, name := lexer.NextIdentifier()
-	funcDef := parseFuncDefExp(lexer)
-	funcDef.IsAno = false
+	fdExp := parseFuncDefExp(lexer)
 
-	return &LocalAssignStat{
-		LastLine: funcDef.Line,
-		NameList: []string{name},
-		ExpList:  []Exp{funcDef},
+	return &LocalFuncDefStat{
+		Name: name,
+		Exp:  fdExp,
 	}
 }
 
@@ -67,13 +65,13 @@ func parseFuncName(lexer *Lexer) (Exp, bool) {
 		lexer.NextToken()
 		line, name := lexer.NextIdentifier()
 		idx := &StringExp{line, name}
-		exp = &BracketsExp{line, exp, idx}
+		exp = &TableAccessExp{line, exp, idx}
 	}
 	if lexer.LookAhead(1) == TOKEN_SEP_COLON {
 		lexer.NextToken()
 		line, name := lexer.NextIdentifier()
 		idx := &StringExp{line, name}
-		exp = &BracketsExp{line, exp, idx}
+		exp = &TableAccessExp{line, exp, idx}
 		hasColon = true
 	}
 

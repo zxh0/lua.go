@@ -70,6 +70,10 @@ loadk(3,-3);
 setlist(0,3,1)`)
 }
 
+func TestLocalFuncDefStat(t *testing.T) {
+	testInsts(t, "local function f() g() end; local a", "[2/2] closure(0,0); loadnil(1,0,_)")
+}
+
 func TestFuncCallStat(t *testing.T) {
 	testInsts(t, "f()", "[2/0] gettabup(0,0,-1); call(0,1,1)")
 	testInsts(t, "f(1,2)", "[3/0] gettabup(0,0,-1); loadk(1,-2); loadk(2,-3); call(0,3,1)")

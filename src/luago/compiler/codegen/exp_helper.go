@@ -51,7 +51,7 @@ func lineOfExp(exp Exp) int {
 		return x.Line
 	case *UnopExp:
 		return x.Line
-	case *BracketsExp:
+	case *TableAccessExp:
 		return lineOfExp(x.PrefixExp)
 	case *ConcatExp:
 		return lineOfExp(x.Exps[0])
@@ -87,7 +87,7 @@ func lastLineOfExp(exp Exp) int {
 		return x.LastLine
 	case *TableConstructorExp:
 		return x.LastLine
-	case *BracketsExp:
+	case *TableAccessExp:
 		return x.LastLine
 	case *ConcatExp:
 		return lastLineOfExp(x.Exps[len(x.Exps)-1])

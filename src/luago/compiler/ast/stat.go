@@ -19,16 +19,12 @@ stat ::=  ‘;’ |
 */
 type Stat interface{}
 
-type EmptyStat struct{}        // ‘;’
-type LabelStat string          // ‘::’ Name ‘::’
-type GotoStat string           // goto Name
-type DoStat *Block             // do block end
-type FuncCallStat *FuncCallExp // functioncall
-
-// break
-type BreakStat struct{
-	Line int
-}
+type EmptyStat struct{}              // ‘;’
+type LabelStat struct{ Name string } // ‘::’ Name ‘::’
+type GotoStat struct{ Name string }  // goto Name
+type BreakStat struct{ Line int }    // break
+type DoStat *Block                   // do block end
+type FuncCallStat *FuncCallExp       // functioncall
 
 // if exp then block {elseif exp then block} [else block] end
 type IfStat struct {
@@ -85,4 +81,10 @@ type LocalAssignStat struct {
 	LastLine int
 	NameList []string
 	ExpList  []Exp
+}
+
+// local function Name funcbody
+type LocalFuncDefStat struct {
+	Name string
+	Exp  *FuncDefExp
 }

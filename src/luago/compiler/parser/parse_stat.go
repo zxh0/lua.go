@@ -54,18 +54,18 @@ func parseStat(lexer *Lexer) Stat {
 }
 
 // label
-func parseLabelStat(lexer *Lexer) LabelStat {
+func parseLabelStat(lexer *Lexer) *LabelStat {
 	lexer.NextTokenOfKind(TOKEN_SEP_LABEL)
 	_, name := lexer.NextIdentifier()
 	lexer.NextTokenOfKind(TOKEN_SEP_LABEL)
-	return LabelStat(name)
+	return &LabelStat{name}
 }
 
 // goto Name
-func parseGotoStat(lexer *Lexer) GotoStat {
+func parseGotoStat(lexer *Lexer) *GotoStat {
 	lexer.NextTokenOfKind(TOKEN_KW_GOTO)
 	_, name := lexer.NextIdentifier()
-	return GotoStat(name)
+	return &GotoStat{name}
 }
 
 // do block end

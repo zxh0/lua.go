@@ -41,8 +41,8 @@ func (self *codeGen) cgExp(node Exp, a, n int) {
 		self.cgFuncDefExp(exp, a)
 	case *FuncCallExp:
 		self.cgFuncCallExp(exp, a, n)
-	case *BracketsExp:
-		self.cgBracketsExp(exp, a)
+	case *TableAccessExp:
+		self.cgTableAccessExp(exp, a)
 	case *ConcatExp:
 		self.cgConcatExp(exp, a)
 	case *UnopExp:
@@ -158,17 +158,17 @@ func (self *codeGen) cgNameExp(node *NameExp, a int) {
 	} else if idx := self.indexOfUpval(node.Name); idx >= 0 {
 		self.emitGetUpval(node.Line, a, idx)
 	} else { // x => _ENV['x']
-		bracketsExp := &BracketsExp{
+		taExp := &TableAccessExp{
 			LastLine:  node.Line,
 			PrefixExp: &NameExp{node.Line, "_ENV"},
 			KeyExp:    &StringExp{node.Line, node.Name},
 		}
-		self.cgBracketsExp(bracketsExp, a)
+		self.cgTableAccessExp(taExp, a)
 	}
 }
 
 // r[a] := prefix[key]
-func (self *codeGen) cgBracketsExp(node *BracketsExp, a int) {
+func (self *codeGen) cgTableAccessExp(node *TableAccessExp, a int) {
 	oldRegs := self.usedRegs()
 	b, kindB := self.expToOpArg(node.PrefixExp, ARG_RU)
 	c, _ := self.expToOpArg(node.KeyExp, ARG_RK)

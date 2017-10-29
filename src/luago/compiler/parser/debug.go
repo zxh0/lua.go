@@ -29,10 +29,10 @@ func statToString(stat Stat) string {
 		return ";"
 	case *BreakStat:
 		return "break"
-	case LabelStat:
-		return "::" + string(x) + "::"
-	case GotoStat:
-		return "goto " + string(x)
+	case *LabelStat:
+		return "::" + x.Name + "::"
+	case *GotoStat:
+		return "goto " + x.Name
 	case DoStat:
 		return "do " + blockToString(x) + " end"
 	case FuncCallStat:
@@ -53,6 +53,8 @@ func statToString(stat Stat) string {
 		return assignStatToString(x)
 	case *LocalAssignStat:
 		return localAssignStatToString(x)
+	case *LocalFuncDefStat:
+		return "local " + funcDefExpToString(x.Exp, x.Name)
 	}
 	panic("todo!")
 }
@@ -142,12 +144,12 @@ func expToString(exp Exp) string {
 	case *TableConstructorExp:
 		return tcExpToString(x)
 	case *FuncDefExp:
-		return funcDefExpToString(x)
+		return funcDefExpToString(x, "")
 	case *NameExp:
 		return x.Name
 	case *ParensExp:
 		return "(" + expToString(x.Exp) + ")"
-	case *BracketsExp:
+	case *TableAccessExp:
 		return expToString(x.PrefixExp) + "[" + expToString(x.KeyExp) + "]"
 	case *FuncCallExp:
 		return funcCallToString(x)
@@ -184,8 +186,12 @@ func tcExpToString(tc *TableConstructorExp) string {
 	return str
 }
 
-func funcDefExpToString(fd *FuncDefExp) string {
-	str := "function("
+func funcDefExpToString(fd *FuncDefExp, name string) string {
+	str := "function"
+	if name != "" {
+		str += " " + name
+	}
+	str += "("
 	for i, name := range fd.ParList {
 		str += name
 		if i < len(fd.ParList)-1 {

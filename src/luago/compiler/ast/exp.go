@@ -34,19 +34,19 @@ type StringExp struct {
 	Str  string
 }
 
+// unop exp
+type UnopExp struct {
+	Line int // line of operator
+	Op   int // operator
+	Exp  Exp
+}
+
 // exp1 op exp2
 type BinopExp struct {
 	Line int // line of operator
 	Op   int // operator
 	Exp1 Exp
 	Exp2 Exp
-}
-
-// unop exp
-type UnopExp struct {
-	Line int // line of operator
-	Op   int
-	Exp  Exp
 }
 
 type ConcatExp struct {
@@ -75,7 +75,6 @@ type FuncDefExp struct {
 	LastLine int // line of `end`
 	ParList  []string
 	IsVararg bool
-	IsAno    bool // anonymous?
 	Block    *Block
 }
 
@@ -97,7 +96,7 @@ type ParensExp struct {
 	Exp Exp
 }
 
-type BracketsExp struct {
+type TableAccessExp struct {
 	LastLine  int // line of `]` ?
 	PrefixExp Exp
 	KeyExp    Exp
