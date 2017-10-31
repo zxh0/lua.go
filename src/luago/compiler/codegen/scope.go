@@ -25,7 +25,6 @@ type breakInfo struct {
 type scope struct {
 	parent    *scope
 	level     int
-	nLocals   int
 	locVars   []*locVarInfo
 	locNames  map[string]*locVarInfo
 	upvalues  map[string]upvalInfo
@@ -54,11 +53,9 @@ func (self *scope) incrLevel() {
 }
 
 func (self *scope) decrLevel(endPc int) []int {
-	self.stackSize = 0
 	self.level--
 	for _, locVar := range self.locNames {
 		if locVar.level > self.level { // out of scope
-			self.nLocals--
 			locVar.endPc = endPc
 			self.removeLocVar(locVar)
 		}
@@ -74,16 +71,27 @@ func (self *scope) decrLevel(endPc int) []int {
 }
 
 func (self *scope) removeLocVar(locVar *locVarInfo) {
-	for locVar.prev != nil {
+	self.freeReg()
+	if locVar.prev != nil {
 		if locVar.prev.level == locVar.level {
-			locVar.prev.endPc = locVar.endPc
-			locVar = locVar.prev
+			self.removeLocVar(locVar.prev)
 		} else {
 			self.locNames[locVar.name] = locVar.prev
-			return
 		}
+	} else {
+		delete(self.locNames, locVar.name)
 	}
-	delete(self.locNames, locVar.name)
+	// for locVar.prev != nil {
+	// 	if locVar.prev.level == locVar.level {
+	// 		locVar.prev.endPc = locVar.endPc
+	// 		locVar = locVar.prev
+	// 		self.freeReg()
+	// 	} else {
+	// 		self.locNames[locVar.name] = locVar.prev
+	// 		return
+	// 	}
+	// }
+	// delete(self.locNames, locVar.name)
 }
 
 func (self *scope) addLocVar(name string, startPc int) int {
@@ -91,11 +99,10 @@ func (self *scope) addLocVar(name string, startPc int) int {
 		prev:    self.locNames[name],
 		name:    name,
 		level:   self.level,
-		slot:    self.nLocals,
+		slot:    self.allocReg(),
 		startPc: startPc,
 		endPc:   0,
 	}
-	self.nLocals++
 
 	self.locVars = append(self.locVars, newVar)
 	self.locNames[name] = newVar
@@ -135,9 +142,6 @@ func (self *scope) freeRegs(n int) {
 }
 
 func (self *scope) allocReg() int {
-	if self.stackSize < self.nLocals {
-		self.stackSize = self.nLocals
-	}
 	self.stackSize++
 	if self.stackSize > self.stackMax {
 		self.stackMax = self.stackSize
@@ -146,9 +150,7 @@ func (self *scope) allocReg() int {
 }
 
 func (self *scope) freeReg() {
-	if self.stackSize > self.nLocals {
-		self.stackSize--
-	}
+	self.stackSize--
 }
 
 /* upvalues */
@@ -230,17 +232,7 @@ func (self *scope) addBreakJmp(pc int) {
 /* summarize */
 
 func (self *scope) getMaxStack() int {
-	maxLocals := 0
-	for _, locVar := range self.locVars {
-		if locVar.slot+1 > maxLocals {
-			maxLocals = locVar.slot + 1
-		}
-	}
-	if self.stackMax > maxLocals {
-		return self.stackMax
-	} else {
-		return maxLocals
-	}
+	return self.stackMax
 }
 
 func (self *scope) getLocVars() []binchunk.LocVar {

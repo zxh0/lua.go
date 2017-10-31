@@ -53,7 +53,7 @@ func (self *codeGen) cgRetStat(exps []Exp, lastLine int) {
 	}
 	self.freeRegs(nExps)
 
-	a := self.scope.nLocals // correct?
+	a := self.usedRegs() // correct?
 	if multRet {
 		self.emitReturn(lastLine, a, -1)
 	} else {

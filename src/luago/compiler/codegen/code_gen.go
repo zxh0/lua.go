@@ -72,11 +72,7 @@ func (self *codeGen) fixEndPc(name string, delta int) {
 
 // todo
 func (self *codeGen) usedRegs() int {
-	if self.scope.stackSize > self.scope.nLocals {
-		return self.scope.stackSize
-	} else {
-		return self.scope.nLocals
-	}
+	return self.scope.stackSize
 }
 func (self *codeGen) allocRegs(n int) int {
 	return self.scope.allocRegs(n)

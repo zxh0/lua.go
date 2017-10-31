@@ -123,7 +123,7 @@ func parseExp5(lexer *Lexer) Exp {
 	}
 
 	if len(exps) > 1 {
-		return &ConcatExp{line, exps}	
+		return &ConcatExp{line, exps}
 	} else {
 		return exps[0]
 	}
@@ -212,7 +212,7 @@ func parseExp0(lexer *Lexer) Exp {
 	}
 }
 
-func parseNumberExp(lexer *Lexer,) Exp {
+func parseNumberExp(lexer *Lexer) Exp {
 	line, _, token := lexer.NextToken()
 	if i, ok := number.ParseInteger(token, 10); ok {
 		return &IntegerExp{line, i}

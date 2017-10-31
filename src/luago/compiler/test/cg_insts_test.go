@@ -6,6 +6,14 @@ import "testing"
 import "assert"
 import "luago/compiler"
 
+func TestLocVar(t *testing.T) {
+	testInsts(t, "local a=1; local a=1", "[2/2] loadk(0,-1); loadk(1,-1)")
+	testInsts(t, "do local a=1 end; do local a=1 end; local a=1", "[2/3] loadk(0,-1); loadk(0,-1); loadk(0,-1)")
+	testInsts(t, "local a=1; do end; local a=1", "[2/2] loadk(0,-1); loadk(1,-1)")
+	testInsts(t, "if x then local a else local a end",
+		"[2/2] gettabup(0,0,-1); test(0,_,0); jmp(0,2); loadnil(0,0,_); jmp(0,4); loadbool(0,1,0); test(0,_,0); jmp(0,1); loadnil(0,0,_)")
+}
+
 func TestReturn(t *testing.T) {
 	testInsts(t, "return", "[2/0] return(0,1,_)")
 	testInsts(t, "local a,b,c; return a", "[3/3] loadnil(0,2,_); return(0,2,_)")

@@ -209,6 +209,7 @@ func (self *codeGen) cgLocalAssignStat(node *LocalAssignStat) {
 	nExps := len(exps)
 	nNames := len(node.NameList)
 
+	oldRegs := self.usedRegs()
 	if nExps == nNames {
 		for _, exp := range exps {
 			a := self.allocReg()
@@ -223,7 +224,7 @@ func (self *codeGen) cgLocalAssignStat(node *LocalAssignStat) {
 				self.cgExp(exp, a, 1)
 			}
 		}
-		self.freeRegs(nExps - nNames)
+		//self.freeRegs(nExps - nNames)
 	} else { // nNames > nExps
 		multRet := false
 		for i, exp := range exps {
@@ -244,6 +245,7 @@ func (self *codeGen) cgLocalAssignStat(node *LocalAssignStat) {
 		}
 	}
 
+	self.freeRegs(self.usedRegs() - oldRegs)
 	startPc := self.pc() + 1
 	for _, name := range node.NameList {
 		self.addLocVar(name, startPc)

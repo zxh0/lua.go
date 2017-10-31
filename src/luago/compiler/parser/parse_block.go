@@ -5,14 +5,16 @@ import . "luago/compiler/lexer"
 
 // block ::= {stat} [retstat]
 func parseBlock(lexer *Lexer) *Block {
-	stats := parseStats(lexer)
-	retExps := parseRetExps(lexer)
-	return &Block{lexer.Line(), stats, retExps}
+	return &Block{
+		Stats:    parseStats(lexer),
+		RetExps:  parseRetExps(lexer),
+		LastLine: lexer.Line(),
+	}
 }
 
 func parseStats(lexer *Lexer) []Stat {
 	stats := make([]Stat, 0, 8)
-	for !isReturnOrBlockEnd(lexer.LookAhead(1)) {
+	for !_isReturnOrBlockEnd(lexer.LookAhead(1)) {
 		stat := parseStat(lexer)
 		if _, ok := stat.(*EmptyStat); !ok {
 			stats = append(stats, stat)
@@ -21,7 +23,7 @@ func parseStats(lexer *Lexer) []Stat {
 	return stats
 }
 
-func isReturnOrBlockEnd(tokenKind int) bool {
+func _isReturnOrBlockEnd(tokenKind int) bool {
 	switch tokenKind {
 	case TOKEN_KW_RETURN, TOKEN_KW_END, TOKEN_EOF,
 		TOKEN_KW_ELSE, TOKEN_KW_ELSEIF, TOKEN_KW_UNTIL:
