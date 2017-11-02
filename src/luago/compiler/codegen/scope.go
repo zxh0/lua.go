@@ -24,7 +24,7 @@ type breakInfo struct {
 
 type scope struct {
 	parent    *scope
-	level     int
+	level     int // blockLevel
 	locVars   []*locVarInfo
 	locNames  map[string]*locVarInfo
 	upvalues  map[string]upvalInfo
@@ -195,13 +195,12 @@ func (self *scope) indexOfUpval(name string) int {
 
 func (self *scope) indexOfConstant(k interface{}) int {
 	if idx, found := self.constants[k]; found {
-		// todo: idx > 0xFF ?
-		return idx + 0x100
+		return idx
 	}
 
 	idx := len(self.constants)
 	self.constants[k] = idx
-	return idx + 0x100
+	return idx
 }
 
 /* break support */
@@ -221,7 +220,7 @@ func (self *scope) addBreakJmp(pc int) {
 			break
 		}
 	}
-	
+
 	if breakInfo == nil {
 		panic("<break> at line ? not inside a loop!")
 	} else {

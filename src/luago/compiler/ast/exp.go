@@ -106,6 +106,6 @@ type FuncCallExp struct {
 	Line       int // line of `(` ?
 	LastLine   int // line of ')'
 	PrefixExp  Exp
-	MethodName string
+	NameExp    *StringExp
 	Args       []Exp
 }

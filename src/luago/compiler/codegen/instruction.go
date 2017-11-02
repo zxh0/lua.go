@@ -34,13 +34,6 @@ func (self insts) encode() []uint32 {
 }
 
 func encodeInst(i instruction) uint32 {
-	if i.opcode == OP_LOADK {
-		i.b -= 0x100
-		if i.b >= 0x100 {
-			panic("todo!") // OP_LOADKX
-		}
-	}
-
 	opmode := Instruction(i.opcode).OpMode() // todo
 	switch opmode {
 	case IABC:

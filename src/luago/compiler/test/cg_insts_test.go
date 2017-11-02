@@ -25,33 +25,33 @@ func TestReturn(t *testing.T) {
 func TestConcat(t *testing.T) {
 	testInsts(t, "x = a .. b .. c; local d",
 `[4/1]
-gettabup(1,0,-1);
-gettabup(2,0,-2);
-gettabup(3,0,-3);
+gettabup(1,0,-2);
+gettabup(2,0,-3);
+gettabup(3,0,-4);
 concat(0,1,3);
-settabup(0,-4,0);
+settabup(0,-1,0);
 loadnil(0,0,_)`)
 }
 
 func TestOP(t *testing.T) {
 	testInsts(t, "local a,b; c=-b", "[3/2] loadnil(0,1,_); unm(2,1,_); settabup(0,-1,2)")
 	testInsts(t, "local a,b; c=a+b", "[3/2] loadnil(0,1,_); add(2,0,1); settabup(0,-1,2)")
-	testInsts(t, "local a,b; c=a+1", "[3/2] loadnil(0,1,_); add(2,0,-1); settabup(0,-2,2)")
-	testInsts(t, "x=a+b", "[3/0] gettabup(1,0,-1); gettabup(2,0,-2); add(0,1,2); settabup(0,-3,0)")
-	testInsts(t, "x=a+b+c", "[4/0] gettabup(2,0,-1); gettabup(3,0,-2); add(1,2,3); gettabup(2,0,-3); add(0,1,2); settabup(0,-4,0)")
+	testInsts(t, "local a,b; c=a+1", "[3/2] loadnil(0,1,_); add(2,0,-2); settabup(0,-1,2)")
+	testInsts(t, "x=a+b", "[3/0] gettabup(1,0,-2); gettabup(2,0,-3); add(0,1,2); settabup(0,-1,0)")
+	testInsts(t, "x=a+b+c", "[4/0] gettabup(2,0,-2); gettabup(3,0,-3); add(1,2,3); gettabup(2,0,-4); add(0,1,2); settabup(0,-1,0)")
 	testInsts(t, "local a,b; c = a and b", "[3/2] loadnil(0,1,_); testset(2,0,0); jmp(0,1); move(2,1,_); settabup(0,-1,2)")
 	testInsts(t, "x = a and b and c",
 `[3/0]
-gettabup(2,0,-1); testset(1,2,0); jmp(0,2);
-gettabup(2,0,-2); move(1,2,_); testset(0,1,0); jmp(0,2);
-gettabup(1,0,-3); move(0,1,_);
-settabup(0,-4,0)`)
+gettabup(2,0,-2); testset(1,2,0); jmp(0,2);
+gettabup(2,0,-3); move(1,2,_); testset(0,1,0); jmp(0,2);
+gettabup(1,0,-4); move(0,1,_);
+settabup(0,-1,0)`)
 	testInsts(t, "x = a or b or c",
 `[3/0]
-gettabup(2,0,-1); testset(1,2,1); jmp(0,2);
-gettabup(2,0,-2); move(1,2,_); testset(0,1,1); jmp(0,2);
-gettabup(1,0,-3); move(0,1,_);
-settabup(0,-4,0)`)
+gettabup(2,0,-2); testset(1,2,1); jmp(0,2);
+gettabup(2,0,-3); move(1,2,_); testset(0,1,1); jmp(0,2);
+gettabup(1,0,-4); move(0,1,_);
+settabup(0,-1,0)`)
 }
 
 func TestTcExp(t *testing.T) {
@@ -161,6 +161,8 @@ func TestLocalAssignStat(t *testing.T) {
 	testInsts(t, "local a=1,nil", "[2/1] loadk(0,-1)")
 	testInsts(t, "local a=1,f()", "[2/1] loadk(0,-1); gettabup(1,0,-2); call(1,1,1)")
 	testInsts(t, "local a,b,c", "[3/3] loadnil(0,2,_)")
+	testInsts(t, "local a=t[100]", "[2/1] gettabup(1,0,-1); gettable(0,1,-2)")
+	testInsts(t, "t={}; local a=t[100]", "[2/1] newtable(0,0,0); settabup(0,-1,0); gettabup(1,0,-1); gettable(0,1,-2)")
 }
 
 func TestAssignStat(t *testing.T) {
@@ -171,7 +173,7 @@ func TestAssignStat(t *testing.T) {
 	testInsts(t, "local a; a=f(),1", "[3/1] loadnil(0,0,_); gettabup(1,0,-1); call(1,1,2); loadk(2,-2); move(0,1,_)")
 	testInsts(t, "local a; a[1]=2", "[4/1] loadnil(0,0,_); move(1,0,_); loadk(2,-1); loadk(3,-2); settable(1,2,3)")
 	testInsts(t, "a=nil", "[2/0] loadnil(0,0,_); settabup(0,-1,0)")
-	testInsts(t, "a=1", "[2/0] loadk(0,-1); settabup(0,-2,0)")
+	testInsts(t, "a=1", "[2/0] loadk(0,-2); settabup(0,-1,0)")
 	//testInsts(t, "local a; a=a+1", "")
 }
 

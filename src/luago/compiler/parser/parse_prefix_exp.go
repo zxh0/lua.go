@@ -69,16 +69,20 @@ func parseParensExp(lexer *Lexer) Exp {
 // functioncall ::=  prefixexp args | prefixexp ‘:’ Name args
 func _finishFuncCallExp(lexer *Lexer, prefixExp Exp) *FuncCallExp {
 	fc := &FuncCallExp{PrefixExp: prefixExp}
-
-	if lexer.LookAhead(1) == TOKEN_SEP_COLON {
-		lexer.NextToken()
-		_, fc.MethodName = lexer.NextIdentifier()
-	}
-
+	fc.NameExp = _parseNameExp(lexer)
 	fc.Line = lexer.Line() // todo
 	fc.Args = _parseArgs(lexer)
 	fc.LastLine = lexer.Line()
 	return fc
+}
+
+func _parseNameExp(lexer *Lexer) *StringExp {
+	if lexer.LookAhead(1) == TOKEN_SEP_COLON {
+		lexer.NextToken()
+		line, name := lexer.NextIdentifier()
+		return &StringExp{line, name}
+	}
+	return nil
 }
 
 // args ::=  ‘(’ [explist] ‘)’ | tableconstructor | LiteralString

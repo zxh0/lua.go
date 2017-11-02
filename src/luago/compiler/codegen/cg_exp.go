@@ -6,12 +6,12 @@ import . "luago/vm"
 
 // kind of operands
 const (
-	ARG_CONST  = 1 // const index
-	ARG_REG    = 2 // register index
-	ARG_UPVAL  = 4 // upvalue index
-	ARG_RK     = ARG_REG | ARG_CONST
-	ARG_RU     = ARG_REG | ARG_UPVAL
-	ARG_RUK    = ARG_REG | ARG_UPVAL | ARG_CONST
+	ARG_CONST = 1 // const index
+	ARG_REG   = 2 // register index
+	ARG_UPVAL = 4 // upvalue index
+	ARG_RK    = ARG_REG | ARG_CONST
+	ARG_RU    = ARG_REG | ARG_UPVAL
+	ARG_RUK   = ARG_REG | ARG_UPVAL | ARG_CONST
 )
 
 // todo: rename to evalExp()?
@@ -58,7 +58,7 @@ func (self *codeGen) cgTableConstructorExp(node *TableConstructorExp, a int) {
 	multRet := nExps > 0 &&
 		isVarargOrFuncCallExp(node.ValExps[nExps-1])
 
-	self.emitNewTable(node.Line, a, nArr, nExps - nArr)
+	self.emitNewTable(node.Line, a, nArr, nExps-nArr)
 
 	for i, keyExp := range node.KeyExps {
 		valExp := node.ValExps[i]
@@ -73,16 +73,16 @@ func (self *codeGen) cgTableConstructorExp(node *TableConstructorExp, a int) {
 				}
 
 				if idx%50 == 0 || idx == nArr { // LFIELDS_PER_FLUSH
-					if idx%50 == 0 {
-						self.freeRegs(50)
-					} else {
-						self.freeRegs(idx%50)
+					n := idx % 50
+					if n == 0 {
+						n = 50
 					}
+					self.freeRegs(n)
 					line := lastLineOfExp(valExp)
 					if i == nExps-1 && multRet {
-						self.emitSetList(line, a, 0, idx/50 + 1)
+						self.emitSetList(line, a, 0, (idx-1)/50+1)
 					} else {
-						self.emitSetList(line, a, idx%50, idx/50 + 1)
+						self.emitSetList(line, a, n, (idx-1)/50+1)
 					}
 				}
 
@@ -124,10 +124,10 @@ func (self *codeGen) prepFuncCall(node *FuncCallExp, a int) int {
 	lastArgIsVarargOrFuncCall := false
 
 	self.cgExp(node.PrefixExp, a, 1)
-	if node.MethodName != "" {
+	if node.NameExp != nil {
 		self.allocReg()
-		idx := self.indexOfConstant(node.MethodName)
-		self.emitSelf(node.Line, a, a, idx)
+		c, _ := self.expToOpArg(node.NameExp, ARG_RK)
+		self.emitSelf(node.Line, a, a, c)
 	}
 	for i, arg := range node.Args {
 		tmp := self.allocReg()
@@ -143,7 +143,7 @@ func (self *codeGen) prepFuncCall(node *FuncCallExp, a int) int {
 	if lastArgIsVarargOrFuncCall {
 		nArgs = -1
 	}
-	if node.MethodName != "" {
+	if node.NameExp != nil {
 		self.freeReg()
 		nArgs++
 	}
@@ -206,7 +206,7 @@ func (self *codeGen) cgBinopExp(node *BinopExp, a int) {
 
 		b, _ = self.expToOpArg(node.Exp2, ARG_REG)
 		self.freeRegs(self.usedRegs() - oldRegs)
-		self.emitMove(node.Line, a, b)		
+		self.emitMove(node.Line, a, b)
 		self.fixSbx(pcOfJmp, self.pc()-pcOfJmp)
 	default:
 		oldRegs := self.usedRegs()
@@ -232,35 +232,39 @@ func (self *codeGen) cgConcatExp(node *ConcatExp, a int) {
 
 func (self *codeGen) expToOpArg(node Exp, argKinds int) (arg, argKind int) {
 	if argKinds&ARG_CONST > 0 {
+		idx := -1
 		switch x := node.(type) {
 		case *NilExp:
-			return self.indexOfConstant(nil), ARG_CONST
+			idx = self.indexOfConstant(nil)
 		case *FalseExp:
-			return self.indexOfConstant(false), ARG_CONST
+			idx = self.indexOfConstant(false)
 		case *TrueExp:
-			return self.indexOfConstant(true), ARG_CONST
+			idx = self.indexOfConstant(true)
 		case *IntegerExp:
-			return self.indexOfConstant(x.Val), ARG_CONST
+			idx = self.indexOfConstant(x.Val)
 		case *FloatExp:
-			return self.indexOfConstant(x.Val), ARG_CONST
+			idx = self.indexOfConstant(x.Val)
 		case *StringExp:
-			return self.indexOfConstant(x.Str), ARG_CONST
+			idx = self.indexOfConstant(x.Str)
+		}
+		if idx >= 0 && idx <= 0xFF {
+			return 0x100 + idx, ARG_CONST
 		}
 	}
-	if argKinds&ARG_REG > 0 {
-		if nameExp, ok := node.(*NameExp); ok {
+
+	if nameExp, ok := node.(*NameExp); ok {
+		if argKinds&ARG_REG > 0 {
 			if r := self.indexOfLocVar(nameExp.Name); r >= 0 {
 				return r, ARG_REG
 			}
 		}
-	}
-	if argKinds&ARG_UPVAL > 0 {
-		if nameExp, ok := node.(*NameExp); ok {
+		if argKinds&ARG_UPVAL > 0 {
 			if idx := self.indexOfUpval(nameExp.Name); idx >= 0 {
 				return idx, ARG_UPVAL
 			}
 		}
 	}
+
 	a := self.allocReg()
 	self.cgExp(node, a, 1)
 	return a, ARG_REG

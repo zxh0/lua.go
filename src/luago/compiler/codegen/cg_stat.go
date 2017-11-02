@@ -130,7 +130,7 @@ func (self *codeGen) cgIfStat(node *IfStat) {
 	}
 
 	for _, pc := range pcJmpToEnds {
-		self.fixSbx(pc, self.pc() - pc)
+		self.fixSbx(pc, self.pc()-pc)
 	}
 }
 
@@ -233,7 +233,7 @@ func (self *codeGen) cgLocalAssignStat(node *LocalAssignStat) {
 				multRet = true
 				n := nNames - nExps + 1
 				self.cgExp(exp, a, n)
-				self.allocRegs(n-1)
+				self.allocRegs(n - 1)
 			} else {
 				self.cgExp(exp, a, 1)
 			}
@@ -268,6 +268,16 @@ func (self *codeGen) cgAssignStat(node *AssignStat) {
 			self.cgExp(taExp.PrefixExp, ts[i], 1)
 			ks[i] = self.allocReg()
 			self.cgExp(taExp.KeyExp, ks[i], 1)
+		} else {
+			nameExp := exp.(*NameExp)
+			if self.indexOfLocVar(nameExp.Name) < 0 && 
+				self.indexOfUpval(nameExp.Name) < 0 {
+				// global var
+				ks[i] = -1
+				if self.indexOfConstant(nameExp.Name) > 0xFF {
+					ks[i] = self.allocReg()
+				}
+			}
 		}
 	}
 	for i := 0; i < nVars; i++ {
@@ -291,7 +301,7 @@ func (self *codeGen) cgAssignStat(node *AssignStat) {
 				multRet = true
 				n := nVars - nExps + 1
 				self.cgExp(exp, a, n)
-				self.allocRegs(n-1)
+				self.allocRegs(n - 1)
 			} else {
 				self.cgExp(exp, a, 1)
 			}
@@ -311,10 +321,14 @@ func (self *codeGen) cgAssignStat(node *AssignStat) {
 				self.emitMove(lastLine, a, vs[i])
 			} else if a := self.indexOfUpval(varName); a >= 0 {
 				self.emitSetUpval(lastLine, a, vs[i])
-			} else {
-				envIdx := self.indexOfUpval("_ENV")
-				strIdx := self.indexOfConstant(varName)
-				self.emitSetTabUp(lastLine, envIdx, strIdx, vs[i])
+			} else { // global var
+				a := self.indexOfUpval("_ENV")
+				if ks[i] < 0 {
+					b := 0x100 + self.indexOfConstant(varName)
+					self.emitSetTabUp(lastLine, a, b, vs[i])
+				} else {
+					self.emitSetTabUp(lastLine, a, ks[i], vs[i])
+				}
 			}
 		} else {
 			self.emitSetTable(lastLine, ts[i], ks[i], vs[i])

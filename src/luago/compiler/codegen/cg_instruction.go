@@ -32,11 +32,11 @@ func (self *codeGen) emitLoadBool(line, a, b, c int) {
 // r[a] = kst[bx]
 func (self *codeGen) emitLoadK(line, a int, k interface{}) {
 	idx := self.indexOfConstant(k)
-	if idx-0x100 < 0x100 { // todo
+	if idx < (1 << 18) {
 		self.emit(line, OP_LOADK, a, idx, 0)
 	} else {
 		self.emit(line, OP_LOADKX, a, 0, 0)
-		self.emit(line, OP_EXTRAARG, idx-0x100, 0, 0)
+		self.emit(line, OP_EXTRAARG, idx, 0, 0)
 	}
 }
 

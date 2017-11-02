@@ -162,8 +162,8 @@ func expToString(exp Exp) string {
 
 func funcCallToString(fc *FuncCallExp) string {
 	str := expToString(fc.PrefixExp)
-	if fc.MethodName != "" {
-		str = str + ":" + fc.MethodName
+	if fc.NameExp != nil {
+		str = str + ":" + fc.NameExp.Str
 	}
 	str += "("
 	for i, exp := range fc.Args {
