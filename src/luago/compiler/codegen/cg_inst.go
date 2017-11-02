@@ -19,6 +19,43 @@ var arithAndBitwiseBinops = map[int]int{
 	TOKEN_OP_SHR:  OP_SHR,
 }
 
+func (self *codeGen) pc() int {
+	return len(self.insts) - 1
+}
+
+func (self *codeGen) emit(line, opcode, a, b, c int) int {
+	i := _encode(opcode, a, b, c)
+	self.insts = append(self.insts, i)
+	self.lines = append(self.lines, uint32(line))
+	return len(self.insts) - 1
+}
+
+func _encode(opcode, a, b, c int) uint32 {
+	opmode := Instruction(opcode).OpMode() // todo
+	switch opmode {
+	case IABC:
+		return uint32(opcode | a<<6 | c<<14 | b<<23)
+	case IABx:
+		return uint32(opcode | a<<6 | b<<14)
+	case IAsBx:
+		return uint32(opcode | a<<6 | (b+MAXARG_sBx)<<14)
+	default: // IAx
+		return uint32(opcode | a<<6)
+	}
+}
+
+func (self *codeGen) fixSbx(pc, sBx int) {
+	i := self.insts[pc]
+	i = i << 18 >> 18                  // clear sBx
+	i = i | uint32(sBx+MAXARG_sBx)<<14 // reset sBx
+	self.insts[pc] = i
+}
+
+// r[a] = r[b]
+func (self *codeGen) emitMove(line, a, b int) {
+	self.emit(line, OP_MOVE, a, b, 0)
+}
+
 // r[a], r[a+1], ..., r[a+b] = nil
 func (self *codeGen) emitLoadNil(line, a, n int) {
 	self.emit(line, OP_LOADNIL, a, n-1, 0)
@@ -40,6 +77,16 @@ func (self *codeGen) emitLoadK(line, a int, k interface{}) {
 	}
 }
 
+// r[a], r[a+1], ..., r[a+b-2] = vararg
+func (self *codeGen) emitVararg(line, a, n int) {
+	self.emit(line, OP_VARARG, a, n+1, 0)
+}
+
+// r[a] = emitClosure(proto[bx])
+func (self *codeGen) emitClosure(line, a, bx int) {
+	self.emit(line, OP_CLOSURE, a, bx, 0)
+}
+
 // r[a] = {}
 func (self *codeGen) emitNewTable(line, a, nArr, nRec int) {
 	self.emit(line, OP_NEWTABLE, a, number.Int2fb(nArr), number.Int2fb(nRec))
@@ -50,14 +97,14 @@ func (self *codeGen) emitSetList(line, a, b, c int) {
 	self.emit(line, OP_SETLIST, a, b, c)
 }
 
-// r[a] = emitClosure(proto[bx])
-func (self *codeGen) emitClosure(line, a, bx int) {
-	self.emit(line, OP_CLOSURE, a, bx, 0)
+// r[a] := r[b][rk(c)]
+func (self *codeGen) emitGetTable(line, a, b, c int) {
+	self.emit(line, OP_GETTABLE, a, b, c)
 }
 
-// r[a] = r[b]
-func (self *codeGen) emitMove(line, a, b int) {
-	self.emit(line, OP_MOVE, a, b, 0)
+// r[a][rk(b)] = rk(c)
+func (self *codeGen) emitSetTable(line, a, b, c int) {
+	self.emit(line, OP_SETTABLE, a, b, c)
 }
 
 // r[a] = upval[b]
@@ -78,21 +125,6 @@ func (self *codeGen) emitGetTabUp(line, a, b, c int) {
 // upval[a][rk(b)] = rk(c)
 func (self *codeGen) emitSetTabUp(line, a, b, c int) {
 	self.emit(line, OP_SETTABUP, a, b, c)
-}
-
-// r[a] := r[b][rk(c)]
-func (self *codeGen) emitGetTable(line, a, b, c int) {
-	self.emit(line, OP_GETTABLE, a, b, c)
-}
-
-// r[a][rk(b)] = rk(c)
-func (self *codeGen) emitSetTable(line, a, b, c int) {
-	self.emit(line, OP_SETTABLE, a, b, c)
-}
-
-// r[a], r[a+1], ..., r[a+b-2] = vararg
-func (self *codeGen) emitVararg(line, a, n int) {
-	self.emit(line, OP_VARARG, a, n+1, 0)
 }
 
 // r[a], ..., r[a+c-2] = r[a](r[a+1], ..., r[a+b-1])

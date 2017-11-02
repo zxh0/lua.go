@@ -270,7 +270,7 @@ func (self *codeGen) cgAssignStat(node *AssignStat) {
 			self.cgExp(taExp.KeyExp, ks[i], 1)
 		} else {
 			nameExp := exp.(*NameExp)
-			if self.indexOfLocVar(nameExp.Name) < 0 && 
+			if self.indexOfLocVar(nameExp.Name) < 0 &&
 				self.indexOfUpval(nameExp.Name) < 0 {
 				// global var
 				ks[i] = -1

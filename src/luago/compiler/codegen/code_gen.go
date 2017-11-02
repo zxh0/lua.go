@@ -5,32 +5,18 @@ import . "luago/compiler/ast"
 
 type codeGen struct {
 	scope  *scope
-	insts  insts
+	insts  []uint32
+	lines  []uint32
 	protos []*Prototype
 }
 
 func newCodeGen(parentScope *scope) *codeGen {
 	return &codeGen{
 		scope:  newScope(parentScope),
-		insts:  make([]instruction, 0, 8),
+		insts:  make([]uint32, 0, 8),
+		lines:  make([]uint32, 0, 8),
 		protos: []*Prototype{},
 	}
-}
-
-func (self *codeGen) pc() int {
-	return len(self.insts) - 1
-}
-
-func (self *codeGen) emit(line, opcode, a, b, c int) int {
-	i := instruction{line, opcode, a, b, c}
-	self.insts = append(self.insts, i)
-	return len(self.insts) - 1
-}
-
-func (self *codeGen) fixSbx(pc, sbx int) {
-	i := self.insts[pc]
-	i.b = sbx
-	self.insts[pc] = i
 }
 
 func (self *codeGen) enterScope(breakable bool) {
@@ -70,22 +56,23 @@ func (self *codeGen) fixEndPc(name string, delta int) {
 	}
 }
 
-// todo
+// registers
 func (self *codeGen) usedRegs() int {
 	return self.scope.stackSize
-}
-func (self *codeGen) allocRegs(n int) int {
-	return self.scope.allocRegs(n)
 }
 func (self *codeGen) allocReg() int {
 	return self.scope.allocReg()
 }
-func (self *codeGen) freeRegs(n int) {
-	self.scope.freeRegs(n)
-}
 func (self *codeGen) freeReg() {
 	self.scope.freeReg()
 }
+func (self *codeGen) allocRegs(n int) int {
+	return self.scope.allocRegs(n)
+}
+func (self *codeGen) freeRegs(n int) {
+	self.scope.freeRegs(n)
+}
+
 func (self *codeGen) indexOfConstant(k interface{}) int {
 	return self.scope.indexOfConstant(k)
 }
@@ -119,11 +106,11 @@ func (self *codeGen) toProto(fd *FuncDefExp) *Prototype {
 		LastLineDefined: uint32(fd.LastLine),
 		NumParams:       byte(len(fd.ParList)),
 		MaxStackSize:    byte(self.scope.getMaxStack()),
-		Code:            self.insts.encode(),
+		Code:            self.insts,
 		Constants:       self.scope.getConstants(),
 		Upvalues:        self.scope.getUpvalues(),
 		Protos:          self.protos,
-		LineInfo:        self.insts.getLineNumTable(),
+		LineInfo:        self.lines,
 		LocVars:         self.scope.getLocVars(),
 		UpvalueNames:    self.scope.getUpvalueNames(),
 	}

@@ -103,9 +103,9 @@ type TableAccessExp struct {
 }
 
 type FuncCallExp struct {
-	Line       int // line of `(` ?
-	LastLine   int // line of ')'
-	PrefixExp  Exp
-	NameExp    *StringExp
-	Args       []Exp
+	Line      int // line of `(` ?
+	LastLine  int // line of ')'
+	PrefixExp Exp
+	NameExp   *StringExp
+	Args      []Exp
 }

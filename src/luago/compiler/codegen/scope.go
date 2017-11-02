@@ -24,13 +24,13 @@ type breakInfo struct {
 
 type scope struct {
 	parent    *scope
+	stackSize int // usedRegs
+	stackMax  int // maxRegs
 	level     int // blockLevel
 	locVars   []*locVarInfo
 	locNames  map[string]*locVarInfo
 	upvalues  map[string]upvalInfo
 	constants map[interface{}]int
-	stackSize int // usedRegs
-	stackMax  int // maxRegs
 	breaks    []*breakInfo
 }
 
@@ -42,6 +42,46 @@ func newScope(parent *scope) *scope {
 		upvalues:  map[string]upvalInfo{},
 		constants: map[interface{}]int{},
 		breaks:    make([]*breakInfo, 1),
+	}
+}
+
+/* registers */
+
+func (self *scope) allocReg() int {
+	self.stackSize++
+	if self.stackSize > self.stackMax {
+		self.stackMax = self.stackSize
+	}
+	return self.stackSize - 1
+}
+
+func (self *scope) freeReg() {
+	if self.stackSize > 0 {
+		self.stackSize--
+	} else {
+		panic("stackSize == 0 !")
+	}
+}
+
+func (self *scope) allocRegs(n int) int {
+	if n > 0 {
+		slot := self.allocReg()
+		for i := 1; i < n; i++ {
+			self.allocReg()
+		}
+		return slot
+	} else {
+		panic("n <= 0 !")
+	}
+}
+
+func (self *scope) freeRegs(n int) {
+	if n >= 0 {
+		for i := 0; i < n; i++ {
+			self.freeReg()
+		}
+	} else {
+		panic("n < 0 !")
 	}
 }
 
@@ -72,26 +112,13 @@ func (self *scope) decrLevel(endPc int) []int {
 
 func (self *scope) removeLocVar(locVar *locVarInfo) {
 	self.freeReg()
-	if locVar.prev != nil {
-		if locVar.prev.level == locVar.level {
-			self.removeLocVar(locVar.prev)
-		} else {
-			self.locNames[locVar.name] = locVar.prev
-		}
-	} else {
+	if locVar.prev == nil {
 		delete(self.locNames, locVar.name)
+	} else if locVar.prev.level == locVar.level {
+		self.removeLocVar(locVar.prev)
+	} else {
+		self.locNames[locVar.name] = locVar.prev
 	}
-	// for locVar.prev != nil {
-	// 	if locVar.prev.level == locVar.level {
-	// 		locVar.prev.endPc = locVar.endPc
-	// 		locVar = locVar.prev
-	// 		self.freeReg()
-	// 	} else {
-	// 		self.locNames[locVar.name] = locVar.prev
-	// 		return
-	// 	}
-	// }
-	// delete(self.locNames, locVar.name)
 }
 
 func (self *scope) addLocVar(name string, startPc int) int {
@@ -116,41 +143,6 @@ func (self *scope) indexOfLocVar(name string) int {
 	} else {
 		return -1
 	}
-}
-
-/* stack */
-
-func (self *scope) allocRegs(n int) int {
-	if n > 0 {
-		slot := self.allocReg()
-		for i := 1; i < n; i++ {
-			self.allocReg()
-		}
-		return slot
-	} else {
-		panic("n <= 0 !")
-	}
-}
-func (self *scope) freeRegs(n int) {
-	if n >= 0 {
-		for i := 0; i < n; i++ {
-			self.freeReg()
-		}
-	} else {
-		panic("n < 0!")
-	}
-}
-
-func (self *scope) allocReg() int {
-	self.stackSize++
-	if self.stackSize > self.stackMax {
-		self.stackMax = self.stackSize
-	}
-	return self.stackSize - 1
-}
-
-func (self *scope) freeReg() {
-	self.stackSize--
 }
 
 /* upvalues */
