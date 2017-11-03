@@ -18,7 +18,6 @@ type locVarInfo struct {
 }
 
 type breakInfo struct {
-	breakable bool
 	breakJmps []int
 }
 
@@ -43,6 +42,18 @@ func newScope(parent *scope) *scope {
 		constants: map[interface{}]int{},
 		breaks:    make([]*breakInfo, 1),
 	}
+}
+
+/* constants */
+
+func (self *scope) indexOfConstant(k interface{}) int {
+	if idx, found := self.constants[k]; found {
+		return idx
+	}
+
+	idx := len(self.constants)
+	self.constants[k] = idx
+	return idx
 }
 
 /* registers */
@@ -85,11 +96,16 @@ func (self *scope) freeRegs(n int) {
 	}
 }
 
-/* local vars */
+/* lexical scope */
 
-func (self *scope) incrLevel() {
+func (self *scope) incrLevel(breakable bool) {
 	self.level++
 	self.breaks = append(self.breaks, nil)
+	if breakable {	
+		self.breaks[self.level] = &breakInfo{
+			breakJmps: []int{},
+		}
+	}
 }
 
 func (self *scope) decrLevel(endPc int) []int {
@@ -145,6 +161,22 @@ func (self *scope) indexOfLocVar(name string) int {
 	}
 }
 
+func (self *scope) addBreakJmp(pc int) {
+	var breakInfo *breakInfo
+	for i := self.level; i >= 0; i-- {
+		breakInfo = self.breaks[i]
+		if breakInfo != nil {
+			break
+		}
+	}
+
+	if breakInfo == nil {
+		panic("<break> at line ? not inside a loop!")
+	} else {
+		breakInfo.breakJmps = append(breakInfo.breakJmps, pc)
+	}
+}
+
 /* upvalues */
 
 func (self *scope) setupEnv() {
@@ -181,43 +213,6 @@ func (self *scope) indexOfUpval(name string) int {
 		return -1
 	}
 	return -1
-}
-
-/* constants */
-
-func (self *scope) indexOfConstant(k interface{}) int {
-	if idx, found := self.constants[k]; found {
-		return idx
-	}
-
-	idx := len(self.constants)
-	self.constants[k] = idx
-	return idx
-}
-
-/* break support */
-
-func (self *scope) markBreakable() {
-	self.breaks[self.level] = &breakInfo{
-		breakable: true,
-		breakJmps: []int{},
-	}
-}
-
-func (self *scope) addBreakJmp(pc int) {
-	var breakInfo *breakInfo
-	for i := self.level; i >= 0; i-- {
-		breakInfo = self.breaks[i]
-		if breakInfo != nil {
-			break
-		}
-	}
-
-	if breakInfo == nil {
-		panic("<break> at line ? not inside a loop!")
-	} else {
-		breakInfo.breakJmps = append(breakInfo.breakJmps, pc)
-	}
 }
 
 /* summarize */

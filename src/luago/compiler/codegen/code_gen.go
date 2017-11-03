@@ -19,41 +19,9 @@ func newCodeGen(parentScope *scope) *codeGen {
 	}
 }
 
-func (self *codeGen) enterScope(breakable bool) {
-	self.scope.incrLevel()
-	if breakable {
-		self.scope.markBreakable()
-	}
-}
-func (self *codeGen) exitScope(endPc int) {
-	pendingBreakJmps := self.scope.decrLevel(endPc)
-	for _, pc := range pendingBreakJmps {
-		self.fixSbx(pc, self.pc()-pc)
-	}
-}
-func (self *codeGen) addLocVar(name string, startPc int) int {
-	return self.scope.addLocVar(name, startPc)
-}
-func (self *codeGen) indexOfLocVar(name string) int {
-	return self.scope.indexOfLocVar(name)
-}
-func (self *codeGen) indexOfUpval(name string) int {
-	return self.scope.indexOfUpval(name)
-}
-
-func (self *codeGen) addBreakJmp(pc int) {
-	self.scope.addBreakJmp(pc)
-}
-
-// todo: rename?
-func (self *codeGen) fixEndPc(name string, delta int) {
-	for i := len(self.scope.locVars) - 1; i >= 0; i-- {
-		locVar := self.scope.locVars[i]
-		if locVar.name == name {
-			locVar.endPc += delta
-			return
-		}
-	}
+// constants
+func (self *codeGen) indexOfConstant(k interface{}) int {
+	return self.scope.indexOfConstant(k)
 }
 
 // registers
@@ -62,7 +30,7 @@ func (self *codeGen) usedRegs() int {
 }
 func (self *codeGen) resetRegs(n int) {
 	self.scope.stackSize = n
-} 
+}
 func (self *codeGen) allocReg() int {
 	return self.scope.allocReg()
 }
@@ -76,8 +44,40 @@ func (self *codeGen) freeRegs(n int) {
 	self.scope.freeRegs(n)
 }
 
-func (self *codeGen) indexOfConstant(k interface{}) int {
-	return self.scope.indexOfConstant(k)
+// lexical scope
+func (self *codeGen) enterScope(breakable bool) {
+	self.scope.incrLevel(breakable)
+}
+func (self *codeGen) exitScope(endPc int) {
+	pendingBreakJmps := self.scope.decrLevel(endPc)
+	for _, pc := range pendingBreakJmps {
+		self.fixSbx(pc, self.pc()-pc)
+	}
+}
+func (self *codeGen) addLocVar(name string, startPc int) int {
+	return self.scope.addLocVar(name, startPc)
+}
+func (self *codeGen) indexOfLocVar(name string) int {
+	return self.scope.indexOfLocVar(name)
+}
+func (self *codeGen) addBreakJmp(pc int) {
+	self.scope.addBreakJmp(pc)
+}
+
+// upvalues
+func (self *codeGen) indexOfUpval(name string) int {
+	return self.scope.indexOfUpval(name)
+}
+
+// todo: rename?
+func (self *codeGen) fixEndPc(name string, delta int) {
+	for i := len(self.scope.locVars) - 1; i >= 0; i-- {
+		locVar := self.scope.locVars[i]
+		if locVar.name == name {
+			locVar.endPc += delta
+			return
+		}
+	}
 }
 
 func (self *codeGen) genSubProto(fd *FuncDefExp) int {

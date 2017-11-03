@@ -14,7 +14,7 @@ func isVarargOrFuncCall(exp Exp) bool {
 func removeTailNils(exps []Exp) []Exp {
 	for n := len(exps) - 1; n >= 0; n-- {
 		if _, ok := exps[n].(*NilExp); !ok {
-			return exps[0: n+1]
+			return exps[0 : n+1]
 		}
 	}
 	return nil

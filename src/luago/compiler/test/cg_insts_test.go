@@ -158,6 +158,29 @@ tforloop(2,-6);
 loadnil(0,0,_)`)
 }
 
+func TestBreakStat(t *testing.T) {
+	testInsts(t, 
+`
+while x 
+  do break; 
+  do 
+    break 
+    do
+      break
+    end
+  end 
+end
+`,
+`[2/0]
+gettabup(0,0,-1);
+test(0,_,0);
+jmp(0,4);
+jmp(0,3);
+jmp(0,2);
+jmp(0,1);
+jmp(0,-7)`)
+}
+
 func TestLocalAssignStat(t *testing.T) {
 	testInsts(t, "local a", "[2/1] loadnil(0,0,_)")
 	testInsts(t, "local a=nil", "[2/1] loadnil(0,0,_)")
