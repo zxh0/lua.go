@@ -42,7 +42,7 @@ func (self *codeGen) cgRetStat(exps []Exp, lastLine int) {
 		}
 	}
 
-	multRet := isVarargOrFuncCallExp(exps[nExps-1])
+	multRet := isVarargOrFuncCall(exps[nExps-1])
 	for i, exp := range exps {
 		r := self.allocReg()
 		if i == nExps-1 && multRet {

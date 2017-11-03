@@ -56,14 +56,14 @@ func (self *codeGen) cgTableConstructorExp(node *TableConstructorExp, a int) {
 	nArr := node.NArr
 	nExps := len(node.KeyExps)
 	multRet := nExps > 0 &&
-		isVarargOrFuncCallExp(node.ValExps[nExps-1])
+		isVarargOrFuncCall(node.ValExps[nExps-1])
 
 	self.emitNewTable(node.Line, a, nArr, nExps-nArr)
 
 	for i, keyExp := range node.KeyExps {
 		valExp := node.ValExps[i]
 
-		if nArr > 0 {
+		if nArr > 0 { // todo: c > 0xFF
 			if idx, ok := keyExp.(int); ok {
 				_a := self.allocReg()
 				if i == nExps-1 && multRet {
@@ -78,7 +78,7 @@ func (self *codeGen) cgTableConstructorExp(node *TableConstructorExp, a int) {
 						n = 50
 					}
 					self.freeRegs(n)
-					line := lastLineOfExp(valExp)
+					line := lastLineOf(valExp)
 					if i == nExps-1 && multRet {
 						self.emitSetList(line, a, 0, (idx-1)/50+1)
 					} else {
@@ -96,7 +96,7 @@ func (self *codeGen) cgTableConstructorExp(node *TableConstructorExp, a int) {
 		self.cgExp(valExp, c, 1)
 		self.freeRegs(2)
 
-		line := lastLineOfExp(valExp)
+		line := lastLineOf(valExp)
 		self.emitSetTable(line, a, b, c)
 	}
 }
@@ -131,7 +131,7 @@ func (self *codeGen) prepFuncCall(node *FuncCallExp, a int) int {
 	}
 	for i, arg := range node.Args {
 		tmp := self.allocReg()
-		if i == nArgs-1 && isVarargOrFuncCallExp(arg) {
+		if i == nArgs-1 && isVarargOrFuncCall(arg) {
 			lastArgIsVarargOrFuncCall = true
 			self.cgExp(arg, tmp, -1)
 		} else {
@@ -227,7 +227,7 @@ func (self *codeGen) cgConcatExp(node *ConcatExp, a int) {
 	c := self.usedRegs() - 1
 	b := c - len(node.Exps) + 1
 	self.freeRegs(c - b + 1)
-	self.emit(node.Line, OP_CONCAT, a, b, c)
+	self.emitABC(node.Line, OP_CONCAT, a, b, c)
 }
 
 func (self *codeGen) expToOpArg(node Exp, argKinds int) (arg, argKind int) {

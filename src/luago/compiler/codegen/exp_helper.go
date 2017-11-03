@@ -2,7 +2,7 @@ package codegen
 
 import . "luago/compiler/ast"
 
-func isVarargOrFuncCallExp(exp Exp) bool {
+func isVarargOrFuncCall(exp Exp) bool {
 	switch exp.(type) {
 	case *VarargExp, *FuncCallExp:
 		return true
@@ -12,20 +12,15 @@ func isVarargOrFuncCallExp(exp Exp) bool {
 }
 
 func removeTailNils(exps []Exp) []Exp {
-	for {
-		if n := len(exps); n > 0 {
-			if _, ok := exps[n-1].(*NilExp); ok {
-				exps = exps[:n-1]
-				continue
-			}
+	for n := len(exps) - 1; n >= 0; n-- {
+		if _, ok := exps[n].(*NilExp); !ok {
+			return exps[0: n+1]
 		}
-		break
 	}
-	return exps
+	return nil
 }
 
-// todo
-func lineOfExp(exp Exp) int {
+func lineOf(exp Exp) int {
 	switch x := exp.(type) {
 	case *NilExp:
 		return x.Line
@@ -52,18 +47,17 @@ func lineOfExp(exp Exp) int {
 	case *UnopExp:
 		return x.Line
 	case *TableAccessExp:
-		return lineOfExp(x.PrefixExp)
+		return lineOf(x.PrefixExp)
 	case *ConcatExp:
-		return lineOfExp(x.Exps[0])
+		return lineOf(x.Exps[0])
 	case *BinopExp:
-		return lineOfExp(x.Exp1)
+		return lineOf(x.Exp1)
+	default:
+		panic("unreachable!")
 	}
-
-	panic("todo!")
 }
 
-// todo
-func lastLineOfExp(exp Exp) int {
+func lastLineOf(exp Exp) int {
 	switch x := exp.(type) {
 	case *NilExp:
 		return x.Line
@@ -90,12 +84,12 @@ func lastLineOfExp(exp Exp) int {
 	case *TableAccessExp:
 		return x.LastLine
 	case *ConcatExp:
-		return lastLineOfExp(x.Exps[len(x.Exps)-1])
+		return lastLineOf(x.Exps[len(x.Exps)-1])
 	case *BinopExp:
-		return lastLineOfExp(x.Exp2)
+		return lastLineOf(x.Exp2)
 	case *UnopExp:
-		return lastLineOfExp(x.Exp)
+		return lastLineOf(x.Exp)
+	default:
+		panic("unreachable!")
 	}
-
-	panic("todo!")
 }

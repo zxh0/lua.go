@@ -59,7 +59,7 @@ func (self *codeGen) cgRepeatStat(node *RepeatStat) {
 	self.cgExp(node.Exp, a, 1)
 	self.freeReg()
 
-	line := lastLineOfExp(node.Exp)
+	line := lastLineOf(node.Exp)
 	self.emitTest(line, a, 0)
 	self.emitJmp(line, pcBeforeBlock-self.pc()-1)
 
@@ -82,7 +82,7 @@ func (self *codeGen) cgWhileStat(node *WhileStat) {
 	self.cgExp(node.Exp, a, 1)
 	self.freeReg()
 
-	line := lastLineOfExp(node.Exp)
+	line := lastLineOf(node.Exp)
 	self.emitTest(line, a, 0)
 	pcJmpToEnd := self.emitJmp(line, 0)
 
@@ -116,7 +116,7 @@ func (self *codeGen) cgIfStat(node *IfStat) {
 		self.cgExp(exp, a, 1)
 		self.freeReg()
 
-		line := lastLineOfExp(exp)
+		line := lastLineOf(exp)
 		self.emitTest(line, a, 0)
 		pcJmpToElseif = self.emitJmp(line, 0)
 
@@ -188,7 +188,7 @@ func (self *codeGen) cgForInStat(node *ForInStat) {
 	self.cgBlock(node.Block)
 	self.fixSbx(jmpToTFC, self.pc()-jmpToTFC)
 
-	line := lineOfExp(node.ExpList[0])
+	line := lineOf(node.ExpList[0])
 	rGenerator := self.indexOfLocVar(forGeneratorVar)
 	self.emitTForCall(line, rGenerator, len(node.NameList))
 	self.emitTForLoop(line, rGenerator+2, jmpToTFC-self.pc()-1)
@@ -218,7 +218,7 @@ func (self *codeGen) cgLocalAssignStat(node *LocalAssignStat) {
 	} else if nExps > nNames {
 		for i, exp := range exps {
 			a := self.allocReg()
-			if i == nExps-1 && isVarargOrFuncCallExp(exp) {
+			if i == nExps-1 && isVarargOrFuncCall(exp) {
 				self.cgExp(exp, a, 0)
 			} else {
 				self.cgExp(exp, a, 1)
@@ -229,7 +229,7 @@ func (self *codeGen) cgLocalAssignStat(node *LocalAssignStat) {
 		multRet := false
 		for i, exp := range exps {
 			a := self.allocReg()
-			if i == nExps-1 && isVarargOrFuncCallExp(exp) {
+			if i == nExps-1 && isVarargOrFuncCall(exp) {
 				multRet = true
 				n := nNames - nExps + 1
 				self.cgExp(exp, a, n)
@@ -287,7 +287,7 @@ func (self *codeGen) cgAssignStat(node *AssignStat) {
 	if nExps >= nVars {
 		for i, exp := range exps {
 			a := self.allocReg()
-			if i >= nVars && i == nExps-1 && isVarargOrFuncCallExp(exp) {
+			if i >= nVars && i == nExps-1 && isVarargOrFuncCall(exp) {
 				self.cgExp(exp, a, 0)
 			} else {
 				self.cgExp(exp, a, 1)
@@ -297,7 +297,7 @@ func (self *codeGen) cgAssignStat(node *AssignStat) {
 		multRet := false
 		for i, exp := range exps {
 			a := self.allocReg()
-			if i == nExps-1 && isVarargOrFuncCallExp(exp) {
+			if i == nExps-1 && isVarargOrFuncCall(exp) {
 				multRet = true
 				n := nVars - nExps + 1
 				self.cgExp(exp, a, n)

@@ -57,9 +57,9 @@ type Upvalue struct {
 }
 
 type LocVar struct {
-	VarName string
-	StartPc uint32
-	EndPc   uint32
+	VarName string // Name?
+	StartPc uint32 // StartPC?
+	EndPc   uint32 // EndPC?
 }
 
 func IsBinaryChunk(data []byte) bool {

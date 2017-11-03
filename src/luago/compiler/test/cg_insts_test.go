@@ -178,22 +178,35 @@ func TestAssignStat(t *testing.T) {
 }
 
 func testInsts(t *testing.T, chunk, expected string) {
-	insts := compile(chunk)
+	insts := compile(chunk, false)
 	expected = strings.Replace(expected, "\n", " ", -1)
-	expected += "; return(0,1,_)"
+	expected += "; return(0,1,_);"
 	assert.StringEqual(t, insts, expected)
 }
 
-func compile(chunk string) string {
+func testDbg(t *testing.T, chunk, expected string) {
+	insts := compile(chunk, true)
+	expected = strings.Replace(expected, "\n", " ", -1)
+	assert.StringEqual(t, insts, expected)
+}
+
+func compile(chunk string, dbgFlag bool) string {
 	proto := compiler.Compile("src", chunk)
 
 	s := fmt.Sprintf("[%d/%d] ", proto.MaxStackSize, len(proto.LocVars))
 	for i, inst := range proto.Code {
+		if dbgFlag {
+			s += fmt.Sprintf("[%2d]", proto.LineInfo[i])
+		}
 		s += instToStr(inst)
-		if i < len(proto.Code)-1 {
-			s += "; "
+		s += "; "
+	}
+	if dbgFlag {
+		for _, locVar := range proto.LocVars {
+			s += fmt.Sprintf("@%s[%d,%d] ",
+				locVar.VarName, locVar.StartPc+1, locVar.EndPc+1)
 		}
 	}
 
-	return s
+	return strings.TrimSpace(s)
 }
