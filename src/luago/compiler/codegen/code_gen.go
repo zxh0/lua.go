@@ -60,6 +60,9 @@ func (self *codeGen) fixEndPc(name string, delta int) {
 func (self *codeGen) usedRegs() int {
 	return self.scope.stackSize
 }
+func (self *codeGen) resetRegs(n int) {
+	self.scope.stackSize = n
+} 
 func (self *codeGen) allocReg() int {
 	return self.scope.allocReg()
 }

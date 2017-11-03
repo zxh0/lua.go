@@ -33,6 +33,14 @@ settabup(0,-1,0);
 loadnil(0,0,_)`)
 }
 
+func TestCMP(t *testing.T) {
+	testInsts(t, "local a,b; c = a==b", "[3/2] loadnil(0,1,_); eq(1,0,1); jmp(0,1); loadbool(2,0,1); loadbool(2,1,0); settabup(0,-1,2)")
+	testInsts(t, "local a,b; c = a<=b", "[3/2] loadnil(0,1,_); le(1,0,1); jmp(0,1); loadbool(2,0,1); loadbool(2,1,0); settabup(0,-1,2)")
+	testInsts(t, "local a,b; c = a< b", "[3/2] loadnil(0,1,_); lt(1,0,1); jmp(0,1); loadbool(2,0,1); loadbool(2,1,0); settabup(0,-1,2)")
+	testInsts(t, "local a,b; c = a>=b", "[3/2] loadnil(0,1,_); le(1,1,0); jmp(0,1); loadbool(2,0,1); loadbool(2,1,0); settabup(0,-1,2)")
+	testInsts(t, "local a,b; c = a> b", "[3/2] loadnil(0,1,_); lt(1,1,0); jmp(0,1); loadbool(2,0,1); loadbool(2,1,0); settabup(0,-1,2)")
+}
+
 func TestOP(t *testing.T) {
 	testInsts(t, "local a,b; c=-b", "[3/2] loadnil(0,1,_); unm(2,1,_); settabup(0,-1,2)")
 	testInsts(t, "local a,b; c=a+b", "[3/2] loadnil(0,1,_); add(2,0,1); settabup(0,-1,2)")
@@ -83,6 +91,7 @@ func TestLocalFuncDefStat(t *testing.T) {
 }
 
 func TestFuncCallStat(t *testing.T) {
+	testInsts(t, "local f; f()", "[2/1] loadnil(0,0,_); move(1,0,_); call(1,1,1)")
 	testInsts(t, "f()", "[2/0] gettabup(0,0,-1); call(0,1,1)")
 	testInsts(t, "f(1,2)", "[3/0] gettabup(0,0,-1); loadk(1,-2); loadk(2,-3); call(0,3,1)")
 	testInsts(t, "f(1,g(2,h(3)))",

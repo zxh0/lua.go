@@ -31,6 +31,11 @@ func (self *codeGen) cgStat(node Stat) {
 	}
 }
 
+func (self *codeGen) cgLocalFuncDefStat(node *LocalFuncDefStat) {
+	r := self.addLocVar(node.Name, self.pc()+2)
+	self.cgFuncDefExp(node.Exp, r)
+}
+
 func (self *codeGen) cgFuncCallStat(node FuncCallStat) {
 	fcExp := (*FuncCallExp)(node)
 	a := self.allocReg()
@@ -55,9 +60,9 @@ func (self *codeGen) cgRepeatStat(node *RepeatStat) {
 	pcBeforeBlock := self.pc()
 	self.cgBlock(node.Block)
 
-	a := self.allocReg()
-	self.cgExp(node.Exp, a, 1)
-	self.freeReg()
+	oldRegs := self.usedRegs()
+	a, _ := self.expToOpArg(node.Exp, ARG_REG)
+	self.resetRegs(oldRegs)
 
 	line := lastLineOf(node.Exp)
 	self.emitTest(line, a, 0)
@@ -78,9 +83,9 @@ while exp do block end <-'
 func (self *codeGen) cgWhileStat(node *WhileStat) {
 	pcBeforeExp := self.pc()
 
-	a := self.allocReg()
-	self.cgExp(node.Exp, a, 1)
-	self.freeReg()
+	oldRegs := self.usedRegs()
+	a, _ := self.expToOpArg(node.Exp, ARG_REG)
+	self.resetRegs(oldRegs)
 
 	line := lastLineOf(node.Exp)
 	self.emitTest(line, a, 0)
@@ -112,9 +117,9 @@ func (self *codeGen) cgIfStat(node *IfStat) {
 			self.fixSbx(pcJmpToElseif, self.pc()-pcJmpToElseif)
 		}
 
-		a := self.allocReg()
-		self.cgExp(exp, a, 1)
-		self.freeReg()
+		oldRegs := self.usedRegs()
+		a, _ := self.expToOpArg(exp, ARG_REG)
+		self.resetRegs(oldRegs)
 
 		line := lastLineOf(exp)
 		self.emitTest(line, a, 0)
@@ -177,13 +182,6 @@ func (self *codeGen) cgForInStat(node *ForInStat) {
 		self.addLocVar(name, self.pc()+2)
 	}
 
-	// todo: ???
-	if len(node.NameList) < 3 {
-		n := 3 - len(node.NameList)
-		self.allocRegs(n)
-		self.freeRegs(n)
-	}
-
 	jmpToTFC := self.emitJmp(node.LineOfDo, 0)
 	self.cgBlock(node.Block)
 	self.fixSbx(jmpToTFC, self.pc()-jmpToTFC)
@@ -197,11 +195,6 @@ func (self *codeGen) cgForInStat(node *ForInStat) {
 	self.fixEndPc(forGeneratorVar, 2)
 	self.fixEndPc(forStateVar, 2)
 	self.fixEndPc(forControlVar, 2)
-}
-
-func (self *codeGen) cgLocalFuncDefStat(node *LocalFuncDefStat) {
-	r := self.addLocVar(node.Name, self.pc()+2)
-	self.cgFuncDefExp(node.Exp, r)
 }
 
 func (self *codeGen) cgLocalAssignStat(node *LocalAssignStat) {
@@ -224,7 +217,6 @@ func (self *codeGen) cgLocalAssignStat(node *LocalAssignStat) {
 				self.cgExp(exp, a, 1)
 			}
 		}
-		//self.freeRegs(nExps - nNames)
 	} else { // nNames > nExps
 		multRet := false
 		for i, exp := range exps {
@@ -245,7 +237,7 @@ func (self *codeGen) cgLocalAssignStat(node *LocalAssignStat) {
 		}
 	}
 
-	self.freeRegs(self.usedRegs() - oldRegs)
+	self.resetRegs(oldRegs)
 	startPc := self.pc() + 1
 	for _, name := range node.NameList {
 		self.addLocVar(name, startPc)
@@ -336,5 +328,5 @@ func (self *codeGen) cgAssignStat(node *AssignStat) {
 	}
 
 	// todo
-	self.freeRegs(self.usedRegs() - oldRegs)
+	self.resetRegs(oldRegs)
 }

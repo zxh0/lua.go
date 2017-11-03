@@ -172,7 +172,7 @@ func (self *codeGen) cgTableAccessExp(node *TableAccessExp, a int) {
 	oldRegs := self.usedRegs()
 	b, kindB := self.expToOpArg(node.PrefixExp, ARG_RU)
 	c, _ := self.expToOpArg(node.KeyExp, ARG_RK)
-	self.freeRegs(self.usedRegs() - oldRegs)
+	self.resetRegs(oldRegs)
 
 	if kindB == ARG_UPVAL {
 		self.emitGetTabUp(node.LastLine, a, b, c)
@@ -186,7 +186,7 @@ func (self *codeGen) cgUnopExp(node *UnopExp, a int) {
 	oldRegs := self.usedRegs()
 	b, _ := self.expToOpArg(node.Exp, ARG_REG)
 	self.emitUnaryOp(node.Line, node.Op, a, b)
-	self.freeRegs(self.usedRegs() - oldRegs)
+	self.resetRegs(oldRegs)
 }
 
 // r[a] := exp1 op exp2
@@ -196,7 +196,7 @@ func (self *codeGen) cgBinopExp(node *BinopExp, a int) {
 		oldRegs := self.usedRegs()
 
 		b, _ := self.expToOpArg(node.Exp1, ARG_REG)
-		self.freeRegs(self.usedRegs() - oldRegs)
+		self.resetRegs(oldRegs)
 		if node.Op == TOKEN_OP_AND {
 			self.emitTestSet(node.Line, a, b, 0)
 		} else {
@@ -205,7 +205,7 @@ func (self *codeGen) cgBinopExp(node *BinopExp, a int) {
 		pcOfJmp := self.emitJmp(node.Line, 0)
 
 		b, _ = self.expToOpArg(node.Exp2, ARG_REG)
-		self.freeRegs(self.usedRegs() - oldRegs)
+		self.resetRegs(oldRegs)
 		self.emitMove(node.Line, a, b)
 		self.fixSbx(pcOfJmp, self.pc()-pcOfJmp)
 	default:
@@ -213,7 +213,7 @@ func (self *codeGen) cgBinopExp(node *BinopExp, a int) {
 		b, _ := self.expToOpArg(node.Exp1, ARG_RK)
 		c, _ := self.expToOpArg(node.Exp2, ARG_RK)
 		self.emitBinaryOp(node.Line, node.Op, a, b, c)
-		self.freeRegs(self.usedRegs() - oldRegs)
+		self.resetRegs(oldRegs)
 	}
 }
 

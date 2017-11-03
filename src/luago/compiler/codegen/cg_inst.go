@@ -219,7 +219,8 @@ func (self *codeGen) emitBinaryOp(line, op, a, b, c int) {
 		case TOKEN_OP_GE:
 			self.emitABC(line, OP_LE, 1, c, b)
 		}
-		self.emitLoadBool(line, a, 1, 1)
-		self.emitLoadBool(line, a, 0, 0)
+		self.emitJmp(line, 1)
+		self.emitLoadBool(line, a, 0, 1)
+		self.emitLoadBool(line, a, 1, 0)
 	}
 }
