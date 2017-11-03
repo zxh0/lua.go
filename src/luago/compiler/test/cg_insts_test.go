@@ -159,10 +159,11 @@ loadnil(0,0,_)`)
 }
 
 func TestBreakStat(t *testing.T) {
+	//testInsts(t, "do break end", "")
 	testInsts(t, 
 `
-while x 
-  do break; 
+while x do 
+  break; 
   do 
     break 
     do
