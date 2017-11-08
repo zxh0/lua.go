@@ -178,11 +178,89 @@ func (self *luaState) LoadString(s string) ThreadStatus {
 	panic("todo: LoadString!")
 }
 
-// [-0, +1, m]
-// http://www.lua.org/manual/5.3/manual.html#luaL_getmetatable
-// lua-5.3.4/src/lauxlib.h#luaL_getmetatable()
-func (self *luaState) GetMetatable2(tname string) LuaType {
-	return self.GetField(LUA_REGISTRYINDEX, tname)
+// [-0, +0, v]
+// http://www.lua.org/manual/5.3/manual.html#luaL_checkversion
+func (self *luaState) CheckVersion() {
+	//panic("todo: CheckVersion!")
+}
+
+// [-0, +0, –]
+// http://www.lua.org/manual/5.3/manual.html#luaL_typename
+// lua-5.3.4/src/lauxlib.h#luaL_typename()
+func (self *luaState) TypeName2(idx int) string {
+	return self.TypeName(self.Type(idx))
+}
+
+// [-0, +0, e]
+// http://www.lua.org/manual/5.3/manual.html#luaL_len
+// lua-5.3.4/src/lauxlib.c#luaL_len()
+func (self *luaState) Len2(idx int) int64 {
+	self.Len(idx)
+	i, isNum := self.ToIntegerX(-1)
+	if !isNum {
+		self.Error2("object length is not an integer")
+	}
+	self.Pop(1)
+	return i
+}
+
+// [-0, +1, e]
+// http://www.lua.org/manual/5.3/manual.html#luaL_tolstring
+// lua-5.3.4/src/lauxlib.c#luaL_tolstring()
+func (self *luaState) ToString2(idx int) string {
+	if self.CallMeta(idx, "__tostring") { /* metafield? */
+		if !self.IsString(-1) {
+			self.Error2("'__tostring' must return a string")
+		}
+	} else {
+		switch self.Type(idx) {
+		case LUA_TNUMBER:
+			if self.IsInteger(idx) {
+				self.PushString(fmt.Sprintf("%d", self.ToInteger(idx))) // todo
+			} else {
+				self.PushString(fmt.Sprintf("%g", self.ToNumber(idx))) // todo
+			}
+		case LUA_TSTRING:
+			self.PushValue(idx)
+		case LUA_TBOOLEAN:
+			if self.ToBoolean(idx) {
+				self.PushString("true")
+			} else {
+				self.PushString("false")
+			}
+		case LUA_TNIL:
+			self.PushString("nil")
+		default:
+			tt := self.GetMetafield(idx, "__name") /* try name */
+			var kind string
+			if tt == LUA_TSTRING {
+				kind = self.CheckString(-1)
+			} else {
+				kind = self.TypeName2(idx)
+			}
+
+			self.PushString(fmt.Sprintf("%s: %p", kind, self.ToPointer(idx)))
+			if tt != LUA_TNIL {
+				self.Remove(-2) /* remove '__name' */
+			}
+		}
+	}
+	return self.CheckString(-1)
+}
+
+// [-0, +1, e]
+// http://www.lua.org/manual/5.3/manual.html#luaL_getsubtable
+// lua-5.3.4/src/lauxlib.c#luaL_getsubtable()
+func (self *luaState) GetSubTable(idx int, fname string) bool {
+	if self.GetField(idx, fname) == LUA_TTABLE {
+		return true /* table already there */
+	}
+	self.Pop(1) /* remove previous result */
+	idx = self.stack.absIndex(idx)
+	self.NewTable()
+	self.PushValue(-1)        /* copy to be left at top */
+	self.SetField(idx, fname) /* assign new table to field */
+	return false              /* false, because did not find table there */
 }
 
 // [-0, +(0|1), m]
@@ -292,91 +370,6 @@ func (self *luaState) SetFuncs(l FuncReg, nup int) {
 	self.Pop(nup) /* remove upvalues */
 }
 
-// [-0, +1, e]
-// http://www.lua.org/manual/5.3/manual.html#luaL_getsubtable
-// lua-5.3.4/src/lauxlib.c#luaL_getsubtable()
-func (self *luaState) GetSubTable(idx int, fname string) bool {
-	if self.GetField(idx, fname) == LUA_TTABLE {
-		return true /* table already there */
-	}
-	self.Pop(1) /* remove previous result */
-	idx = self.stack.absIndex(idx)
-	self.NewTable()
-	self.PushValue(-1)        /* copy to be left at top */
-	self.SetField(idx, fname) /* assign new table to field */
-	return false              /* false, because did not find table there */
-}
-
-// [-0, +0, e]
-// http://www.lua.org/manual/5.3/manual.html#luaL_len
-// lua-5.3.4/src/lauxlib.c#luaL_len()
-func (self *luaState) Len2(idx int) int64 {
-	self.Len(idx)
-	i, isNum := self.ToIntegerX(-1)
-	if !isNum {
-		self.Error2("object length is not an integer")
-	}
-	self.Pop(1)
-	return i
-}
-
-// [-0, +0, –]
-// http://www.lua.org/manual/5.3/manual.html#luaL_typename
-// lua-5.3.4/src/lauxlib.h#luaL_typename()
-func (self *luaState) TypeName2(idx int) string {
-	return self.TypeName(self.Type(idx))
-}
-
-// [-0, +1, e]
-// http://www.lua.org/manual/5.3/manual.html#luaL_tolstring
-// lua-5.3.4/src/lauxlib.c#luaL_tolstring()
-func (self *luaState) ToString2(idx int) string {
-	if self.CallMeta(idx, "__tostring") { /* metafield? */
-		if !self.IsString(-1) {
-			self.Error2("'__tostring' must return a string")
-		}
-	} else {
-		switch self.Type(idx) {
-		case LUA_TNUMBER:
-			if self.IsInteger(idx) {
-				self.PushString(fmt.Sprintf("%d", self.ToInteger(idx))) // todo
-			} else {
-				self.PushString(fmt.Sprintf("%g", self.ToNumber(idx))) // todo
-			}
-		case LUA_TSTRING:
-			self.PushValue(idx)
-		case LUA_TBOOLEAN:
-			if self.ToBoolean(idx) {
-				self.PushString("true")
-			} else {
-				self.PushString("false")
-			}
-		case LUA_TNIL:
-			self.PushString("nil")
-		default:
-			tt := self.GetMetafield(idx, "__name") /* try name */
-			var kind string
-			if tt == LUA_TSTRING {
-				kind = self.CheckString(-1)
-			} else {
-				kind = self.TypeName2(idx)
-			}
-
-			self.PushString(fmt.Sprintf("%s: %p", kind, self.ToPointer(idx)))
-			if tt != LUA_TNIL {
-				self.Remove(-2) /* remove '__name' */
-			}
-		}
-	}
-	return self.CheckString(-1)
-}
-
-// [-0, +0, v]
-// http://www.lua.org/manual/5.3/manual.html#luaL_checkversion
-func (self *luaState) CheckVersion() {
-	//panic("todo: CheckVersion!")
-}
-
 func (self *luaState) intError(arg int) {
 	if self.IsNumber(arg) {
 		self.ArgError(arg, "number has no integer representation")
@@ -402,4 +395,11 @@ func (self *luaState) tagError(arg int, tag LuaType) {
 // 	}
 // 	msg := self.PushFString("%s expected, got %s", tname, typearg)
 // 	return self.ArgError(arg, msg)
+// }
+
+// [-0, +1, m]
+// http://www.lua.org/manual/5.3/manual.html#luaL_getmetatable
+// lua-5.3.4/src/lauxlib.h#luaL_getmetatable()
+// func (self *luaState) GetMetatable2(tname string) LuaType {
+// 	return self.GetField(LUA_REGISTRYINDEX, tname)
 // }

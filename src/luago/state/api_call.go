@@ -146,7 +146,7 @@ func (self *luaState) PCall(nArgs, nResults, msgh int) (status ThreadStatus) {
 	defer func() {
 		if r := recover(); r != nil { // todo
 			if msgh < 0 {
-				panic(r)
+				panic(_getErrObj(r))
 			} else if msgh > 0 {
 				panic("todo: msgh > 0")
 			} else {
