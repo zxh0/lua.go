@@ -48,29 +48,32 @@ var operators = []operator{
 func (self *luaState) Arith(op ArithOp) {
 	operator := operators[op]
 
-	// operands
-	var b luaValue = int64(0)
+	var a, b luaValue // operands
+	b = self.stack.pop()
 	if op != LUA_OPUNM && op != LUA_OPBNOT {
-		b = self.stack.pop()
+		a = self.stack.pop()
+	} else {
+		a = b
 	}
-	a := self.stack.pop()
 
 	if result := _arith(a, b, operator); result != nil {
 		self.stack.push(result)
-	} else {
-		mm := operator.metamethod
-		if result, ok := callMetamethod(a, b, mm, self); ok {
-			self.stack.push(result)
-		} else {
-			var typeName string
-			if _, ok := convertToFloat(a); !ok {
-				typeName = self.TypeName(typeOf(a))
-			} else {
-				typeName = self.TypeName(typeOf(b))
-			}
-			panic("attempt to perform arithmetic on a " + typeName + " value")
-		}
+		return
 	}
+
+	mm := operator.metamethod
+	if result, ok := callMetamethod(a, b, mm, self); ok {
+		self.stack.push(result)
+		return
+	}
+
+	var typeName string
+	if _, ok := convertToFloat(a); !ok {
+		typeName = self.TypeName(typeOf(a))
+	} else {
+		typeName = self.TypeName(typeOf(b))
+	}
+	panic("attempt to perform arithmetic on a " + typeName + " value")
 }
 
 func _arith(a, b luaValue, op operator) luaValue {

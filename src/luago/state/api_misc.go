@@ -77,8 +77,8 @@ func (self *luaState) Next(idx int) bool {
 // http://www.lua.org/manual/5.3/manual.html#lua_len
 func (self *luaState) Len(idx int) {
 	val := self.stack.get(idx)
-	if str, ok := val.(string); ok {
-		self.stack.push(int64(len(str)))
+	if s, ok := val.(string); ok {
+		self.stack.push(int64(len(s)))
 	} else if result, ok := callMetamethod(val, val, "__len", self); ok {
 		self.stack.push(result)
 	} else if t, ok := val.(*luaTable); ok {
@@ -109,15 +109,16 @@ func (self *luaState) Concat(n int) {
 			a := self.stack.pop()
 			if result, ok := callMetamethod(a, b, "__concat", self); ok {
 				self.stack.push(result)
-			} else {
-				var typeName string
-				if _, ok := convertToFloat(a); !ok {
-					typeName = self.TypeName(typeOf(a))
-				} else {
-					typeName = self.TypeName(typeOf(b))
-				}
-				panic("attempt to concatenate a " + typeName + " value")
+				continue
 			}
+
+			var typeName string
+			if _, ok := convertToFloat(a); !ok {
+				typeName = self.TypeName(typeOf(a))
+			} else {
+				typeName = self.TypeName(typeOf(b))
+			}
+			panic("attempt to concatenate a " + typeName + " value")
 		}
 	}
 	// n == 1, do nothing

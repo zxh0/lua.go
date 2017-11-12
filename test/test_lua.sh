@@ -53,6 +53,7 @@ test_dir() { # $1:dir
 }
 
 test_dir "compiler"
+test_dir "lang"
 test_dir "PiL4/ch01"
 test_dir "PiL4/ch03"
 test_dir "PiL4/ch04"

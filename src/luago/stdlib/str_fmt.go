@@ -3,13 +3,13 @@ package stdlib
 import "regexp"
 import "strings"
 
+// tag = %[flags][width][.precision]specifier
+var tagPattern = regexp.MustCompile(`%[ #+-0]?[0-9]*(\.[0-9]+)?[cdeEfgGioqsuxX%]`)
+
 func parseFmtStr(fmt string) []string {
 	if fmt == "" || strings.IndexByte(fmt, '%') < 0 {
 		return []string{fmt}
 	}
-
-	// tag = %[flags][width][.precision]specifier
-	pattern := regexp.MustCompile(`%[ #+-0]?[0-9]*(\.[0-9]+)?[cdeEfgGioqsuxX%]`)
 
 	parsed := make([]string, 0, len(fmt)/2)
 	for {
@@ -17,7 +17,7 @@ func parseFmtStr(fmt string) []string {
 			break
 		}
 
-		loc := pattern.FindStringIndex(fmt)
+		loc := tagPattern.FindStringIndex(fmt)
 		if loc == nil {
 			parsed = append(parsed, fmt)
 			break
