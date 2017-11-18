@@ -7,10 +7,11 @@ import "strconv"
 import "strings"
 
 //var reSpaces = regexp.MustCompile(`^\s+`)
+var reNewLine = regexp.MustCompile("\r\n|\n\r|\n|\r")
 var reIdentifier = regexp.MustCompile(`^[_\d\w]+`)
-var reNumber = regexp.MustCompile(`^-?0[xX][0-9a-fA-F]+(\.[0-9a-fA-F]+)?([pP][+\-]?[0-9]+)?|^-?[0-9]+(\.[0-9]+)?([eE][+\-]?[0-9]+)?`)
+var reNumber = regexp.MustCompile(`^0[xX][0-9a-fA-F]*(\.[0-9a-fA-F]*)?([pP][+\-]?[0-9]+)?|^[0-9]*(\.[0-9]*)?([eE][+\-]?[0-9]+)?`)
 var reShortStr = regexp.MustCompile(`(?s)(^'(\\'|[^'])*')|(^"(\\"|[^"])*")`)
-var reLongStrStart = regexp.MustCompile(`^\[=*\[`)
+var reOpeningLongBracket = regexp.MustCompile(`^\[=*\[`)
 
 var reDecEscapeSeq = regexp.MustCompile(`^\\[0-9]{1,3}`)
 var reHexEscapeSeq = regexp.MustCompile(`^\\x[0-9a-fA-F]{2}`)
@@ -63,8 +64,6 @@ func (self *Lexer) NextTokenOfKind(kind int) (line int, token string) {
 
 func (self *Lexer) NextToken() (line, kind int, token string) {
 	self.skipWhiteSpaces()
-	line = self.line
-
 	if len(self.chunk) == 0 {
 		return line, TOKEN_EOF, "EOF"
 	}
@@ -72,136 +71,136 @@ func (self *Lexer) NextToken() (line, kind int, token string) {
 	switch self.chunk[0] {
 	case ';':
 		self.next(1)
-		return line, TOKEN_SEP_SEMI, ""
+		return self.line, TOKEN_SEP_SEMI, ""
 	case ',':
 		self.next(1)
-		return line, TOKEN_SEP_COMMA, ""
+		return self.line, TOKEN_SEP_COMMA, ""
 	case '(':
 		self.next(1)
-		return line, TOKEN_SEP_LPAREN, ""
+		return self.line, TOKEN_SEP_LPAREN, ""
 	case ')':
 		self.next(1)
-		return line, TOKEN_SEP_RPAREN, ""
+		return self.line, TOKEN_SEP_RPAREN, ""
 	case ']':
 		self.next(1)
-		return line, TOKEN_SEP_RBRACK, ""
+		return self.line, TOKEN_SEP_RBRACK, ""
 	case '{':
 		self.next(1)
-		return line, TOKEN_SEP_LCURLY, ""
+		return self.line, TOKEN_SEP_LCURLY, ""
 	case '}':
 		self.next(1)
-		return line, TOKEN_SEP_RCURLY, ""
+		return self.line, TOKEN_SEP_RCURLY, ""
 	case '+':
 		self.next(1)
-		return line, TOKEN_OP_ADD, ""
+		return self.line, TOKEN_OP_ADD, ""
 	case '-':
 		self.next(1)
-		return line, TOKEN_OP_MINUS, ""
+		return self.line, TOKEN_OP_MINUS, ""
 	case '*':
 		self.next(1)
-		return line, TOKEN_OP_MUL, ""
+		return self.line, TOKEN_OP_MUL, ""
 	case '^':
 		self.next(1)
-		return line, TOKEN_OP_POW, ""
+		return self.line, TOKEN_OP_POW, ""
 	case '%':
 		self.next(1)
-		return line, TOKEN_OP_MOD, ""
+		return self.line, TOKEN_OP_MOD, ""
 	case '&':
 		self.next(1)
-		return line, TOKEN_OP_BAND, ""
+		return self.line, TOKEN_OP_BAND, ""
 	case '|':
 		self.next(1)
-		return line, TOKEN_OP_BOR, ""
+		return self.line, TOKEN_OP_BOR, ""
 	case '#':
 		self.next(1)
-		return line, TOKEN_OP_LEN, ""
-	case '.':
-		if self.test("...") {
-			self.next(3)
-			return line, TOKEN_VARARG, ""
-		} else if self.test("..") {
-			self.next(2)
-			return line, TOKEN_OP_CONCAT, ""
-		} else {
-			self.next(1)
-			return line, TOKEN_SEP_DOT, ""
-		}
+		return self.line, TOKEN_OP_LEN, ""
 	case ':':
 		if self.test("::") {
 			self.next(2)
-			return line, TOKEN_SEP_LABEL, ""
+			return self.line, TOKEN_SEP_LABEL, ""
 		} else {
 			self.next(1)
-			return line, TOKEN_SEP_COLON, ""
+			return self.line, TOKEN_SEP_COLON, ""
 		}
 	case '/':
 		if self.test("//") {
 			self.next(2)
-			return line, TOKEN_OP_IDIV, ""
+			return self.line, TOKEN_OP_IDIV, ""
 		} else {
 			self.next(1)
-			return line, TOKEN_OP_DIV, ""
+			return self.line, TOKEN_OP_DIV, ""
 		}
 	case '~':
 		if self.test("~=") {
 			self.next(2)
-			return line, TOKEN_OP_NE, ""
+			return self.line, TOKEN_OP_NE, ""
 		} else {
 			self.next(1)
-			return line, TOKEN_OP_WAVE, ""
+			return self.line, TOKEN_OP_WAVE, ""
 		}
 	case '=':
 		if self.test("==") {
 			self.next(2)
-			return line, TOKEN_OP_EQ, ""
+			return self.line, TOKEN_OP_EQ, ""
 		} else {
 			self.next(1)
-			return line, TOKEN_OP_ASSIGN, ""
+			return self.line, TOKEN_OP_ASSIGN, ""
 		}
 	case '<':
 		if self.test("<<") {
 			self.next(2)
-			return line, TOKEN_OP_SHL, ""
+			return self.line, TOKEN_OP_SHL, ""
 		} else if self.test("<=") {
 			self.next(2)
-			return line, TOKEN_OP_LE, ""
+			return self.line, TOKEN_OP_LE, ""
 		} else {
 			self.next(1)
-			return line, TOKEN_OP_LT, ""
+			return self.line, TOKEN_OP_LT, ""
 		}
 	case '>':
 		if self.test(">>") {
 			self.next(2)
-			return line, TOKEN_OP_SHR, ""
+			return self.line, TOKEN_OP_SHR, ""
 		} else if self.test(">=") {
 			self.next(2)
-			return line, TOKEN_OP_GE, ""
+			return self.line, TOKEN_OP_GE, ""
 		} else {
 			self.next(1)
-			return line, TOKEN_OP_GT, ""
+			return self.line, TOKEN_OP_GT, ""
+		}
+	case '.':
+		if self.test("...") {
+			self.next(3)
+			return self.line, TOKEN_VARARG, ""
+		} else if self.test("..") {
+			self.next(2)
+			return self.line, TOKEN_OP_CONCAT, ""
+		} else if len(self.chunk) == 1 || !isDigit(self.chunk[1]) {
+			self.next(1)
+			return self.line, TOKEN_SEP_DOT, ""
 		}
 	case '[':
 		if self.test("[[") || self.test("[=") {
-			return line, TOKEN_STRING, self.scanLongString()
+			return self.line, TOKEN_STRING, self.scanLongString()
 		} else {
 			self.next(1)
-			return line, TOKEN_SEP_LBRACK, ""
+			return self.line, TOKEN_SEP_LBRACK, ""
 		}
 	case '\'', '"':
-		return line, TOKEN_STRING, self.scanShortString()
+		return self.line, TOKEN_STRING, self.scanShortString()
 	}
 
 	c := self.chunk[0]
-	if isDigit(c) {
+	if c == '.' || isDigit(c) {
 		token := self.scanNumber()
-		return line, TOKEN_NUMBER, token
+		return self.line, TOKEN_NUMBER, token
 	}
 	if c == '_' || isLatter(c) {
 		token := self.scanIdentifier()
 		if kind, found := keywords[token]; found {
-			return line, kind, "" // keyword
+			return self.line, kind, "" // keyword
 		} else {
-			return line, TOKEN_IDENTIFIER, token
+			return self.line, TOKEN_IDENTIFIER, token
 		}
 	}
 
@@ -227,16 +226,14 @@ func (self *Lexer) skipWhiteSpaces() {
 	for len(self.chunk) > 0 {
 		if self.test("--") {
 			self.skipComment()
-		} else if c := self.chunk[0]; isWhiteSpace(c) {
-			if self.test("\r\n") {
-				self.next(2)
-				self.line += 1
-			} else {
-				self.next(1)
-				if isNewLine(c) {
-					self.line += 1
-				}
-			}
+		} else if self.test("\r\n") || self.test("\n\r") {
+			self.next(2)
+			self.line += 1
+		} else if isNewLine(self.chunk[0]) {
+			self.next(1)
+			self.line += 1
+		} else if isWhiteSpace(self.chunk[0]) {
+			self.next(1)
 		} else {
 			break
 		}
@@ -248,7 +245,7 @@ func (self *Lexer) skipComment() {
 
 	// long comment ?
 	if self.test("[") {
-		if reLongStrStart.FindString(self.chunk) != "" {
+		if reOpeningLongBracket.FindString(self.chunk) != "" {
 			self.scanLongString()
 			return
 		}
@@ -277,21 +274,27 @@ func (self *Lexer) scan(re *regexp.Regexp) string {
 }
 
 func (self *Lexer) scanLongString() string {
-	startStr := reLongStrStart.FindString(self.chunk)
-	if startStr == "" {
+	openingLongBracket := reOpeningLongBracket.FindString(self.chunk)
+	if openingLongBracket == "" {
 		self.error("invalid long string delimiter near '%s'",
 			self.chunk[0:2])
 	}
 
-	endStr := strings.Replace(startStr, "[", "]", -1)
-	endIdx := strings.Index(self.chunk, endStr)
-	if endIdx < 0 {
+	closingLongBracket := strings.Replace(openingLongBracket, "[", "]", -1)
+	closingLongBracketIdx := strings.Index(self.chunk, closingLongBracket)
+	if closingLongBracketIdx < 0 {
 		self.error("unfinished long string or comment")
 	}
 
-	str := self.chunk[len(startStr):endIdx]
-	self.next(endIdx + len(endStr))
+	str := self.chunk[len(openingLongBracket):closingLongBracketIdx]
+	self.next(closingLongBracketIdx + len(closingLongBracket))
+
+	str = reNewLine.ReplaceAllString(str, "\n")
 	self.line += strings.Count(str, "\n")
+	if len(str) > 0 && str[0] == '\n' {
+		str = str[1:]
+	}
+
 	return str
 }
 
@@ -300,6 +303,7 @@ func (self *Lexer) scanShortString() string {
 		self.next(len(str))
 		str = str[1 : len(str)-1]
 		if strings.Index(str, `\`) >= 0 {
+			self.line += len(reNewLine.FindAllString(str, -1))
 			str = self.escape(str)
 		}
 		return str
@@ -315,89 +319,91 @@ func (self *Lexer) escape(str string) string {
 		if str[0] != '\\' {
 			buf.WriteByte(str[0])
 			str = str[1:]
-		} else if len(str) > 1 {
-			switch str[1] {
-			case 'a':
-				buf.WriteByte('\a')
-				str = str[2:]
-				continue
-			case 'b':
-				buf.WriteByte('\b')
-				str = str[2:]
-				continue
-			case 'f':
-				buf.WriteByte('\f')
-				str = str[2:]
-				continue
-			case 'n':
-				buf.WriteByte('\n')
-				str = str[2:]
-				continue
-			case 'r':
-				buf.WriteByte('\r')
-				str = str[2:]
-				continue
-			case 't':
-				buf.WriteByte('\t')
-				str = str[2:]
-				continue
-			case 'v':
-				buf.WriteByte('\v')
-				str = str[2:]
-				continue
-			case '"':
-				buf.WriteByte('"')
-				str = str[2:]
-				continue
-			case '\'':
-				buf.WriteByte('\'')
-				str = str[2:]
-				continue
-			case '\\':
-				buf.WriteByte('\\')
-				str = str[2:]
-				continue
-			case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9': // \ddd
-				if found := reDecEscapeSeq.FindString(str); found != "" {
-					d, _ := strconv.ParseInt(found[1:], 10, 32)
-					if d <= 0xFF {
-						buf.WriteByte(byte(d))
-						str = str[len(found):]
-						continue
-					}
-					self.error("decimal escape too large near '%s'", found)
-				}
-			case 'x': // \xXX
-				if found := reHexEscapeSeq.FindString(str); found != "" {
-					d, _ := strconv.ParseInt(found[2:], 16, 32)
+			continue
+		}
+
+		if len(str) == 1 {
+			self.error("unfinished string")
+		}
+
+		switch str[1] {
+		case 'a':
+			buf.WriteByte('\a')
+			str = str[2:]
+			continue
+		case 'b':
+			buf.WriteByte('\b')
+			str = str[2:]
+			continue
+		case 'f':
+			buf.WriteByte('\f')
+			str = str[2:]
+			continue
+		case 'n':
+			buf.WriteByte('\n')
+			str = str[2:]
+			continue
+		case 'r':
+			buf.WriteByte('\r')
+			str = str[2:]
+			continue
+		case 't':
+			buf.WriteByte('\t')
+			str = str[2:]
+			continue
+		case 'v':
+			buf.WriteByte('\v')
+			str = str[2:]
+			continue
+		case '"':
+			buf.WriteByte('"')
+			str = str[2:]
+			continue
+		case '\'':
+			buf.WriteByte('\'')
+			str = str[2:]
+			continue
+		case '\\':
+			buf.WriteByte('\\')
+			str = str[2:]
+			continue
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9': // \ddd
+			if found := reDecEscapeSeq.FindString(str); found != "" {
+				d, _ := strconv.ParseInt(found[1:], 10, 32)
+				if d <= 0xFF {
 					buf.WriteByte(byte(d))
 					str = str[len(found):]
 					continue
 				}
-			case 'u': // \u{XXX}
-				if found := reUnicodeEscapeSeq.FindString(str); found != "" {
-					if len(found) <= 10 {
-						d, _ := strconv.ParseInt(found[3:len(found)-1], 16, 32)
-						if d <= 0x10FFFF {
-							buf.WriteRune(rune(d))
-							str = str[len(found):]
-							continue
-						}
-					}
-					self.error("UTF-8 value too large near '%s'", found)
-				}
-			case 'z':
-				str = str[2:]
-				for len(str) > 0 && isWhiteSpace(str[0]) {
-					if str[0] == '\n' {
-						self.line += 1
-					}
-					str = str[1:]
-				}
+				self.error("decimal escape too large near '%s'", found)
+			}
+		case 'x': // \xXX
+			if found := reHexEscapeSeq.FindString(str); found != "" {
+				d, _ := strconv.ParseInt(found[2:], 16, 32)
+				buf.WriteByte(byte(d))
+				str = str[len(found):]
 				continue
 			}
-			self.error("invalid escape sequence near '\\%c'", str[1])
+		case 'u': // \u{XXX}
+			if found := reUnicodeEscapeSeq.FindString(str); found != "" {
+				if len(found) <= 10 {
+					d, _ := strconv.ParseInt(found[3:len(found)-1], 16, 32)
+					if d <= 0x10FFFF {
+						buf.WriteRune(rune(d))
+						str = str[len(found):]
+						continue
+					}
+				}
+				self.error("UTF-8 value too large near '%s'", found)
+			}
+		case 'z':
+			str = str[2:]
+			for len(str) > 0 && isWhiteSpace(str[0]) { // todo
+				str = str[1:]
+			}
+			continue
 		}
+		self.error("invalid escape sequence near '\\%c'", str[1])
 	}
 
 	return buf.String()
@@ -407,9 +413,8 @@ func isWhiteSpace(c byte) bool {
 	switch c {
 	case '\t', '\n', '\v', '\f', '\r', ' ':
 		return true
-	default:
-		return false
 	}
+	return false
 }
 
 func isNewLine(c byte) bool {

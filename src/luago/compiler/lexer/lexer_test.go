@@ -97,9 +97,9 @@ func TestNextToken_identifiers(t *testing.T) {
 func TestNextToken_numbers(t *testing.T) {
 	numbers := `
 	3   345   0xff   0xBEBADA
-	
 	3.0     3.1416     314.16e-2     0.31416E1     34e1
 	0x0.1E  0xA23p-4   0X1.921FB54442D18P+1
+	3.	.3	00001
 	`
 	lexer := NewLexer("str", numbers)
 	assertNextNumber(t, lexer, "3")
@@ -114,6 +114,9 @@ func TestNextToken_numbers(t *testing.T) {
 	assertNextNumber(t, lexer, "0x0.1E")
 	assertNextNumber(t, lexer, "0xA23p-4")
 	assertNextNumber(t, lexer, "0X1.921FB54442D18P+1")
+	assertNextNumber(t, lexer, "3.")
+	assertNextNumber(t, lexer, ".3")
+	assertNextNumber(t, lexer, "00001")
 	assertNextTokenKind(t, lexer, TOKEN_EOF)
 }
 
@@ -137,6 +140,8 @@ func TestNextToken_comments(t *testing.T) {
 func TestNextToken_strings(t *testing.T) {
 	strs := `
 	[[]] [[ long string ]]
+	[=[
+long string]=]
 	[===[long\z
 	string]===]
 	'' '"' 'short string'
@@ -151,6 +156,7 @@ func TestNextToken_strings(t *testing.T) {
 	lexer := NewLexer("str", strs)
 	assertNextString(t, lexer, "")
 	assertNextString(t, lexer, " long string ")
+	assertNextString(t, lexer, "long string")
 	assertNextString(t, lexer, "long\\z\n\tstring")
 	assertNextString(t, lexer, "")
 	assertNextString(t, lexer, "\"")
@@ -162,14 +168,14 @@ func TestNextToken_strings(t *testing.T) {
 	assertNextString(t, lexer, "\b \b @ z \b z z 我 zzz")
 	assertNextString(t, lexer, "foo bar")
 	assertNextTokenKind(t, lexer, TOKEN_EOF)
-	assert.IntEqual(t, lexer.line, 13)
+	assert.IntEqual(t, lexer.line, 15)
 }
 
 func TestNextToken_whiteSpaces(t *testing.T) {
 	strs := "\r\n \r\n \n\r \n \r \n \t\v\f"
 	lexer := NewLexer("str", strs)
 	assertNextTokenKind(t, lexer, TOKEN_EOF)
-	assert.IntEqual(t, lexer.line, 8)
+	assert.IntEqual(t, lexer.line, 7)
 }
 
 func TestNextToken_hw(t *testing.T) {
@@ -206,6 +212,7 @@ func TestErrors(t *testing.T) {
 	testError(t, "'abc\\defg'", "src:1: invalid escape sequence near '\\d'")
 	testError(t, "'\\256'", "src:1: decimal escape too large near '\\256'")
 	testError(t, "'\\u{11FFFF}'", "src:1: UTF-8 value too large near '\\u{11FFFF}'")
+	testError(t, "'\\'", "src:1: unfinished string")
 }
 
 func testError(t *testing.T, chunk, expectedErr string) {
