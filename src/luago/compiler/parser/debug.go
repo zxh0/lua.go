@@ -33,7 +33,7 @@ func statToString(stat Stat) string {
 		return "::" + x.Name + "::"
 	case *GotoStat:
 		return "goto " + x.Name
-	case DoStat:
+	case *DoStat:
 		return "do " + blockToString(x.Block) + " end"
 	case *WhileStat:
 		return "while " + expToString(x.Exp) +

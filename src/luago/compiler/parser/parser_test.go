@@ -136,6 +136,7 @@ func TestStatFuncCall(t *testing.T) {
 }
 
 func TestStatAssign(t *testing.T) {
+	testStat2(t, `f().a = 1`, `f()['a'] = 1`)
 	testStat2(t, `a = io.read('*n')`, `a = io['read']('*n')`)
 	testStat(t, `local tolerance = 10`) // todo
 	testStat(t, `local f = function() end`)
