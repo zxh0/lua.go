@@ -34,15 +34,15 @@ func statToString(stat Stat) string {
 	case *GotoStat:
 		return "goto " + x.Name
 	case DoStat:
-		return "do " + blockToString(x) + " end"
-	case FuncCallStat:
-		return funcCallToString(x)
+		return "do " + blockToString(x.Block) + " end"
 	case *WhileStat:
 		return "while " + expToString(x.Exp) +
 			" do " + blockToString(x.Block) + " end"
 	case *RepeatStat:
 		return "repeat " + blockToString(x.Block) +
 			" until " + expToString(x.Exp)
+	case *FuncCallStat:
+		return funcCallToString(x)
 	case *IfStat:
 		return ifStatToString(x)
 	case *ForNumStat:

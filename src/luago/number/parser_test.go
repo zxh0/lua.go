@@ -20,6 +20,14 @@ func TestParseFloat(t *testing.T) {
 	testFloat(t, "0xA23p-4", "162.1875")
 	testFloat(t, "0X1.921FB54442D18P+1", "3.141592653589793")
 	testFloat(t, "0xffffffffffffffff.0", "1.8446744073709552e+19")
+	testFloat(t, "3.", "3")
+	testFloat(t, ".3", "0.3")
+	testFloat(t, "3.e1", "30")
+	testFloat(t, ".3e1", "3")
+	testFloat(t, "0x1.p1", "2")
+	testFloat(t, "0x.1p1", "0.125")
+	//testFloat(t, "0x", "0") todo
+	//testFloat(t, "0x.p1", "?") todo
 }
 
 func testInteger(t *testing.T, str string, i int64) {

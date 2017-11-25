@@ -4,9 +4,9 @@ import . "luago/compiler/ast"
 
 func (self *codeGen) cgStat(node Stat) {
 	switch stat := node.(type) {
-	case DoStat:
-		self.cgBlockWithNewScope(stat, false)
-	case FuncCallStat:
+	case *DoStat:
+		self.cgBlockWithNewScope(stat.Block, false)
+	case *FuncCallStat:
 		self.cgFuncCallStat(stat)
 	case *BreakStat:
 		self.cgBreakStat(stat)
@@ -36,10 +36,9 @@ func (self *codeGen) cgLocalFuncDefStat(node *LocalFuncDefStat) {
 	self.cgFuncDefExp(node.Exp, r)
 }
 
-func (self *codeGen) cgFuncCallStat(node FuncCallStat) {
-	fcExp := (*FuncCallExp)(node)
+func (self *codeGen) cgFuncCallStat(node *FuncCallStat) {
 	a := self.allocReg()
-	self.cgExp(fcExp, a, 0)
+	self.cgExp(node, a, 0)
 	self.freeReg()
 }
 

@@ -69,11 +69,11 @@ func parseGotoStat(lexer *Lexer) *GotoStat {
 }
 
 // do block end
-func parseDoStat(lexer *Lexer) DoStat {
+func parseDoStat(lexer *Lexer) *DoStat {
 	lexer.NextTokenOfKind(TOKEN_KW_DO)
 	block := parseBlock(lexer)
 	lexer.NextTokenOfKind(TOKEN_KW_END)
-	return DoStat(block)
+	return &DoStat{block}
 }
 
 // while exp do block end
@@ -234,7 +234,7 @@ func parseAssignOrFuncCallStat(lexer *Lexer) Stat {
 	backup := lexer.Backup()
 	prefixExp := parsePrefixExp(lexer)
 	if fc, ok := prefixExp.(*FuncCallExp); ok {
-		return FuncCallStat(fc)
+		return fc
 	} else {
 		lexer.Restore(backup)
 		return parseAssignStat(lexer)

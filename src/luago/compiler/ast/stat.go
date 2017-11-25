@@ -20,11 +20,11 @@ stat ::=  ‘;’ |
 type Stat interface{}
 
 type EmptyStat struct{}              // ‘;’
+type BreakStat struct{ Line int }    // break
 type LabelStat struct{ Name string } // ‘::’ Name ‘::’
 type GotoStat struct{ Name string }  // goto Name
-type BreakStat struct{ Line int }    // break
-type DoStat *Block                   // do block end
-type FuncCallStat *FuncCallExp       // functioncall
+type DoStat struct{ Block *Block }   // do block end
+type FuncCallStat = FuncCallExp      // functioncall
 
 // if exp then block {elseif exp then block} [else block] end
 type IfStat struct {
