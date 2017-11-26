@@ -307,11 +307,7 @@ func parseLocalFuncDefStat(lexer *Lexer) *LocalFuncDefStat {
 	lexer.NextTokenOfKind(TOKEN_KW_FUNCTION) // function
 	_, name := lexer.NextIdentifier()        // name
 	fdExp := parseFuncDefExp(lexer)          // funcbody
-
-	return &LocalFuncDefStat{
-		Name: name,
-		Exp:  fdExp,
-	}
+	return &LocalFuncDefStat{name, fdExp}
 }
 
 // function funcname funcbody
@@ -322,17 +318,17 @@ func parseLocalFuncDefStat(lexer *Lexer) *LocalFuncDefStat {
 func parseFuncDefStat(lexer *Lexer) *AssignStat {
 	lexer.NextTokenOfKind(TOKEN_KW_FUNCTION)
 	pexp, hasColon := _parseFuncName(lexer)
-	funcDef := parseFuncDefExp(lexer)
+	fdExp := parseFuncDefExp(lexer)
 	if hasColon { // insert self
-		funcDef.ParList = append(funcDef.ParList, "self")
-		copy(funcDef.ParList[1:], funcDef.ParList)
-		funcDef.ParList[0] = "self"
+		fdExp.ParList = append(fdExp.ParList, "self")
+		copy(fdExp.ParList[1:], fdExp.ParList)
+		fdExp.ParList[0] = "self"
 	}
 
 	return &AssignStat{
-		LastLine: funcDef.Line,
+		LastLine: fdExp.Line,
 		VarList:  []Exp{pexp},
-		ExpList:  []Exp{funcDef},
+		ExpList:  []Exp{fdExp},
 	}
 }
 

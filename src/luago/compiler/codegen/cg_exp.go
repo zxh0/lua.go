@@ -153,7 +153,7 @@ func (self *codeGen) prepFuncCall(node *FuncCallExp, a int) int {
 
 // r[a] := name
 func (self *codeGen) cgNameExp(node *NameExp, a int) {
-	if r := self.indexOfLocVar(node.Name); r >= 0 {
+	if r := self.slotOfLocVar(node.Name); r >= 0 {
 		self.emitMove(node.Line, a, r)
 	} else if idx := self.indexOfUpval(node.Name); idx >= 0 {
 		self.emitGetUpval(node.Line, a, idx)
@@ -254,7 +254,7 @@ func (self *codeGen) expToOpArg(node Exp, argKinds int) (arg, argKind int) {
 
 	if nameExp, ok := node.(*NameExp); ok {
 		if argKinds&ARG_REG > 0 {
-			if r := self.indexOfLocVar(nameExp.Name); r >= 0 {
+			if r := self.slotOfLocVar(nameExp.Name); r >= 0 {
 				return r, ARG_REG
 			}
 		}

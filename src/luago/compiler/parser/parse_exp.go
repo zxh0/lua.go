@@ -226,17 +226,21 @@ func parseNumberExp(lexer *Lexer) Exp {
 // functiondef ::= function funcbody
 // funcbody ::= ‘(’ [parlist] ‘)’ block end
 func parseFuncDefExp(lexer *Lexer) *FuncDefExp {
-	/* keyword function is scanned */
+	//lexer.NextTokenOfKind(TOKEN_KW_FUNCTION)
 	line := lexer.Line()
-	lexer.NextTokenOfKind(TOKEN_SEP_LPAREN)
-	names, isVararg := _parseParList(lexer)
-	lexer.NextTokenOfKind(TOKEN_SEP_RPAREN)
+	lexer.NextTokenOfKind(TOKEN_SEP_LPAREN) // (
+	names, isVararg := _parseParList(lexer) // parlist
+	lexer.NextTokenOfKind(TOKEN_SEP_RPAREN) // )
+	block := parseBlock(lexer)              // block
+	lexer.NextTokenOfKind(TOKEN_KW_END)     // end
 
-	block := parseBlock(lexer)
-	lexer.NextTokenOfKind(TOKEN_KW_END)
-	lastLine := lexer.Line()
-
-	return &FuncDefExp{line, lastLine, names, isVararg, block}
+	return &FuncDefExp{
+		Line:     line,
+		LastLine: lexer.Line(),
+		ParList:  names,
+		IsVararg: isVararg,
+		Block:    block,
+	}
 }
 
 // parlist ::= namelist [‘,’ ‘...’] | ‘...’

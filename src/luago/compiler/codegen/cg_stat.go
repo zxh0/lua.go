@@ -186,7 +186,7 @@ func (self *codeGen) cgForInStat(node *ForInStat) {
 	self.fixSbx(jmpToTFC, self.pc()-jmpToTFC)
 
 	line := lineOf(node.ExpList[0])
-	rGenerator := self.indexOfLocVar(forGeneratorVar)
+	rGenerator := self.slotOfLocVar(forGeneratorVar)
 	self.emitTForCall(line, rGenerator, len(node.NameList))
 	self.emitTForLoop(line, rGenerator+2, jmpToTFC-self.pc()-1)
 
@@ -261,7 +261,7 @@ func (self *codeGen) cgAssignStat(node *AssignStat) {
 			self.cgExp(taExp.KeyExp, ks[i], 1)
 		} else {
 			nameExp := exp.(*NameExp)
-			if self.indexOfLocVar(nameExp.Name) < 0 &&
+			if self.slotOfLocVar(nameExp.Name) < 0 &&
 				self.indexOfUpval(nameExp.Name) < 0 {
 				// global var
 				ks[i] = -1
@@ -308,7 +308,7 @@ func (self *codeGen) cgAssignStat(node *AssignStat) {
 	for i, exp := range node.VarList {
 		if nameExp, ok := exp.(*NameExp); ok {
 			varName := nameExp.Name
-			if a := self.indexOfLocVar(varName); a >= 0 {
+			if a := self.slotOfLocVar(varName); a >= 0 {
 				self.emitMove(lastLine, a, vs[i])
 			} else if a := self.indexOfUpval(varName); a >= 0 {
 				self.emitSetUpval(lastLine, a, vs[i])

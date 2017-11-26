@@ -3,9 +3,9 @@ package codegen
 import "luago/binchunk"
 
 type upvalInfo struct {
-	instack bool
-	idx     int
-	seq     int
+	locVarSlot int
+	upvalIndex int
+	index      int
 }
 
 type locVarInfo struct {
@@ -19,8 +19,8 @@ type locVarInfo struct {
 
 type scope struct {
 	parent    *scope
-	stackSize int // usedRegs
-	stackMax  int // maxRegs
+	usedRegs  int
+	maxRegs   int
 	level     int // blockLevel
 	locVars   []*locVarInfo
 	locNames  map[string]*locVarInfo
@@ -55,18 +55,18 @@ func (self *scope) indexOfConstant(k interface{}) int {
 /* registers */
 
 func (self *scope) allocReg() int {
-	self.stackSize++
-	if self.stackSize > self.stackMax {
-		self.stackMax = self.stackSize
+	self.usedRegs++
+	if self.usedRegs > self.maxRegs {
+		self.maxRegs = self.usedRegs
 	}
-	return self.stackSize - 1
+	return self.usedRegs - 1
 }
 
 func (self *scope) freeReg() {
-	if self.stackSize > 0 {
-		self.stackSize--
+	if self.usedRegs > 0 {
+		self.usedRegs--
 	} else {
-		panic("stackSize == 0 !")
+		panic("usedRegs == 0 !")
 	}
 }
 
@@ -144,7 +144,7 @@ func (self *scope) addLocVar(name string, startPc int) int {
 	return newVar.slot
 }
 
-func (self *scope) indexOfLocVar(name string) int {
+func (self *scope) slotOfLocVar(name string) int {
 	if locVar, found := self.locNames[name]; found {
 		return locVar.slot
 	} else {
@@ -167,44 +167,47 @@ func (self *scope) addBreakJmp(pc int) {
 
 func (self *scope) setupEnv() {
 	self.upvalues["_ENV"] = upvalInfo{
-		instack: true,
-		idx:     0,
-		seq:     0,
+		locVarSlot: 0,
+		upvalIndex: -1,
+		index:      0,
 	}
 }
 
 func (self *scope) indexOfUpval(name string) int {
-	if uvInfo, ok := self.upvalues[name]; ok {
-		return uvInfo.seq
+	if upval, ok := self.upvalues[name]; ok {
+		return upval.index
 	}
 	if self.parent != nil {
-		seq := len(self.upvalues)
 		if locVar, found := self.parent.locNames[name]; found {
-			self.upvalues[name] = upvalInfo{
-				instack: true,
-				idx:     locVar.slot,
-				seq:     seq,
+			upval := upvalInfo{
+				upvalIndex: -1,
+				locVarSlot: locVar.slot,
+				index:      len(self.upvalues),
 			}
-			return seq
+			self.upvalues[name] = upval
+			return upval.index
 		}
 		if idx := self.parent.indexOfUpval(name); idx >= 0 {
-			self.upvalues[name] = upvalInfo{
-				instack: false,
-				idx:     idx,
-				seq:     seq,
+			upval := upvalInfo{
+				locVarSlot: -1,
+				upvalIndex: idx,
+				index:      len(self.upvalues),
 			}
-			return seq
+			self.upvalues[name] = upval
+			return upval.index
 		}
-		self.indexOfUpval("_ENV")
-		return -1
 	}
 	return -1
 }
 
 /* summarize */
 
-func (self *scope) getMaxStack() int {
-	return self.stackMax
+func (self scope) getConstants() []interface{} {
+	consts := make([]interface{}, len(self.constants))
+	for k, idx := range self.constants {
+		consts[idx] = k
+	}
+	return consts
 }
 
 func (self *scope) getLocVars() []binchunk.LocVar {
@@ -222,10 +225,10 @@ func (self *scope) getLocVars() []binchunk.LocVar {
 func (self scope) getUpvalues() []binchunk.Upvalue {
 	upvals := make([]binchunk.Upvalue, len(self.upvalues))
 	for _, uv := range self.upvalues {
-		if uv.instack {
-			upvals[uv.seq] = binchunk.Upvalue{1, byte(uv.idx)}
+		if uv.locVarSlot >= 0 { // instack
+			upvals[uv.index] = binchunk.Upvalue{1, byte(uv.locVarSlot)}
 		} else {
-			upvals[uv.seq] = binchunk.Upvalue{0, byte(uv.idx)}
+			upvals[uv.index] = binchunk.Upvalue{0, byte(uv.upvalIndex)}
 		}
 	}
 	return upvals
@@ -234,15 +237,7 @@ func (self scope) getUpvalues() []binchunk.Upvalue {
 func (self scope) getUpvalueNames() []string {
 	names := make([]string, len(self.upvalues))
 	for name, uv := range self.upvalues {
-		names[uv.seq] = name
+		names[uv.index] = name
 	}
 	return names
-}
-
-func (self scope) getConstants() []interface{} {
-	consts := make([]interface{}, len(self.constants))
-	for k, idx := range self.constants {
-		consts[idx] = k
-	}
-	return consts
 }

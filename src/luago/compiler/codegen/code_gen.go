@@ -26,10 +26,10 @@ func (self *codeGen) indexOfConstant(k interface{}) int {
 
 // registers
 func (self *codeGen) usedRegs() int {
-	return self.scope.stackSize
+	return self.scope.usedRegs
 }
 func (self *codeGen) resetRegs(n int) {
-	self.scope.stackSize = n
+	self.scope.usedRegs = n
 }
 func (self *codeGen) allocReg() int {
 	return self.scope.allocReg()
@@ -57,8 +57,8 @@ func (self *codeGen) exitScope(endPc int) {
 func (self *codeGen) addLocVar(name string, startPc int) int {
 	return self.scope.addLocVar(name, startPc)
 }
-func (self *codeGen) indexOfLocVar(name string) int {
-	return self.scope.indexOfLocVar(name)
+func (self *codeGen) slotOfLocVar(name string) int {
+	return self.scope.slotOfLocVar(name)
 }
 func (self *codeGen) addBreakJmp(pc int) {
 	self.scope.addBreakJmp(pc)
@@ -108,7 +108,7 @@ func (self *codeGen) toProto(fd *FuncDefExp) *Prototype {
 		LineDefined:     uint32(fd.Line),
 		LastLineDefined: uint32(fd.LastLine),
 		NumParams:       byte(len(fd.ParList)),
-		MaxStackSize:    byte(self.scope.getMaxStack()),
+		MaxStackSize:    byte(self.scope.maxRegs),
 		Code:            self.insts,
 		Constants:       self.scope.getConstants(),
 		Upvalues:        self.scope.getUpvalues(),

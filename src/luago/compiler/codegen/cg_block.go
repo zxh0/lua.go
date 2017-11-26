@@ -28,7 +28,7 @@ func (self *codeGen) cgRetStat(exps []Exp, lastLine int) {
 
 	if nExps == 1 {
 		if nameExp, ok := exps[0].(*NameExp); ok {
-			if r := self.indexOfLocVar(nameExp.Name); r >= 0 {
+			if r := self.slotOfLocVar(nameExp.Name); r >= 0 {
 				self.emitReturn(lastLine, r, 1)
 				return
 			}
