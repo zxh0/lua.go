@@ -4,7 +4,7 @@ import "testing"
 
 func TestForNumDbg(t *testing.T) {
 	testDbg(t,
-`
+		`
 for
 i
 =
@@ -20,7 +20,7 @@ i
 )
 end -- 15
 `,
-`[6/4]
+		`[6/4]
 [ 5]loadk(0,-1);
 [ 7]loadk(1,-2);
 [ 9]loadk(2,-3);
@@ -38,7 +38,7 @@ end -- 15
 
 func TestForInDbg(t *testing.T) {
 	testDbg(t,
-`
+		`
 for
 k
 ,
@@ -57,7 +57,7 @@ v
 )
 end
 `,
-`[8/5]
+		`[8/5]
 [ 7]gettabup(0,0,-1);
 [ 9]gettabup(1,0,-2);
 [ 7]call(0,2,4);

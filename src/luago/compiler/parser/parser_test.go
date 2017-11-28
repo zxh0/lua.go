@@ -54,7 +54,7 @@ func TestExpBinOp(t *testing.T) {
 	testExp2(t, `true and x and true and x and true`,
 		`((x and x) and true)`)
 	testExp2(t, `((((a + b))))`, `(a + b)`)
-	testExp2(t, `((((a))))`, `a`)
+	testExp2(t, `((((a))))`, `(a)`)
 }
 
 func TestExpTC(t *testing.T) {
@@ -70,7 +70,7 @@ func TestExpTC(t *testing.T) {
 
 func TestPrefixExp(t *testing.T) {
 	testExp(t, `name`)
-	testExp2(t, `(name)`, `name`)
+	testExp2(t, `(name)`, `(name)`)
 	testExp(t, `name[key]`)
 	testExp2(t, `name.field`, `name['field']`)
 	testExp2(t, `a.b.c.d.e`, `a['b']['c']['d']['e']`)
@@ -158,6 +158,16 @@ func TestFuncDef(t *testing.T) {
 	testBlock2(t, `local function f(a) end`, `local function f(a) end`)
 }
 
+func TestError(t *testing.T) {
+	testError(t, `f()   = 1`, `str:1: syntax error near '='`)
+	testError(t, `a,f() = 1`, `str:1: syntax error near '='`)
+	testError(t, `(a)   = 1`, `str:1: syntax error near '='`)
+	testError(t, `(a+b) = 1`, `str:1: syntax error near '='`)
+	testError(t, `(a.b) = 1`, `str:1: syntax error near '='`)
+	testError(t, `a + b = 1`, `str:1: syntax error near '+'`)
+	//testError(t, `true = 1`, ``)
+}
+
 func testExp(t *testing.T, str string) {
 	exp := parseExp(lexer.NewLexer("", str))
 	_str := expToString(exp)
@@ -200,4 +210,20 @@ func testBlock2(t *testing.T, str, str2 string) {
 	if _str != str2 {
 		t.Errorf(_str)
 	}
+}
+
+func testError(t *testing.T, str, err string) {
+	_err := getError(str)
+	assert.StringEqual(t, _err, err)
+}
+
+func getError(str string) (err string) {
+	// catch error
+	defer func() {
+		if r := recover(); r != nil {
+			err = r.(string)
+		}
+	}()
+	parseBlock(lexer.NewLexer("str", str))
+	return
 }

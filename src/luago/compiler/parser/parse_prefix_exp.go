@@ -18,7 +18,7 @@ prefixexp ::= Name |
 func parsePrefixExp(lexer *Lexer) Exp {
 	var exp Exp
 
-	if lexer.LookAhead(1) == TOKEN_IDENTIFIER { // Name
+	if lexer.LookAhead() == TOKEN_IDENTIFIER { // Name
 		line, name := lexer.NextIdentifier()
 		exp = &NameExp{line, name}
 	} else { // ‘(’ exp ‘)’
@@ -26,7 +26,7 @@ func parsePrefixExp(lexer *Lexer) Exp {
 	}
 
 	for {
-		switch lexer.LookAhead(1) {
+		switch lexer.LookAhead() {
 		case TOKEN_SEP_LBRACK: // prefixexp ‘[’ exp ‘]’
 			lexer.NextToken() // TOKEN_SEP_LBRACK
 			idx := parseExp(lexer)
@@ -58,7 +58,7 @@ func parseParensExp(lexer *Lexer) Exp {
 		if x.Op == TOKEN_OP_POW || x.Op == TOKEN_OP_CONCAT {
 			return &ParensExp{exp}
 		}
-	case *VarargExp, *FuncCallExp:
+	case *VarargExp, *FuncCallExp, *NameExp, *TableAccessExp:
 		return &ParensExp{exp}
 	}
 
@@ -77,7 +77,7 @@ func _finishFuncCallExp(lexer *Lexer, prefixExp Exp) *FuncCallExp {
 }
 
 func _parseNameExp(lexer *Lexer) *StringExp {
-	if lexer.LookAhead(1) == TOKEN_SEP_COLON {
+	if lexer.LookAhead() == TOKEN_SEP_COLON {
 		lexer.NextToken()
 		line, name := lexer.NextIdentifier()
 		return &StringExp{line, name}
@@ -89,10 +89,10 @@ func _parseNameExp(lexer *Lexer) *StringExp {
 func _parseArgs(lexer *Lexer) []Exp {
 	var args []Exp = nil
 
-	switch lexer.LookAhead(1) {
+	switch lexer.LookAhead() {
 	case TOKEN_SEP_LPAREN: // ‘(’ [explist] ‘)’
 		lexer.NextToken() // TOKEN_SEP_LPAREN
-		if lexer.LookAhead(1) != TOKEN_SEP_RPAREN {
+		if lexer.LookAhead() != TOKEN_SEP_RPAREN {
 			args = parseExpList(lexer)
 		}
 		lexer.NextTokenOfKind(TOKEN_SEP_RPAREN)

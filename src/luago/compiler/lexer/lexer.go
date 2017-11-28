@@ -18,35 +18,29 @@ var reHexEscapeSeq = regexp.MustCompile(`^\\x[0-9a-fA-F]{2}`)
 var reUnicodeEscapeSeq = regexp.MustCompile(`^\\u\{[0-9a-fA-F]+\}`)
 
 type Lexer struct {
-	source string
-	chunk  string
-	line   int // current line number
+	source        string // source name
+	chunk         string // source code
+	line          int    // current line number
+	nextToken     string
+	nextTokenKind int
+	nextTokenLine int
 }
 
 func NewLexer(source string, chunk string) *Lexer {
-	return &Lexer{source, chunk, 1}
+	return &Lexer{source, chunk, 1, "", 0, 0}
 }
 
 func (self *Lexer) Line() int {
 	return self.line
 }
 
-func (self *Lexer) Backup() Lexer {
-	return Lexer{"", self.chunk, self.line}
-}
-func (self *Lexer) Restore(backup Lexer) {
-	self.chunk = backup.chunk
-	self.line = backup.line
-}
-
-// todo
-func (self *Lexer) LookAhead(n int) int {
-	backup := self.Backup()
-	for i := 1; i < n; i++ {
-		self.NextToken()
-	}
-	_, kind, _ := self.NextToken()
-	self.Restore(backup)
+func (self *Lexer) LookAhead() int {
+	currentLine := self.line
+	line, kind, token := self.NextToken()
+	self.line = currentLine
+	self.nextTokenLine = line
+	self.nextTokenKind = kind
+	self.nextToken = token
 	return kind
 }
 
@@ -63,6 +57,15 @@ func (self *Lexer) NextTokenOfKind(kind int) (line int, token string) {
 }
 
 func (self *Lexer) NextToken() (line, kind int, token string) {
+	if self.nextTokenLine > 0 {
+		line = self.nextTokenLine
+		kind = self.nextTokenKind
+		token = self.nextToken
+		self.line = self.nextTokenLine
+		self.nextTokenLine = 0
+		return
+	}
+
 	self.skipWhiteSpaces()
 	if len(self.chunk) == 0 {
 		return line, TOKEN_EOF, "EOF"
@@ -71,120 +74,120 @@ func (self *Lexer) NextToken() (line, kind int, token string) {
 	switch self.chunk[0] {
 	case ';':
 		self.next(1)
-		return self.line, TOKEN_SEP_SEMI, ""
+		return self.line, TOKEN_SEP_SEMI, ";"
 	case ',':
 		self.next(1)
-		return self.line, TOKEN_SEP_COMMA, ""
+		return self.line, TOKEN_SEP_COMMA, ","
 	case '(':
 		self.next(1)
-		return self.line, TOKEN_SEP_LPAREN, ""
+		return self.line, TOKEN_SEP_LPAREN, "("
 	case ')':
 		self.next(1)
-		return self.line, TOKEN_SEP_RPAREN, ""
+		return self.line, TOKEN_SEP_RPAREN, ")"
 	case ']':
 		self.next(1)
-		return self.line, TOKEN_SEP_RBRACK, ""
+		return self.line, TOKEN_SEP_RBRACK, "]"
 	case '{':
 		self.next(1)
-		return self.line, TOKEN_SEP_LCURLY, ""
+		return self.line, TOKEN_SEP_LCURLY, "{"
 	case '}':
 		self.next(1)
-		return self.line, TOKEN_SEP_RCURLY, ""
+		return self.line, TOKEN_SEP_RCURLY, "}"
 	case '+':
 		self.next(1)
-		return self.line, TOKEN_OP_ADD, ""
+		return self.line, TOKEN_OP_ADD, "+"
 	case '-':
 		self.next(1)
-		return self.line, TOKEN_OP_MINUS, ""
+		return self.line, TOKEN_OP_MINUS, "-"
 	case '*':
 		self.next(1)
-		return self.line, TOKEN_OP_MUL, ""
+		return self.line, TOKEN_OP_MUL, "*"
 	case '^':
 		self.next(1)
-		return self.line, TOKEN_OP_POW, ""
+		return self.line, TOKEN_OP_POW, "^"
 	case '%':
 		self.next(1)
-		return self.line, TOKEN_OP_MOD, ""
+		return self.line, TOKEN_OP_MOD, "%"
 	case '&':
 		self.next(1)
-		return self.line, TOKEN_OP_BAND, ""
+		return self.line, TOKEN_OP_BAND, "&"
 	case '|':
 		self.next(1)
-		return self.line, TOKEN_OP_BOR, ""
+		return self.line, TOKEN_OP_BOR, "|"
 	case '#':
 		self.next(1)
-		return self.line, TOKEN_OP_LEN, ""
+		return self.line, TOKEN_OP_LEN, "#"
 	case ':':
 		if self.test("::") {
 			self.next(2)
-			return self.line, TOKEN_SEP_LABEL, ""
+			return self.line, TOKEN_SEP_LABEL, "::"
 		} else {
 			self.next(1)
-			return self.line, TOKEN_SEP_COLON, ""
+			return self.line, TOKEN_SEP_COLON, ":"
 		}
 	case '/':
 		if self.test("//") {
 			self.next(2)
-			return self.line, TOKEN_OP_IDIV, ""
+			return self.line, TOKEN_OP_IDIV, "//"
 		} else {
 			self.next(1)
-			return self.line, TOKEN_OP_DIV, ""
+			return self.line, TOKEN_OP_DIV, "/"
 		}
 	case '~':
 		if self.test("~=") {
 			self.next(2)
-			return self.line, TOKEN_OP_NE, ""
+			return self.line, TOKEN_OP_NE, "~="
 		} else {
 			self.next(1)
-			return self.line, TOKEN_OP_WAVE, ""
+			return self.line, TOKEN_OP_WAVE, "~"
 		}
 	case '=':
 		if self.test("==") {
 			self.next(2)
-			return self.line, TOKEN_OP_EQ, ""
+			return self.line, TOKEN_OP_EQ, "=="
 		} else {
 			self.next(1)
-			return self.line, TOKEN_OP_ASSIGN, ""
+			return self.line, TOKEN_OP_ASSIGN, "="
 		}
 	case '<':
 		if self.test("<<") {
 			self.next(2)
-			return self.line, TOKEN_OP_SHL, ""
+			return self.line, TOKEN_OP_SHL, "<<"
 		} else if self.test("<=") {
 			self.next(2)
-			return self.line, TOKEN_OP_LE, ""
+			return self.line, TOKEN_OP_LE, "<="
 		} else {
 			self.next(1)
-			return self.line, TOKEN_OP_LT, ""
+			return self.line, TOKEN_OP_LT, "<"
 		}
 	case '>':
 		if self.test(">>") {
 			self.next(2)
-			return self.line, TOKEN_OP_SHR, ""
+			return self.line, TOKEN_OP_SHR, ">>"
 		} else if self.test(">=") {
 			self.next(2)
-			return self.line, TOKEN_OP_GE, ""
+			return self.line, TOKEN_OP_GE, ">="
 		} else {
 			self.next(1)
-			return self.line, TOKEN_OP_GT, ""
+			return self.line, TOKEN_OP_GT, ">"
 		}
 	case '.':
 		if self.test("...") {
 			self.next(3)
-			return self.line, TOKEN_VARARG, ""
+			return self.line, TOKEN_VARARG, "..."
 		} else if self.test("..") {
 			self.next(2)
-			return self.line, TOKEN_OP_CONCAT, ""
+			return self.line, TOKEN_OP_CONCAT, ".."
 		} else if len(self.chunk) == 1 || !isDigit(self.chunk[1]) {
 			self.next(1)
-			return self.line, TOKEN_SEP_DOT, ""
+			return self.line, TOKEN_SEP_DOT, "."
 		}
 	case '[':
 		if self.test("[[") || self.test("[=") {
 			return self.line, TOKEN_STRING, self.scanLongString()
 		} else {
 			self.next(1)
-			return self.line, TOKEN_SEP_LBRACK, ""
+			return self.line, TOKEN_SEP_LBRACK, "["
 		}
 	case '\'', '"':
 		return self.line, TOKEN_STRING, self.scanShortString()
@@ -198,7 +201,7 @@ func (self *Lexer) NextToken() (line, kind int, token string) {
 	if c == '_' || isLatter(c) {
 		token := self.scanIdentifier()
 		if kind, found := keywords[token]; found {
-			return self.line, kind, "" // keyword
+			return self.line, kind, token // keyword
 		} else {
 			return self.line, TOKEN_IDENTIFIER, token
 		}

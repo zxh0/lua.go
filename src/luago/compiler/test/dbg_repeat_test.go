@@ -4,7 +4,7 @@ import "testing"
 
 func TestRepeatDbg(t *testing.T) {
 	testDbg(t,
-`
+		`
 repeat
 local 
 a
@@ -21,7 +21,7 @@ b
 until -- 15
 a
 `,
-`[5/2]
+		`[5/2]
 [ 6]loadnil(0,1,_);
 [ 9]gettabup(2,0,-2);
 [11]move(3,0,_);

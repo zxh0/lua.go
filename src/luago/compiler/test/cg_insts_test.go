@@ -24,7 +24,7 @@ func TestReturn(t *testing.T) {
 
 func TestConcat(t *testing.T) {
 	testInsts(t, "x = a .. b .. c; local d",
-`[4/1]
+		`[4/1]
 gettabup(1,0,-2);
 gettabup(2,0,-3);
 gettabup(3,0,-4);
@@ -49,13 +49,13 @@ func TestOP(t *testing.T) {
 	testInsts(t, "x=a+b+c", "[4/0] gettabup(2,0,-2); gettabup(3,0,-3); add(1,2,3); gettabup(2,0,-4); add(0,1,2); settabup(0,-1,0)")
 	testInsts(t, "local a,b; c = a and b", "[3/2] loadnil(0,1,_); testset(2,0,0); jmp(0,1); move(2,1,_); settabup(0,-1,2)")
 	testInsts(t, "x = a and b and c",
-`[3/0]
+		`[3/0]
 gettabup(2,0,-2); testset(1,2,0); jmp(0,2);
 gettabup(2,0,-3); move(1,2,_); testset(0,1,0); jmp(0,2);
 gettabup(1,0,-4); move(0,1,_);
 settabup(0,-1,0)`)
 	testInsts(t, "x = a or b or c",
-`[3/0]
+		`[3/0]
 gettabup(2,0,-2); testset(1,2,1); jmp(0,2);
 gettabup(2,0,-3); move(1,2,_); testset(0,1,1); jmp(0,2);
 gettabup(1,0,-4); move(0,1,_);
@@ -64,20 +64,20 @@ settabup(0,-1,0)`)
 
 func TestTcExp(t *testing.T) {
 	testInsts(t, "local a={1,2}",
-`[3/1]
+		`[3/1]
 newtable(0,2,0);
 loadk(1,-1);
 loadk(2,-2);
 setlist(0,2,1)`)
 	testInsts(t, "local a={1,f()}",
-`[3/1]
+		`[3/1]
 newtable(0,2,0);
 loadk(1,-1);
 gettabup(2,0,-2);
 call(2,1,0);
 setlist(0,0,1)`)
 	testInsts(t, "local a={1,f(),2}",
-`[4/1]
+		`[4/1]
 newtable(0,3,0);
 loadk(1,-1);
 gettabup(2,0,-2);
@@ -95,7 +95,7 @@ func TestFuncCallStat(t *testing.T) {
 	testInsts(t, "f()", "[2/0] gettabup(0,0,-1); call(0,1,1)")
 	testInsts(t, "f(1,2)", "[3/0] gettabup(0,0,-1); loadk(1,-2); loadk(2,-3); call(0,3,1)")
 	testInsts(t, "f(1,g(2,h(3)))",
-`[6/0]
+		`[6/0]
 gettabup(0,0,-1); loadk(1,-2);
 gettabup(2,0,-3); loadk(3,-4);
 gettabup(4,0,-5); loadk(5,-6);
@@ -105,7 +105,7 @@ call(4,2,0); call(2,0,0); call(0,0,1)`)
 
 func TestRepeatStat(t *testing.T) {
 	testInsts(t, "repeat f() until g()",
-`[2/0]
+		`[2/0]
 gettabup(0,0,-1); call(0,1,1);
 gettabup(0,0,-2); call(0,1,2);
 test(0,_,0); jmp(0,-6)`)
@@ -113,7 +113,7 @@ test(0,_,0); jmp(0,-6)`)
 
 func TestWhileStat(t *testing.T) {
 	testInsts(t, "while f() do g() end",
-`[2/0]
+		`[2/0]
 gettabup(0,0,-1); call(0,1,2);
 test(0,_,0); jmp(0,3);
 gettabup(0,0,-2); call(0,1,1);
@@ -122,7 +122,7 @@ jmp(0,-7)`)
 
 func TestIfStat(t *testing.T) {
 	testInsts(t, "if a then f() elseif b then g() end",
-`[2/0]
+		`[2/0]
 gettabup(0,0,-1); test(0,_,0); jmp(0,3);
 gettabup(0,0,-2); call(0,1,1); jmp(0,5);
 gettabup(0,0,-3); test(0,_,0); jmp(0,2);
@@ -131,7 +131,7 @@ gettabup(0,0,-4); call(0,1,1)`)
 
 func TestForNumStat(t *testing.T) {
 	testInsts(t, "for i=1,100,2 do f() end; local a",
-`[5/5]
+		`[5/5]
 loadk(0,-1);
 loadk(1,-2);
 loadk(2,-3);
@@ -144,7 +144,7 @@ loadnil(0,0,_)`)
 
 func TestForInStat(t *testing.T) {
 	testInsts(t, "for k,v in pairs(t) do print(k,v) end; local a",
-`[8/6]
+		`[8/6]
 gettabup(0,0,-1);
 gettabup(1,0,-2);
 call(0,2,4);
@@ -160,8 +160,8 @@ loadnil(0,0,_)`)
 
 func TestBreakStat(t *testing.T) {
 	//testInsts(t, "do break end", "")
-	testInsts(t, 
-`
+	testInsts(t,
+		`
 while x do 
   break; 
   do 
@@ -172,7 +172,7 @@ while x do
   end 
 end
 `,
-`[2/0]
+		`[2/0]
 gettabup(0,0,-1);
 test(0,_,0);
 jmp(0,4);

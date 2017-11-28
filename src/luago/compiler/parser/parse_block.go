@@ -14,7 +14,7 @@ func parseBlock(lexer *Lexer) *Block {
 
 func parseStats(lexer *Lexer) []Stat {
 	stats := make([]Stat, 0, 8)
-	for !_isReturnOrBlockEnd(lexer.LookAhead(1)) {
+	for !_isReturnOrBlockEnd(lexer.LookAhead()) {
 		stat := parseStat(lexer)
 		if _, ok := stat.(*EmptyStat); !ok {
 			stats = append(stats, stat)
@@ -36,12 +36,12 @@ func _isReturnOrBlockEnd(tokenKind int) bool {
 // retstat ::= return [explist] [‘;’]
 // explist ::= exp {‘,’ exp}
 func parseRetExps(lexer *Lexer) []Exp {
-	if lexer.LookAhead(1) != TOKEN_KW_RETURN {
+	if lexer.LookAhead() != TOKEN_KW_RETURN {
 		return nil
 	}
 
 	lexer.NextTokenOfKind(TOKEN_KW_RETURN)
-	switch lexer.LookAhead(1) {
+	switch lexer.LookAhead() {
 	case TOKEN_EOF, TOKEN_KW_END,
 		TOKEN_KW_ELSE, TOKEN_KW_ELSEIF, TOKEN_KW_UNTIL:
 		return []Exp{}
@@ -50,7 +50,7 @@ func parseRetExps(lexer *Lexer) []Exp {
 		return []Exp{}
 	default:
 		exps := parseExpList(lexer)
-		if lexer.LookAhead(1) == TOKEN_SEP_SEMI {
+		if lexer.LookAhead() == TOKEN_SEP_SEMI {
 			lexer.NextToken()
 		}
 		return exps

@@ -4,7 +4,7 @@ import "testing"
 
 func TestWhileDbg(t *testing.T) {
 	testDbg(t,
-`
+		`
 while
 a
 do
@@ -22,7 +22,7 @@ c -- 15
 )
 end
 `,
-`[6/2]
+		`[6/2]
 [ 3]gettabup(0,0,-1);
 [ 3]test(0,_,0);
 [ 3]jmp(0,7);

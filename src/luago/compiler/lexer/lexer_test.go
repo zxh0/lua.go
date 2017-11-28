@@ -193,15 +193,15 @@ func TestLookAhead(t *testing.T) {
 	src := `print("Hello, World!")`
 	lexer := NewLexer("str", src)
 
-	assert.IntEqual(t, lexer.LookAhead(1), TOKEN_IDENTIFIER)
+	assert.IntEqual(t, lexer.LookAhead(), TOKEN_IDENTIFIER)
 	lexer.NextToken()
-	assert.IntEqual(t, lexer.LookAhead(1), TOKEN_SEP_LPAREN)
+	assert.IntEqual(t, lexer.LookAhead(), TOKEN_SEP_LPAREN)
 	lexer.NextToken()
-	assert.IntEqual(t, lexer.LookAhead(1), TOKEN_STRING)
+	assert.IntEqual(t, lexer.LookAhead(), TOKEN_STRING)
 	lexer.NextToken()
-	assert.IntEqual(t, lexer.LookAhead(1), TOKEN_SEP_RPAREN)
+	assert.IntEqual(t, lexer.LookAhead(), TOKEN_SEP_RPAREN)
 	lexer.NextToken()
-	assert.IntEqual(t, lexer.LookAhead(1), TOKEN_EOF)
+	assert.IntEqual(t, lexer.LookAhead(), TOKEN_EOF)
 }
 
 func TestErrors(t *testing.T) {

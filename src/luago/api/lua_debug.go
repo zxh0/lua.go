@@ -1,5 +1,14 @@
 package api
 
+// Event codes
+const (
+	LUA_HOOKCALL = iota
+	LUA_HOOKRET
+	LUA_HOOKLINE
+	LUA_HOOKCOUNT
+	LUA_HOOKTAILCALL
+)
+
 // http://www.lua.org/manual/5.3/manual.html#lua_Debug
 type LuaDebug struct {
 	Event           int

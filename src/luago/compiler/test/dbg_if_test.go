@@ -4,7 +4,7 @@ import "testing"
 
 func TestIfDbg(t *testing.T) {
 	testDbg(t,
-`
+		`
 local a,b,c
 if
 a
@@ -32,7 +32,7 @@ x
 ) 
 end
 `,
-`[5/5]
+		`[5/5]
 [ 2]loadnil(0,2,_);
 [ 4]test(0,_,0);
 [ 4]jmp(0,4);
