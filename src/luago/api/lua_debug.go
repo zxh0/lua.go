@@ -35,10 +35,10 @@ type DebugAPI interface {
 	SetHook(f LuaHook, mask, count int)
 	GetHookCount() int
 	GetHookMask() int
-	GetInfo(what string, ar *LuaDebug)
+	GetStack(level int, ar *LuaDebug) bool
+	GetInfo(what string, ar *LuaDebug) bool
 	GetLocal(ar *LuaDebug, n int) string
 	SetLocal(ar *LuaDebug, n int) string
-	GetStack(level int, ar *LuaDebug) int
 	GetUpvalue(funcIdx, n int) string
 	SetUpvalue(funcIdx, n int) string
 	UpvalueId(funcIdx, n int) interface{}

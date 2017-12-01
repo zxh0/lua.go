@@ -24,3 +24,12 @@ func newGoClosure(f GoFunction, nUpvals int) *closure {
 		upvals: upvals,
 	}
 }
+
+func (self *closure) getUpvalueName(n int) string {
+	if self.proto != nil {
+		if len(self.proto.UpvalueNames) > n {
+			return self.proto.UpvalueNames[n]
+		}
+	}
+	return ""
+}

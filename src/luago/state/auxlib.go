@@ -17,7 +17,7 @@ func (self *luaState) Error2(fmt string, a ...interface{}) int {
 // http://www.lua.org/manual/5.3/manual.html#luaL_argerror
 func (self *luaState) ArgError(arg int, extraMsg string) int {
 	// bad argument #arg to 'funcname' (extramsg)
-	panic("todo: ArgError!")
+	return self.Error2("bad argument #%d (%s)", arg, extraMsg) // todo
 }
 
 // [-0, +1, m]
@@ -380,22 +380,22 @@ func (self *luaState) intError(arg int) {
 }
 
 func (self *luaState) tagError(arg int, tag LuaType) {
-	//self.typeError(arg, self.TypeName(LuaType(tag)))
-	panic("todo!")
+	self.typeError(arg, self.TypeName(LuaType(tag)))
 }
 
-// func (self *luaState) typeError(arg int, tname string) int {
-// 	var typearg string /* name for the type of the actual argument */
-// 	if self.GetMetafield(arg, "__name") == LUA_TSTRING {
-// 		typearg, _ = self.ToString(-1) /* use the given type name */
-// 	//} else if self.Type(arg) == LUA_TLIGHTUSERDATA {
-// 	//	typearg = "light userdata" /* special name for messages */
-// 	} else {
-// 		typearg = self.TypeName2(arg) /* standard name */
-// 	}
-// 	msg := self.PushFString("%s expected, got %s", tname, typearg)
-// 	return self.ArgError(arg, msg)
-// }
+func (self *luaState) typeError(arg int, tname string) int {
+	var typeArg string /* name for the type of the actual argument */
+	if self.GetMetafield(arg, "__name") == LUA_TSTRING {
+		typeArg, _ = self.ToString(-1) /* use the given type name */
+	} else if self.Type(arg) == LUA_TLIGHTUSERDATA {
+		typeArg = "light userdata" /* special name for messages */
+	} else {
+		typeArg = self.TypeName2(arg) /* standard name */
+	}
+	msg := tname + " expected, got " + typeArg
+	self.PushString(msg)
+	return self.ArgError(arg, msg)
+}
 
 // [-0, +1, m]
 // http://www.lua.org/manual/5.3/manual.html#luaL_getmetatable

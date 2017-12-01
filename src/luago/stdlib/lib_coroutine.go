@@ -66,7 +66,7 @@ func coStatus(ls LuaState) int {
 		case LUA_YIELD:
 			ls.PushString("suspended")
 		case LUA_OK:
-			if co.GetStack(0, &LuaDebug{}) > 0 { /* does it have frames? */
+			if co.GetStack(0, &LuaDebug{}) { /* does it have frames? */
 				ls.PushString("normal") /* it is running */
 			} else if co.GetTop() == 0 {
 				ls.PushString("dead")
