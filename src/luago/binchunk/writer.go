@@ -172,8 +172,8 @@ func (self *writer) writeLocVars(locVars []LocVar) {
 	self.writeUint32(uint32(len(locVars)))
 	for _, locVar := range locVars {
 		self.writeString(locVar.VarName)
-		self.writeUint32(locVar.StartPc)
-		self.writeUint32(locVar.EndPc)
+		self.writeUint32(locVar.StartPC)
+		self.writeUint32(locVar.EndPC)
 	}
 }
 

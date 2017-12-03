@@ -181,7 +181,7 @@ func (self *printer) printDebug(f *Prototype) {
 	self.printf("locals (%d):\n", len(f.LocVars))
 	for i, locVar := range f.LocVars {
 		self.printf("\t%d\t%s\t%d\t%d\n",
-			i, locVar.VarName, locVar.StartPc+1, locVar.EndPc+1)
+			i, locVar.VarName, locVar.StartPC+1, locVar.EndPC+1)
 	}
 	self.printf("upvalues (%d):\n", len(f.Upvalues))
 	for i, upval := range f.Upvalues {

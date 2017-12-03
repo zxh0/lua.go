@@ -175,8 +175,8 @@ func (self *reader) readLocVars() []LocVar {
 	for i := range locVars {
 		locVars[i] = LocVar{
 			VarName: self.readString(),
-			StartPc: self.readUint32(),
-			EndPc:   self.readUint32(),
+			StartPC: self.readUint32(),
+			EndPC:   self.readUint32(),
 		}
 	}
 	return locVars

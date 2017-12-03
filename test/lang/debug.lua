@@ -16,7 +16,7 @@ debug.setupvalue(f, 1, 200)
 assert(uv == 200)
 
 
-info = debug.getinfo(1)
+info = debug.getinfo(f)
 print(info.source)
 print(info.short_src)
 print(info.linedefined)

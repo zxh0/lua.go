@@ -160,9 +160,9 @@ func (self *codeGen) cgForNumStat(node *ForNumStat) {
 	self.fixSbx(loopPc, prepPc-loopPc)
 
 	self.exitScope(self.pc())
-	self.fixEndPc(forIndexVar, 1)
-	self.fixEndPc(forLimitVar, 1)
-	self.fixEndPc(forStepVar, 1)
+	self.fixEndPC(forIndexVar, 1)
+	self.fixEndPC(forLimitVar, 1)
+	self.fixEndPC(forStepVar, 1)
 }
 
 func (self *codeGen) cgForInStat(node *ForInStat) {
@@ -191,9 +191,9 @@ func (self *codeGen) cgForInStat(node *ForInStat) {
 	self.emitTForLoop(line, rGenerator+2, jmpToTFC-self.pc()-1)
 
 	self.exitScope(self.pc() - 1)
-	self.fixEndPc(forGeneratorVar, 2)
-	self.fixEndPc(forStateVar, 2)
-	self.fixEndPc(forControlVar, 2)
+	self.fixEndPC(forGeneratorVar, 2)
+	self.fixEndPC(forStateVar, 2)
+	self.fixEndPC(forControlVar, 2)
 }
 
 func (self *codeGen) cgLocalAssignStat(node *LocalAssignStat) {
@@ -237,9 +237,9 @@ func (self *codeGen) cgLocalAssignStat(node *LocalAssignStat) {
 	}
 
 	self.resetRegs(oldRegs)
-	startPc := self.pc() + 1
+	startPC := self.pc() + 1
 	for _, name := range node.NameList {
-		self.addLocVar(name, startPc)
+		self.addLocVar(name, startPC)
 	}
 }
 

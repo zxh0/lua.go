@@ -1,5 +1,6 @@
 package state
 
+import "strings"
 import . "luago/api"
 
 func (self *luaState) GetHook() LuaHook {
@@ -28,7 +29,42 @@ func (self *luaState) GetStack(level int, ar *LuaDebug) bool {
 }
 
 func (self *luaState) GetInfo(what string, ar *LuaDebug) bool {
-	panic("todo: GetInfo!")
+	if len(what) > 0 && what[0] == '>' {
+		val := self.stack.pop()
+		if _, ok := val.(*closure); ok {
+			if strings.IndexByte(what, 'n') >= 0 {
+				ar.Name = ""     // todo
+				ar.NameWhat = "" // todo
+			}
+			if strings.IndexByte(what, 'S') >= 0 {
+				ar.Source = ""         // todo
+				ar.ShortSrc = ""       // todo
+				ar.LineDefined = 0     // todo
+				ar.LastLineDefined = 0 // todo
+				ar.What = ""           // todo
+			}
+			if strings.IndexByte(what, 'l') >= 0 {
+				ar.CurrentLine = 0 // todo
+			}
+			if strings.IndexByte(what, 't') >= 0 {
+				ar.IsTailCall = false // todo
+			}
+			if strings.IndexByte(what, 'u') >= 0 {
+				ar.NUps = 0         // todo
+				ar.NParams = 0      // todo
+				ar.IsVararg = false // todo
+			}
+			if strings.IndexByte(what, 'f') >= 0 {
+				panic("todo")
+			}
+			if strings.IndexByte(what, 'L') >= 0 {
+				panic("todo")
+			}
+		} else {
+			panic("function expected")
+		}
+	}
+	panic("todo: GetInfo!" + what)
 }
 
 func (self *luaState) GetLocal(ar *LuaDebug, n int) string {

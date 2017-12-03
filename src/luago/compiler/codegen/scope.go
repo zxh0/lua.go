@@ -13,8 +13,8 @@ type locVarInfo struct {
 	name    string
 	level   int
 	slot    int
-	startPc int
-	endPc   int
+	startPC int
+	endPC   int
 }
 
 type scope struct {
@@ -103,11 +103,11 @@ func (self *scope) incrLevel(breakable bool) {
 	}
 }
 
-func (self *scope) decrLevel(endPc int) []int {
+func (self *scope) decrLevel(endPC int) []int {
 	self.level--
 	for _, locVar := range self.locNames {
 		if locVar.level > self.level { // out of scope
-			locVar.endPc = endPc
+			locVar.endPC = endPC
 			self.removeLocVar(locVar)
 		}
 	}
@@ -128,14 +128,14 @@ func (self *scope) removeLocVar(locVar *locVarInfo) {
 	}
 }
 
-func (self *scope) addLocVar(name string, startPc int) int {
+func (self *scope) addLocVar(name string, startPC int) int {
 	newVar := &locVarInfo{
 		prev:    self.locNames[name],
 		name:    name,
 		level:   self.level,
 		slot:    self.allocReg(),
-		startPc: startPc,
-		endPc:   0,
+		startPC: startPC,
+		endPC:   0,
 	}
 
 	self.locVars = append(self.locVars, newVar)
@@ -215,8 +215,8 @@ func (self *scope) getLocVars() []binchunk.LocVar {
 	for i, locVar := range self.locVars {
 		locVars[i] = binchunk.LocVar{
 			VarName: locVar.name,
-			StartPc: uint32(locVar.startPc),
-			EndPc:   uint32(locVar.endPc),
+			StartPC: uint32(locVar.startPC),
+			EndPC:   uint32(locVar.endPC),
 		}
 	}
 	return locVars

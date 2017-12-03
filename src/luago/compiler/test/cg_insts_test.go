@@ -237,7 +237,7 @@ func compile(chunk string, dbgFlag bool) string {
 	if dbgFlag {
 		for _, locVar := range proto.LocVars {
 			s += fmt.Sprintf("@%s[%d,%d] ",
-				locVar.VarName, locVar.StartPc+1, locVar.EndPc+1)
+				locVar.VarName, locVar.StartPC+1, locVar.EndPC+1)
 		}
 	}
 

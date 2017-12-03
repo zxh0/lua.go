@@ -121,7 +121,7 @@ func TestHeader(t *testing.T) {
 	data := writer.data()
 
 	reader := &reader{data}
-	reader.readHeader()
+	reader.checkHeader()
 }
 
 func TestString(t *testing.T) {

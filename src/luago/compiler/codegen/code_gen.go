@@ -48,14 +48,14 @@ func (self *codeGen) freeRegs(n int) {
 func (self *codeGen) enterScope(breakable bool) {
 	self.scope.incrLevel(breakable)
 }
-func (self *codeGen) exitScope(endPc int) {
-	pendingBreakJmps := self.scope.decrLevel(endPc)
+func (self *codeGen) exitScope(endPC int) {
+	pendingBreakJmps := self.scope.decrLevel(endPC)
 	for _, pc := range pendingBreakJmps {
 		self.fixSbx(pc, self.pc()-pc)
 	}
 }
-func (self *codeGen) addLocVar(name string, startPc int) int {
-	return self.scope.addLocVar(name, startPc)
+func (self *codeGen) addLocVar(name string, startPC int) int {
+	return self.scope.addLocVar(name, startPC)
 }
 func (self *codeGen) slotOfLocVar(name string) int {
 	return self.scope.slotOfLocVar(name)
@@ -70,11 +70,11 @@ func (self *codeGen) indexOfUpval(name string) int {
 }
 
 // todo: rename?
-func (self *codeGen) fixEndPc(name string, delta int) {
+func (self *codeGen) fixEndPC(name string, delta int) {
 	for i := len(self.scope.locVars) - 1; i >= 0; i-- {
 		locVar := self.scope.locVars[i]
 		if locVar.name == name {
-			locVar.endPc += delta
+			locVar.endPC += delta
 			return
 		}
 	}
@@ -97,8 +97,8 @@ func (self *codeGen) genProto(fd *FuncDefExp) *Prototype {
 
 	self.cgBlock(fd.Block)
 
-	endPc := self.pc() + 2
-	self.exitScope(endPc)
+	endPC := self.pc() + 2
+	self.exitScope(endPC)
 
 	return self.toProto(fd)
 }
