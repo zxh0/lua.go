@@ -90,7 +90,7 @@ func (self *luaStack) isValid(idx int) bool {
 		return true
 	}
 	absIdx := self.absIndex(idx)
-	return absIdx > 0 || absIdx <= self.top
+	return absIdx > 0 && absIdx <= self.top
 }
 
 func (self *luaStack) get(idx int) luaValue {

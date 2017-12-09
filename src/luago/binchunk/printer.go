@@ -54,7 +54,7 @@ func (self *printer) printCode(f *Prototype) {
 		ax := i.Ax()
 
 		line := "-"
-		if f.LineInfo != nil {
+		if len(f.LineInfo) > 0 {
 			line = fmt.Sprintf("%d", f.LineInfo[pc])
 		}
 		self.printf("\t%d\t[%s]\t%s \t", pc+1, line, i.OpName()) // todo

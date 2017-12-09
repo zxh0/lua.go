@@ -196,12 +196,8 @@ func (self *luaState) ToString(idx int) (string, bool) {
 	switch x := val.(type) {
 	case string:
 		return x, true
-	case int64:
-		s := fmt.Sprintf("%d", x) // todo
-		self.stack.set(idx, s)
-		return s, true
-	case float64:
-		s := fmt.Sprintf("%g", x) // todo
+	case int64, float64:
+		s := fmt.Sprintf("%v", x) // todo
 		self.stack.set(idx, s)
 		return s, true
 	default:
