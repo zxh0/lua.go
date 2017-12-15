@@ -1,8 +1,8 @@
 package stdlib
 
 import "fmt"
+import "strconv"
 import . "luago/api"
-import "luago/number"
 
 var baseFuncs = map[string]GoFunction{
 	"print":          basePrint,
@@ -327,7 +327,7 @@ func baseToNumber(ls LuaState) int {
 		s, _ := ls.ToString(1)
 		base := int(ls.CheckInteger(2))
 		ls.ArgCheck(2 <= base && base <= 36, 2, "base out of range")
-		if n, ok := number.ParseInteger(s, base); ok {
+		if n, err := strconv.ParseInt(s, base, 64); err == nil {
 			ls.PushInteger(n)
 			return 1
 		} /* else not a number */

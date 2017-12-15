@@ -234,7 +234,7 @@ func parseExp0(lexer *Lexer) Exp {
 
 func parseNumberExp(lexer *Lexer) Exp {
 	line, _, token := lexer.NextToken()
-	if i, ok := number.ParseInteger(token, 10); ok {
+	if i, ok := number.ParseInteger(token); ok {
 		return &IntegerExp{line, i}
 	} else if f, ok := number.ParseFloat(token); ok {
 		return &FloatExp{line, f}

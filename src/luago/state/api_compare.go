@@ -42,6 +42,9 @@ func (self *luaState) eq(a, b luaValue, raw bool) bool {
 	case bool:
 		y, ok := b.(bool)
 		return ok && x == y
+	case string:
+		y, ok := b.(string)
+		return ok && x == y
 	case int64:
 		switch y := b.(type) {
 		case int64:
@@ -60,9 +63,6 @@ func (self *luaState) eq(a, b luaValue, raw bool) bool {
 		default:
 			return false
 		}
-	case string:
-		y, ok := b.(string)
-		return ok && x == y
 	case *luaTable:
 		if y, ok := b.(*luaTable); ok {
 			if x == y || raw {
@@ -80,6 +80,9 @@ func (self *luaState) eq(a, b luaValue, raw bool) bool {
 
 func (self *luaState) lt(a, b luaValue) bool {
 	switch x := a.(type) {
+	case string:
+		y, ok := b.(string)
+		return ok && x < y
 	case int64:
 		switch y := b.(type) {
 		case int64:
@@ -98,9 +101,6 @@ func (self *luaState) lt(a, b luaValue) bool {
 		default:
 			return false
 		}
-	case string:
-		y, ok := b.(string)
-		return ok && x < y
 	default:
 		if result, ok := callMetamethod(a, b, "__lt", self); ok {
 			return convertToBoolean(result)
@@ -113,6 +113,9 @@ func (self *luaState) lt(a, b luaValue) bool {
 
 func (self *luaState) le(a, b luaValue) bool {
 	switch x := a.(type) {
+	case string:
+		y, ok := b.(string)
+		return ok && x <= y
 	case int64:
 		switch y := b.(type) {
 		case int64:
@@ -131,9 +134,6 @@ func (self *luaState) le(a, b luaValue) bool {
 		default:
 			return false
 		}
-	case string:
-		y, ok := b.(string)
-		return ok && x <= y
 	default:
 		if result, ok := callMetamethod(a, b, "__le", self); ok {
 			return convertToBoolean(result)

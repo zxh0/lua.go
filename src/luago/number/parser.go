@@ -7,14 +7,9 @@ import "strconv"
 
 var reInteger = regexp.MustCompile(`^[+-]?[0-9]+$|^-?0x[0-9a-f]+$`)
 
-func ParseInteger(str string, base int) (int64, bool) {
+func ParseInteger(str string) (int64, bool) {
 	str = strings.TrimSpace(str)
 	str = strings.ToLower(str)
-
-	if base != 10 {
-		i, err := strconv.ParseInt(str, base, 64)
-		return i, err == nil
-	}
 
 	if !reInteger.MatchString(str) { // float?
 		return 0, false
@@ -23,7 +18,7 @@ func ParseInteger(str string, base int) (int64, bool) {
 		str = str[1:]
 	}
 	if strings.Index(str, "0x") < 0 { // decimal
-		i, err := strconv.ParseInt(str, base, 64)
+		i, err := strconv.ParseInt(str, 10, 64)
 		return i, err == nil
 	}
 

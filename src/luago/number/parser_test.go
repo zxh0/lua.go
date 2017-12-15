@@ -31,7 +31,7 @@ func TestParseFloat(t *testing.T) {
 }
 
 func testInteger(t *testing.T, str string, i int64) {
-	j, ok := ParseInteger(str, 10)
+	j, ok := ParseInteger(str)
 	if !ok || j != i {
 		t.Errorf("%d != %d", j, i)
 	}

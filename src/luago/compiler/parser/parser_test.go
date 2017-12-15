@@ -12,6 +12,7 @@ func TestExpLiteral(t *testing.T) {
 	testExp(t, `'foo'`)
 	testExp(t, `{}`)
 	testExp(t, `...`)
+	testExp2(t, `0xFF`, `255`)
 }
 
 func TestExpUnOp(t *testing.T) {

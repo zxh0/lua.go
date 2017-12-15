@@ -73,7 +73,7 @@ func convertToInteger(val luaValue) (int64, bool) {
 }
 
 func _stringToInteger(s string) (int64, bool) {
-	if i, ok := number.ParseInteger(s, 10); ok {
+	if i, ok := number.ParseInteger(s); ok {
 		return i, true
 	}
 	if f, ok := number.ParseFloat(s); ok {

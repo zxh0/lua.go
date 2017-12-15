@@ -45,7 +45,7 @@ func (self *luaState) GC(what, data int) int {
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_stringtonumber
 func (self *luaState) StringToNumber(s string) bool {
-	if n, ok := number.ParseInteger(s, 10); ok {
+	if n, ok := number.ParseInteger(s); ok {
 		self.PushInteger(n)
 		return true
 	}
