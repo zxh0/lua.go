@@ -1,5 +1,6 @@
 package state
 
+import "math"
 import "luago/number"
 
 type pair struct {
@@ -11,16 +12,19 @@ type luaTable struct {
 	metatable *luaTable
 	_map      map[luaValue]luaValue
 	arr       []luaValue
-	_len      int
 	pairs     []pair // used by next()
 	nextPairs []pair // used by next()
 }
 
 func newLuaTable(nArr, nRec int) *luaTable {
-	return &luaTable{
-		_map: make(map[luaValue]luaValue),
-		arr:  make([]luaValue, 0, nArr),
+	t := &luaTable{}
+	if nArr > 0 {
+		t.arr = make([]luaValue, 0, nArr)
 	}
+	if nRec > 0 {
+		t._map = make(map[luaValue]luaValue, nRec)
+	}
+	return t
 }
 
 func (self *luaTable) hasMetafield(fieldName string) bool {
@@ -29,19 +33,7 @@ func (self *luaTable) hasMetafield(fieldName string) bool {
 }
 
 func (self *luaTable) len() int {
-	if self._len < 0 {
-		// calc & cache len of sequence
-		self._len = 0
-		for _, val := range self.arr {
-			if val != nil {
-				self._len++
-			} else {
-				break
-			}
-		}
-	}
-
-	return self._len
+	return len(self.arr)
 }
 
 func (self *luaTable) get(key luaValue) luaValue {
@@ -52,43 +44,66 @@ func (self *luaTable) get(key luaValue) luaValue {
 			return self.arr[idx-1]
 		}
 	}
-	if val, found := self._map[key]; found {
-		return val
-	} else {
-		return nil
+	return self._map[key]
+}
+
+func _floatToIntger(key luaValue) luaValue {
+	if f, ok := key.(float64); ok {
+		if i, ok := number.FloatToInteger(f); ok {
+			return i
+		}
 	}
+	return key
 }
 
 func (self *luaTable) put(key, val luaValue) {
 	if key == nil {
 		panic("table index is nil!")
 	}
+	if f, ok := key.(float64); ok && math.IsNaN(f) {
+		panic("table index is NaN!")
+	}
 
 	self.pairs = nil // invalidate pairs
-	self._len = -1
 
 	key = _floatToIntger(key)
 	if idx, ok := key.(int64); ok && idx >= 1 {
 		arrLen := int64(len(self.arr))
 		if idx <= arrLen {
 			self.arr[idx-1] = val
+			if idx == arrLen && val == nil {
+				self._shrinkArray()
+			}
 			return
 		}
 		if idx == arrLen+1 {
 			delete(self._map, key)
-			self.arr = append(self.arr, val)
-			self.expandArray()
+			if val != nil {
+				self.arr = append(self.arr, val)
+				self._expandArray()
+			}
 			return
 		}
 	}
 	if val != nil {
+		if self._map == nil {
+			self._map = make(map[luaValue]luaValue, 8)
+		}
 		self._map[key] = val
 	} else {
 		delete(self._map, key)
 	}
 }
 
-func (self *luaTable) expandArray() {
+func (self *luaTable) _shrinkArray() {
+	for i := len(self.arr) - 1; i >= 0; i-- {
+		if self.arr[i] == nil {
+			self.arr = self.arr[0:i]
+		}
+	}
+}
+
+func (self *luaTable) _expandArray() {
 	for idx := int64(len(self.arr)) + 1; true; idx++ {
 		if val, found := self._map[idx]; found {
 			delete(self._map, idx)
@@ -135,13 +150,4 @@ func (self *luaTable) initPairs() {
 			self.pairs = append(self.pairs, pair{key, val})
 		}
 	}
-}
-
-func _floatToIntger(key luaValue) luaValue {
-	if f, ok := key.(float64); ok {
-		if i, ok := number.FloatToInteger(f); ok {
-			return i
-		}
-	}
-	return key
 }

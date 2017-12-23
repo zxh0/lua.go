@@ -2,16 +2,13 @@ package vm
 
 import "luago/api"
 
-/* number of list items to accumulate before a SETLIST instruction */
-const LFIELDS_PER_FLUSH = 50
-
 /* OpMode */
 /* basic instruction format */
 const (
-	IABC = iota // [  B:9  ][  C:9  ][ A:8  ][OP:6]
-	IABx        // [      Bx:18     ][ A:8  ][OP:6]
-	IAsBx       // [     sBx:18     ][ A:8  ][OP:6]
-	IAx         // [           Ax:26        ][OP:6]
+	IABC  = iota // [  B:9  ][  C:9  ][ A:8  ][OP:6]
+	IABx         // [      Bx:18     ][ A:8  ][OP:6]
+	IAsBx        // [     sBx:18     ][ A:8  ][OP:6]
+	IAx          // [           Ax:26        ][OP:6]
 )
 
 /* OpArgMask */

@@ -118,13 +118,8 @@ func (self *luaState) callLuaClosure(nArgs, nResults int, c *closure) {
 }
 
 func (self *luaState) runLuaClosure() {
-	// fmt.Printf("call %s\n", c.toString())
-	code := self.stack.closure.proto.Code
 	for {
-		pc := self.stack.pc
-		inst := vm.Instruction(code[pc])
-		self.stack.pc++
-
+		inst := vm.Instruction(self.Fetch())
 		inst.Execute(self)
 
 		// indent := fmt.Sprintf("%%%ds", self.callDepth*2)

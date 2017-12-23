@@ -43,9 +43,7 @@ func loadK(i Instruction, vm LuaVM) {
 func loadKx(i Instruction, vm LuaVM) {
 	a, _ := i.ABx()
 	a += 1
-
-	vm.AddPC(1)
-	ax := Instruction(vm.Instruction()).Ax()
+	ax := Instruction(vm.Fetch()).Ax()
 
 	//vm.CheckStack(1)
 	vm.GetConst(ax) // ~/k[ax]

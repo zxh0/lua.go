@@ -4,8 +4,10 @@ func (self *luaState) AddPC(n int) {
 	self.stack.pc += n
 }
 
-func (self *luaState) Instruction() uint32 {
-	return self.stack.closure.proto.Code[self.stack.pc]
+func (self *luaState) Fetch() uint32 {
+	i := self.stack.closure.proto.Code[self.stack.pc]
+	self.stack.pc++
+	return i
 }
 
 // todo

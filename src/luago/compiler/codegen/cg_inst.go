@@ -1,7 +1,6 @@
 package codegen
 
 import . "luago/compiler/lexer"
-import "luago/number"
 import . "luago/vm"
 
 var arithAndBitwiseBinops = map[int]int{
@@ -93,7 +92,7 @@ func (self *codeGen) emitClosure(line, a, bx int) {
 // r[a] = {}
 func (self *codeGen) emitNewTable(line, a, nArr, nRec int) {
 	self.emitABC(line, OP_NEWTABLE,
-		a, number.Int2fb(nArr), number.Int2fb(nRec))
+		a, Int2fb(nArr), Int2fb(nRec))
 }
 
 // r[a][(c-1)*FPF+i] := r[a+i], 1 <= i <= b

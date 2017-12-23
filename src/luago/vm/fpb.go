@@ -1,4 +1,4 @@
-package number
+package vm
 
 /*
 ** converts an integer to a "floating point byte", represented as

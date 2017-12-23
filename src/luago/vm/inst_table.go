@@ -1,7 +1,9 @@
 package vm
 
 import . "luago/api"
-import "luago/number"
+
+/* number of list items to accumulate before a SETLIST instruction */
+const LFIELDS_PER_FLUSH = 50
 
 // R(A) := {} (size = B,C)
 func newTable(i Instruction, vm LuaVM) {
@@ -9,8 +11,8 @@ func newTable(i Instruction, vm LuaVM) {
 	a += 1
 
 	//vm.CheckStack(1)
-	vm.CreateTable(number.Fb2int(b), number.Fb2int(c)) // ~/{}
-	vm.Replace(a)                                      // ~
+	vm.CreateTable(Fb2int(b), Fb2int(c)) // ~/{}
+	vm.Replace(a)                        // ~
 }
 
 // R(A) := R(B)[RK(C)]
@@ -41,9 +43,10 @@ func setList(i Instruction, vm LuaVM) {
 	a, b, c := i.ABC()
 	a += 1
 
-	if c == 0 {
-		vm.AddPC(1)
-		c = Instruction(vm.Instruction()).Ax()
+	if c > 0 {
+		c = c - 1
+	} else {
+		c = Instruction(vm.Fetch()).Ax()
 	}
 
 	bIsZero := b == 0
@@ -53,19 +56,19 @@ func setList(i Instruction, vm LuaVM) {
 	}
 
 	vm.CheckStack(1)
-	tableIdx := int64((c - 1) * LFIELDS_PER_FLUSH)
+	idx := int64(c * LFIELDS_PER_FLUSH)
 	for j := 1; j <= b; j++ {
-		tableIdx++
-		vm.PushValue(a + j)  // ~/r[a+j]
-		vm.SetI(a, tableIdx) // ~
+		idx++
+		vm.PushValue(a + j) // ~/r[a+j]
+		vm.SetI(a, idx)     // ~
 	}
 
 	if bIsZero {
 		n := vm.GetTop() - vm.MaxStackSize()
 		for j := 1; j <= n; j++ {
-			tableIdx++
+			idx++
 			vm.PushValue(vm.MaxStackSize() + j)
-			vm.SetI(a, tableIdx)
+			vm.SetI(a, idx)
 		}
 
 		// clear stack
