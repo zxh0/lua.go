@@ -64,14 +64,13 @@ func setList(i Instruction, vm LuaVM) {
 	}
 
 	if bIsZero {
-		n := vm.GetTop() - vm.MaxStackSize()
-		for j := 1; j <= n; j++ {
+		for j := vm.RegisterCount() + 1; j <= vm.GetTop(); j++ {
 			idx++
-			vm.PushValue(vm.MaxStackSize() + j)
+			vm.PushValue(j)
 			vm.SetI(a, idx)
 		}
 
 		// clear stack
-		vm.SetTop(vm.MaxStackSize())
+		vm.SetTop(vm.RegisterCount())
 	}
 }

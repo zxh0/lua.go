@@ -61,59 +61,55 @@ func (self *luaState) Call(nArgs, nResults int) {
 
 func (self *luaState) callGoClosure(nArgs, nResults int, c *closure) {
 	// create new lua stack
-	calleeStack := newLuaStack(nArgs+LUA_MINSTACK, self)
-	calleeStack.closure = c
+	newStack := newLuaStack(nArgs+LUA_MINSTACK, self)
+	newStack.closure = c
 
 	// pass args, pop func
-	callerStack := self.stack
 	if nArgs > 0 {
-		args := callerStack.popN(nArgs)
-		calleeStack.pushN(args, nArgs)
+		args := self.stack.popN(nArgs)
+		newStack.pushN(args, nArgs)
 	}
-	callerStack.pop()
+	self.stack.pop()
 
 	// run closure
-	self.pushLuaStack(calleeStack)
+	self.pushLuaStack(newStack)
 	r := c.goFunc(self)
 	self.popLuaStack()
 
 	// return results
 	if nResults != 0 {
-		results := calleeStack.popN(r)
-		callerStack.pushN(results, nResults)
+		results := newStack.popN(r)
+		self.stack.pushN(results, nResults)
 	}
 }
 
 func (self *luaState) callLuaClosure(nArgs, nResults int, c *closure) {
-	// create new lua stack
 	nRegs := int(c.proto.MaxStackSize)
-	calleeStack := newLuaStack(nRegs+LUA_MINSTACK, self)
-	calleeStack.closure = c
+	nParams := int(c.proto.NumParams)
+	isVararg := c.proto.IsVararg == 1
+
+	// create new lua stack
+	newStack := newLuaStack(nRegs+LUA_MINSTACK, self)
+	newStack.closure = c
 
 	// pass args, pop func
-	callerStack := self.stack
-	if nArgs > 0 {
-		args := callerStack.popN(nArgs)
-		calleeStack.pushN(args, nArgs)
-
-		nParams := int(c.proto.NumParams)
-		isVararg := c.proto.IsVararg == 1
-		if nArgs > nParams && isVararg {
-			calleeStack.varargs = args[nParams:]
-		}
+	funcAndArgs := self.stack.popN(nArgs + 1)
+	newStack.pushN(funcAndArgs[1:], nParams)
+	newStack.top = nRegs
+	if nArgs > nParams && isVararg {
+		newStack.varargs = funcAndArgs[nParams+1:]
 	}
-	callerStack.pop()
-	calleeStack.top = nRegs
 
 	// run closure
-	self.pushLuaStack(calleeStack)
+	self.pushLuaStack(newStack)
 	self.runLuaClosure()
 	self.popLuaStack()
 
 	// return results
 	if nResults != 0 {
-		results := calleeStack.popN(calleeStack.top - nRegs)
-		callerStack.pushN(results, nResults)
+		results := newStack.popN(newStack.top - nRegs)
+		self.stack.check(len(results))
+		self.stack.pushN(results, nResults)
 	}
 }
 

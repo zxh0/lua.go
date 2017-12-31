@@ -10,8 +10,7 @@ func (self *luaState) Fetch() uint32 {
 	return i
 }
 
-// todo
-func (self *luaState) MaxStackSize() int {
+func (self *luaState) RegisterCount() int {
 	return int(self.stack.closure.proto.MaxStackSize)
 }
 

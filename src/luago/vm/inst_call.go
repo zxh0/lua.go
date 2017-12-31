@@ -17,9 +17,7 @@ func vararg(i Instruction, vm LuaVM) {
 	a, b, _ := i.ABC()
 	a += 1
 
-	if b < 0 {
-		panic("b < 0!")
-	} else if b != 1 { // b==0 or b>1
+	if b != 1 { // b==0 or b>1
 		vm.LoadVararg(b - 1)
 		_popResults(a, b, vm)
 	}
@@ -67,7 +65,7 @@ func _pushFuncAndArgs(a, b int, vm LuaVM) (nArgs int) {
 		return b - 1
 	} else {
 		_fixStack(a, vm)
-		return vm.GetTop() - vm.MaxStackSize() - 1
+		return vm.GetTop() - vm.RegisterCount() - 1
 	}
 }
 
@@ -75,10 +73,11 @@ func _fixStack(a int, vm LuaVM) {
 	x := int(vm.ToInteger(-1))
 	vm.Pop(1)
 
+	vm.CheckStack(x - a)
 	for i := a; i < x; i++ {
 		vm.PushValue(i)
 	}
-	vm.Rotate(vm.MaxStackSize()+1, x-a)
+	vm.Rotate(vm.RegisterCount()+1, x-a)
 }
 
 func _popResults(a, c int, vm LuaVM) {
@@ -90,6 +89,7 @@ func _popResults(a, c int, vm LuaVM) {
 		}
 	} else {
 		// leave results on stack
+		vm.CheckStack(1)
 		vm.PushInteger(int64(a))
 	}
 }
