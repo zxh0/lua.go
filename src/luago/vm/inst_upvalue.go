@@ -6,43 +6,39 @@ import . "luago/api"
 func getUpval(i Instruction, vm LuaVM) {
 	a, b, _ := i.ABC()
 	a += 1
+	b += 1
 
-	//vm.CheckStack(1)
-	vm.GetUpvalue2(b) // ~/uv[b]
-	vm.Replace(a)     // ~
+	vm.Copy(LuaUpvalueIndex(b), a)
 }
 
 // UpValue[B] := R(A)
 func setUpval(i Instruction, vm LuaVM) {
 	a, b, _ := i.ABC()
 	a += 1
+	b += 1
 
-	//vm.CheckStack(1)
-	vm.PushValue(a)   // ~/r[a]
-	vm.SetUpvalue2(b) // ~
+	vm.Copy(a, LuaUpvalueIndex(b))
 }
 
 // R(A) := UpValue[B][RK(C)]
 func getTabUp(i Instruction, vm LuaVM) {
 	a, b, c := i.ABC()
 	a += 1
+	b += 1
 
-	//vm.CheckStack(2)
-	vm.GetUpvalue2(b) // ~/uv[b]
-	vm.GetRK(c)       // ~/uv[b]/rk[c]
-	vm.GetTable(-2)   // ~/uv[b]/uv[b][rk[c]]
-	vm.Replace(a)     // ~/uv[b]
-	vm.Pop(1)         // ~
+	//vm.CheckStack(1)
+	vm.GetRK(c)                     // ~/rk[c]
+	vm.GetTable(LuaUpvalueIndex(b)) // ~/uv[b][rk[c]]
+	vm.Replace(a)                   // ~/
 }
 
 // UpValue[A][RK(B)] := RK(C)
 func setTabUp(i Instruction, vm LuaVM) {
 	a, b, c := i.ABC()
+	a += 1
 
-	//vm.CheckStack(3)
-	vm.GetUpvalue2(a) // ~/uv[a]
-	vm.GetRK(b)       // ~/uv[a]/rk[b]
-	vm.GetRK(c)       // ~/uv[a]/rk[b]/rk[c]
-	vm.SetTable(-3)   // ~/uv[a]
-	vm.Pop(1)         // ~
+	//vm.CheckStack(2)
+	vm.GetRK(b)                     // ~/rk[b]
+	vm.GetRK(c)                     // ~/rk[b]/rk[c]
+	vm.SetTable(LuaUpvalueIndex(a)) // ~/
 }

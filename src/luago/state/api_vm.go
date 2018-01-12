@@ -27,16 +27,6 @@ func (self *luaState) GetRK(rk int) {
 	}
 }
 
-func (self *luaState) GetUpvalue2(idx int) {
-	upval := self.stack.closure.upvals[idx]
-	self.stack.push(*upval)
-}
-
-func (self *luaState) SetUpvalue2(idx int) {
-	upval := self.stack.closure.upvals[idx]
-	*upval = self.stack.pop()
-}
-
 func (self *luaState) LoadProto(idx int) {
 	proto := self.stack.closure.proto.Protos[idx]
 	closure := newLuaClosure(proto)

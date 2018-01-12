@@ -82,9 +82,9 @@ func (self *luaStack) absIndex(idx int) int {
 
 func (self *luaStack) isValid(idx int) bool {
 	if idx < LUA_REGISTRYINDEX { /* upvalues */
-		uvIdx := LUA_REGISTRYINDEX - idx
+		uvIdx := LUA_REGISTRYINDEX - idx - 1
 		c := self.closure
-		return c != nil && c.goFunc != nil && uvIdx <= len(c.upvals)
+		return c != nil && uvIdx < len(c.upvals)
 	}
 	if idx == LUA_REGISTRYINDEX {
 		return true
@@ -95,15 +95,12 @@ func (self *luaStack) isValid(idx int) bool {
 
 func (self *luaStack) get(idx int) luaValue {
 	if idx < LUA_REGISTRYINDEX { /* upvalues */
-		uvIdx := LUA_REGISTRYINDEX - idx
-		//if uvIdx > MAXUPVAL + 1 {
-		//	panic("upvalue index too large!")
-		//}
+		uvIdx := LUA_REGISTRYINDEX - idx - 1
 		c := self.closure
-		if c == nil || c.goFunc == nil || len(c.upvals) < uvIdx {
+		if c == nil || uvIdx >= len(c.upvals) {
 			return nil
 		}
-		return *self.closure.upvals[uvIdx-1]
+		return *(c.upvals[uvIdx])
 	}
 
 	if idx == LUA_REGISTRYINDEX {
@@ -118,7 +115,20 @@ func (self *luaStack) get(idx int) luaValue {
 }
 
 func (self *luaStack) set(idx int, val luaValue) {
-	// todo: LUA_REGISTRYINDEX?
+	if idx < LUA_REGISTRYINDEX { /* upvalues */
+		uvIdx := LUA_REGISTRYINDEX - idx - 1
+		c := self.closure
+		if c != nil && uvIdx < len(c.upvals) {
+			c.upvals[uvIdx] = &val
+		}
+		return
+	}
+
+	if idx == LUA_REGISTRYINDEX {
+		self.state.registry = val.(*luaTable)
+		return
+	}
+
 	absIdx := self.absIndex(idx)
 	if absIdx > 0 && absIdx <= self.top {
 		self.slots[absIdx-1] = val

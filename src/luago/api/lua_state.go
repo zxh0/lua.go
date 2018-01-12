@@ -122,6 +122,11 @@ type BasicAPI interface {
 	GC(what, data int) int //
 }
 
+// no pseudo-index
+// lua_insert
+// lua_remove
+// lua_rotate
+
 // type LuaBoolean bool
 // type LuaInteger int64
 // type LuaNumber float64

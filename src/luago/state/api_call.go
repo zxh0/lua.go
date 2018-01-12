@@ -23,7 +23,7 @@ func (self *luaState) Load(chunk []byte, chunkName, mode string) ThreadStatus {
 	}
 
 	c := newLuaClosure(proto)
-	if len(proto.Upvalues) > 0 { // todo
+	if len(proto.Upvalues) > 0 {
 		env := self.registry.get(LUA_RIDX_GLOBALS)
 		c.upvals[0] = &env
 	}
