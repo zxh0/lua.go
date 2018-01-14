@@ -64,15 +64,12 @@ func (self *luaState) eq(a, b luaValue, raw bool) bool {
 			return false
 		}
 	case *luaTable:
-		if y, ok := b.(*luaTable); ok {
-			if x == y || raw {
-				return x == y
-			}
+		if y, ok := b.(*luaTable); ok && x != y && !raw {
 			if result, ok := callMetamethod(x, y, "__eq", self); ok {
 				return convertToBoolean(result)
 			}
 		}
-		return false
+		return a == b
 	default:
 		return a == b
 	}

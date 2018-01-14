@@ -73,10 +73,12 @@ func (self *luaState) SetMetatable(idx int) {
 	val := self.stack.get(idx)
 	mtVal := self.stack.pop()
 
-	if mt, ok := mtVal.(*luaTable); ok {
+	if mtVal == nil {
+		setMetatable(val, nil, self)
+	} else if mt, ok := mtVal.(*luaTable); ok {
 		setMetatable(val, mt, self)
 	} else {
-		panic("not a table!") // todo
+		panic("table expected!") // todo
 	}
 }
 

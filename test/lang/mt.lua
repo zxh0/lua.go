@@ -13,3 +13,5 @@ mt.__eq = function(a, b) return 100 end
 assert(t == t)
 assert((t == {}) == true)
 assert({} ~= print)
+
+setmetatable(t, nil)
