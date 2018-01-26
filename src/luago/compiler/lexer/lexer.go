@@ -35,6 +35,9 @@ func (self *Lexer) Line() int {
 }
 
 func (self *Lexer) LookAhead() int {
+	if self.nextTokenLine > 0 {
+		return self.nextTokenKind
+	}
 	currentLine := self.line
 	line, kind, token := self.NextToken()
 	self.line = currentLine
@@ -68,7 +71,7 @@ func (self *Lexer) NextToken() (line, kind int, token string) {
 
 	self.skipWhiteSpaces()
 	if len(self.chunk) == 0 {
-		return line, TOKEN_EOF, "EOF"
+		return self.line, TOKEN_EOF, "EOF"
 	}
 
 	switch self.chunk[0] {
