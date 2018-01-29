@@ -166,6 +166,8 @@ func TestError(t *testing.T) {
 	testError(t, `(a+b) = 1`, `str:1: syntax error near '='`)
 	testError(t, `(a.b) = 1`, `str:1: syntax error near '='`)
 	testError(t, `a + b = 1`, `str:1: syntax error near '+'`)
+	testError(t, `f(,)`, `str:1: syntax error near ','`) // todo
+	testError(t, `function f(,) end`, `str:1: syntax error near ','`) // todo
 	//testError(t, `true = 1`, ``)
 }
 

@@ -273,7 +273,7 @@ func parseAssignOrFuncCallStat(lexer *Lexer) Stat {
 
 // varlist ‘=’ explist |
 func parseAssignStat(lexer *Lexer, var0 Exp) *AssignStat {
-	varList := _parseVarList(lexer, var0)  // varlist
+	varList := _finishVarList(lexer, var0) // varlist
 	lexer.NextTokenOfKind(TOKEN_OP_ASSIGN) // =
 	expList := parseExpList(lexer)         // explist
 	return &AssignStat{
@@ -284,7 +284,7 @@ func parseAssignStat(lexer *Lexer, var0 Exp) *AssignStat {
 }
 
 // varlist ::= var {‘,’ var}
-func _parseVarList(lexer *Lexer, var0 Exp) []Exp {
+func _finishVarList(lexer *Lexer, var0 Exp) []Exp {
 	vars := []Exp{_checkVar(lexer, var0)}
 	for lexer.LookAhead() == TOKEN_SEP_COMMA {
 		lexer.NextToken()
@@ -299,10 +299,9 @@ func _checkVar(lexer *Lexer, exp Exp) Exp {
 	switch exp.(type) {
 	case *NameExp, *TableAccessExp:
 		return exp
-	default:
-		lexer.NextTokenOfKind(-1) // trigger error
-		panic("unreachable!")
 	}
+	lexer.NextTokenOfKind(-1) // trigger error
+	panic("unreachable!")
 }
 
 // function funcname funcbody
@@ -312,26 +311,23 @@ func _checkVar(lexer *Lexer, exp Exp) Exp {
 // namelist ::= Name {‘,’ Name}
 func parseFuncDefStat(lexer *Lexer) *AssignStat {
 	lexer.NextTokenOfKind(TOKEN_KW_FUNCTION)
-	pexp, hasColon := _parseFuncName(lexer)
+	fnExp, hasColon := _parseFuncName(lexer)
 	fdExp := parseFuncDefExp(lexer)
 	if hasColon { // insert self
-		fdExp.ParList = append(fdExp.ParList, "self")
+		fdExp.ParList = append(fdExp.ParList, "")
 		copy(fdExp.ParList[1:], fdExp.ParList)
 		fdExp.ParList[0] = "self"
 	}
 
 	return &AssignStat{
 		LastLine: fdExp.Line,
-		VarList:  []Exp{pexp},
+		VarList:  []Exp{fnExp},
 		ExpList:  []Exp{fdExp},
 	}
 }
 
 // funcname ::= Name {‘.’ Name} [‘:’ Name]
-func _parseFuncName(lexer *Lexer) (Exp, bool) {
-	var exp Exp
-	hasColon := false
-
+func _parseFuncName(lexer *Lexer) (exp Exp, hasColon bool) {
 	line, name := lexer.NextIdentifier()
 	exp = &NameExp{line, name}
 
@@ -349,5 +345,5 @@ func _parseFuncName(lexer *Lexer) (Exp, bool) {
 		hasColon = true
 	}
 
-	return exp, hasColon
+	return
 }

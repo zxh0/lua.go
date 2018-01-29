@@ -25,12 +25,11 @@ func parseStats(lexer *Lexer) []Stat {
 
 func _isReturnOrBlockEnd(tokenKind int) bool {
 	switch tokenKind {
-	case TOKEN_EOF, TOKEN_KW_RETURN, TOKEN_KW_END,
+	case TOKEN_KW_RETURN, TOKEN_EOF, TOKEN_KW_END,
 		TOKEN_KW_ELSE, TOKEN_KW_ELSEIF, TOKEN_KW_UNTIL:
 		return true
-	default:
-		return false
 	}
+	return false
 }
 
 // retstat ::= return [explist] [‘;’]
@@ -40,7 +39,7 @@ func parseRetExps(lexer *Lexer) []Exp {
 		return nil
 	}
 
-	lexer.NextTokenOfKind(TOKEN_KW_RETURN)
+	lexer.NextToken()
 	switch lexer.LookAhead() {
 	case TOKEN_EOF, TOKEN_KW_END,
 		TOKEN_KW_ELSE, TOKEN_KW_ELSEIF, TOKEN_KW_UNTIL:

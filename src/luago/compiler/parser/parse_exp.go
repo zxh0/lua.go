@@ -133,20 +133,18 @@ func parseExp6(lexer *Lexer) Exp {
 
 // a .. b
 func parseExp5(lexer *Lexer) Exp {
-	line := 0
-	exps := make([]Exp, 0, 2)
+	exp := parseExp4(lexer)
+	if lexer.LookAhead() != TOKEN_OP_CONCAT {
+		return exp
+	}
 
-	exps = append(exps, parseExp4(lexer))
+	line := 0
+	exps := []Exp{exp}
 	for lexer.LookAhead() == TOKEN_OP_CONCAT {
 		line, _, _ = lexer.NextToken()
 		exps = append(exps, parseExp4(lexer))
 	}
-
-	if len(exps) > 1 {
-		return &ConcatExp{line, exps}
-	} else {
-		return exps[0]
-	}
+	return &ConcatExp{line, exps} 
 }
 
 // x +/- y
@@ -188,15 +186,14 @@ func parseExp2(lexer *Lexer) Exp {
 		line, op, _ := lexer.NextToken()
 		exp := &UnopExp{line, op, parseExp2(lexer)}
 		return optimizeUnaryOp(exp)
-	default:
-		return parseExp1(lexer)
 	}
+	return parseExp1(lexer)
 }
 
 // x ^ y
 func parseExp1(lexer *Lexer) Exp { // pow is right associative
 	exp := parseExp0(lexer)
-	for lexer.LookAhead() == TOKEN_OP_POW {
+	if lexer.LookAhead() == TOKEN_OP_POW {
 		line, op, _ := lexer.NextToken()
 		exp = &BinopExp{line, op, exp, parseExp1(lexer)}
 	}
@@ -248,7 +245,7 @@ func parseNumberExp(lexer *Lexer) Exp {
 func parseFuncDefExp(lexer *Lexer) *FuncDefExp {
 	line := lexer.Line()                    // function
 	lexer.NextTokenOfKind(TOKEN_SEP_LPAREN) // (
-	names, isVararg := _parseParList(lexer) // parlist
+	names, isVararg := _parseParList(lexer) // [parlist]
 	lexer.NextTokenOfKind(TOKEN_SEP_RPAREN) // )
 	block := parseBlock(lexer)              // block
 	lexer.NextTokenOfKind(TOKEN_KW_END)     // end
@@ -262,29 +259,30 @@ func parseFuncDefExp(lexer *Lexer) *FuncDefExp {
 	}
 }
 
+// [parlist]
 // parlist ::= namelist [‘,’ ‘...’] | ‘...’
 func _parseParList(lexer *Lexer) (names []string, isVararg bool) {
-	names = make([]string, 0, 8)
-	isVararg = false
+	switch lexer.LookAhead() {
+	case TOKEN_SEP_RPAREN:
+		return nil, false
+	case TOKEN_VARARG:
+		lexer.NextToken()
+		return nil, true
+	}
 
-	for {
-		switch lexer.LookAhead() {
-		case TOKEN_IDENTIFIER:
+	_, name := lexer.NextIdentifier()
+	names = append(names, name)
+	for lexer.LookAhead() == TOKEN_SEP_COMMA {
+		lexer.NextToken()
+		if lexer.LookAhead() == TOKEN_IDENTIFIER {
 			_, name := lexer.NextIdentifier()
 			names = append(names, name)
-		case TOKEN_VARARG:
-			lexer.NextToken()
-			isVararg = true
-			return
-		}
-
-		if lexer.LookAhead() == TOKEN_SEP_COMMA {
-			lexer.NextToken()
 		} else {
+			lexer.NextTokenOfKind(TOKEN_VARARG)
+			isVararg = true
 			break
 		}
 	}
-
 	return
 }
 
@@ -313,10 +311,10 @@ func _parseFieldList(lexer *Lexer, tc *TableConstructorExp) {
 
 	for _isFieldSep(lexer.LookAhead()) {
 		lexer.NextToken()
-		if lexer.LookAhead() == TOKEN_SEP_RCURLY {
-			break
-		} else {
+		if lexer.LookAhead() != TOKEN_SEP_RCURLY {
 			_parseField(lexer, tc)
+		} else {
+			break
 		}
 	}
 }
