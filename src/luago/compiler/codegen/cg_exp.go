@@ -53,18 +53,25 @@ func (self *codeGen) cgExp(node Exp, a, n int) {
 }
 
 func (self *codeGen) cgTableConstructorExp(node *TableConstructorExp, a int) {
-	nArr := node.NArr
+	nArr := 0
+	for _, keyExp := range node.KeyExps {
+		if keyExp == nil {
+			nArr++
+		}
+	}
 	nExps := len(node.KeyExps)
 	multRet := nExps > 0 &&
 		isVarargOrFuncCall(node.ValExps[nExps-1])
 
 	self.emitNewTable(node.Line, a, nArr, nExps-nArr)
 
+	idx := 0
 	for i, keyExp := range node.KeyExps {
 		valExp := node.ValExps[i]
 
 		if nArr > 0 { // todo: c > 0xFF
-			if idx, ok := keyExp.(int); ok {
+			if keyExp == nil {
+				idx++
 				_a := self.allocReg()
 				if i == nExps-1 && multRet {
 					self.cgExp(valExp, _a, -1)

@@ -180,7 +180,10 @@ func tcExpToString(tc *TableConstructorExp) string {
 	str := "{"
 	for i, k := range tc.KeyExps {
 		v := tc.ValExps[i]
-		str += "[" + expToString(k) + "]" + "=" + expToString(v) + ","
+		if k != nil {
+			str += "[" + expToString(k) + "]" + "="
+		}
+		str += expToString(v) + ","
 	}
 	str += "}"
 	return str

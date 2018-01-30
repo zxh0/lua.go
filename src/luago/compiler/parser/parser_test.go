@@ -43,7 +43,7 @@ func TestExpBinOp(t *testing.T) {
 	testExp2(t, `a ^ b ^ c ^ d`, `(a ^ (b ^ (c ^ d)))`)
 	testExp2(t, `a .. b .. c .. d`, `a .. b .. c .. d`)
 	testExp2(t, `(a + b) // (c - d)`, `((a + b) // (c - d))`)
-	testExp2(t, `((a ^ b) ^ c) ^ d`, `(((((a ^ b)) ^ c)) ^ d)`)
+	testExp2(t, `((a ^ b) ^ c) ^ d`, `(((a ^ b) ^ c) ^ d)`)
 	testExp2(t, `n - 1`, `(n - 1)`)
 	testExp2(t, `n-1`, `(n - 1)`)
 	testExp2(t, `a or b or c`, `((a or b) or c)`)
@@ -56,17 +56,21 @@ func TestExpBinOp(t *testing.T) {
 		`((x and x) and true)`)
 	testExp2(t, `((((a + b))))`, `(a + b)`)
 	testExp2(t, `((((a))))`, `(a)`)
+	testExp2(t, `1 + 2 + 3`, `6`)
+	//testExp2(t, `2 ^ 2 ^ 3`, `256`)
+	//testExp2(t, `2 ^ (2 ^ 3)`, `256`)
+	//testExp2(t, `(2 ^ 2) ^ 3`, `64`)
 }
 
 func TestExpTC(t *testing.T) {
 	testExp(t, `{}`)
-	testExp2(t, `{...}`, `{[1]=...,}`)
-	testExp2(t, `{f(),}`, `{[1]=f(),}`)
-	testExp2(t, `{f(), nil}`, `{[1]=f(),[2]=nil,}`)
+	testExp2(t, `{...}`, `{...,}`)
+	testExp2(t, `{f(),}`, `{f(),}`)
+	testExp2(t, `{f(), nil}`, `{f(),nil,}`)
 	testExp2(t, `{[f(1)] = g, 'x', 'y', x = 1, f(x), [30] = 23, 45}`,
-		`{[f(1)]=g,[1]='x',[2]='y',['x']=1,[3]=f(x),[30]=23,[4]=45,}`)
+		`{[f(1)]=g,'x','y',['x']=1,f(x),[30]=23,45,}`)
 	testExp2(t, `{ [f(1)] = g; "x", "y"; x = 1, f(x), [30] = 23; 45 }`,
-		`{[f(1)]=g,[1]='x',[2]='y',['x']=1,[3]=f(x),[30]=23,[4]=45,}`)
+		`{[f(1)]=g,'x','y',['x']=1,f(x),[30]=23,45,}`)
 }
 
 func TestPrefixExp(t *testing.T) {
@@ -83,7 +87,7 @@ func TestExpFuncCall(t *testing.T) {
 	testExp2(t, `print ''`, `print('')`)
 	testExp2(t, `print 'hello'`, `print('hello')`)
 	testExp2(t, `print {}`, `print({})`)
-	testExp2(t, `print {1}`, `print({[1]=1,})`)
+	testExp2(t, `print {1}`, `print({1,})`)
 	testExp(t, `f()`)
 	testExp(t, `g(f(), x)`)
 	testExp(t, `g(x, f())`)
@@ -166,7 +170,7 @@ func TestError(t *testing.T) {
 	testError(t, `(a+b) = 1`, `str:1: syntax error near '='`)
 	testError(t, `(a.b) = 1`, `str:1: syntax error near '='`)
 	testError(t, `a + b = 1`, `str:1: syntax error near '+'`)
-	testError(t, `f(,)`, `str:1: syntax error near ','`) // todo
+	testError(t, `f(,)`, `str:1: syntax error near ','`)              // todo
 	testError(t, `function f(,) end`, `str:1: syntax error near ','`) // todo
 	//testError(t, `true = 1`, ``)
 }
