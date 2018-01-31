@@ -3,60 +3,60 @@ package codegen
 import . "luago/compiler/ast"
 
 // todo: rename
-func (self *codeGen) cgBlockWithNewScope(node *Block, breakable bool) {
-	self.enterScope(breakable)
-	self.cgBlock(node)
-	self.exitScope(self.pc() + 1)
+func cgBlockWithNewScope(fi *funcInfo, node *Block, breakable bool) {
+	fi.enterScope(breakable)
+	cgBlock(fi, node)
+	fi.exitScope(fi.pc() + 1)
 }
 
-func (self *codeGen) cgBlock(node *Block) {
+func cgBlock(fi *funcInfo, node *Block) {
 	for _, stat := range node.Stats {
-		self.cgStat(stat)
+		cgStat(fi, stat)
 	}
 
 	if node.RetExps != nil {
-		self.cgRetStat(node.RetExps, node.LastLine)
+		cgRetStat(fi, node.RetExps, node.LastLine)
 	}
 }
 
-func (self *codeGen) cgRetStat(exps []Exp, lastLine int) {
+func cgRetStat(fi *funcInfo, exps []Exp, lastLine int) {
 	nExps := len(exps)
 	if nExps == 0 {
-		self.emitReturn(lastLine, 0, 0)
+		fi.emitReturn(lastLine, 0, 0)
 		return
 	}
 
 	if nExps == 1 {
 		if nameExp, ok := exps[0].(*NameExp); ok {
-			if r := self.slotOfLocVar(nameExp.Name); r >= 0 {
-				self.emitReturn(lastLine, r, 1)
+			if r := fi.slotOfLocVar(nameExp.Name); r >= 0 {
+				fi.emitReturn(lastLine, r, 1)
 				return
 			}
 		}
 		if fcExp, ok := exps[0].(*FuncCallExp); ok {
-			r := self.allocReg()
-			self.cgTailCallExp(fcExp, r)
-			self.freeReg()
-			self.emitReturn(lastLine, r, -1)
+			r := fi.allocReg()
+			cgTailCallExp(fi, fcExp, r)
+			fi.freeReg()
+			fi.emitReturn(lastLine, r, -1)
 			return
 		}
 	}
 
 	multRet := isVarargOrFuncCall(exps[nExps-1])
 	for i, exp := range exps {
-		r := self.allocReg()
+		r := fi.allocReg()
 		if i == nExps-1 && multRet {
-			self.cgExp(exp, r, -1)
+			cgExp(fi, exp, r, -1)
 		} else {
-			self.cgExp(exp, r, 1)
+			cgExp(fi, exp, r, 1)
 		}
 	}
-	self.freeRegs(nExps)
+	fi.freeRegs(nExps)
 
-	a := self.usedRegs() // correct?
+	a := fi.usedRegs // correct?
 	if multRet {
-		self.emitReturn(lastLine, a, -1)
+		fi.emitReturn(lastLine, a, -1)
 	} else {
-		self.emitReturn(lastLine, a, nExps)
+		fi.emitReturn(lastLine, a, nExps)
 	}
 }
