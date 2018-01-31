@@ -2,13 +2,6 @@ package codegen
 
 import . "luago/compiler/ast"
 
-// todo: rename
-func cgBlockWithNewScope(fi *funcInfo, node *Block, breakable bool) {
-	fi.enterScope(breakable)
-	cgBlock(fi, node)
-	fi.exitScope(fi.pc() + 1)
-}
-
 func cgBlock(fi *funcInfo, node *Block) {
 	for _, stat := range node.Stats {
 		cgStat(fi, stat)

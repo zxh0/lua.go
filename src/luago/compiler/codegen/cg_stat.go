@@ -5,7 +5,7 @@ import . "luago/compiler/ast"
 func cgStat(fi *funcInfo, node Stat) {
 	switch stat := node.(type) {
 	case *DoStat:
-		cgBlockWithNewScope(fi, stat.Block, false)
+		cgDoStat(fi, stat)
 	case *FuncCallStat:
 		cgFuncCallStat(fi, stat)
 	case *BreakStat:
@@ -29,6 +29,12 @@ func cgStat(fi *funcInfo, node Stat) {
 	case *LabelStat, *GotoStat:
 		panic("label and goto statements are not supported!")
 	}
+}
+
+func cgDoStat(fi *funcInfo, node *DoStat) {
+	fi.enterScope(false)
+	cgBlock(fi, node.Block)
+	fi.exitScope(fi.pc() + 1)
 }
 
 func cgLocalFuncDefStat(fi *funcInfo, node *LocalFuncDefStat) {
@@ -61,7 +67,7 @@ func cgRepeatStat(fi *funcInfo, node *RepeatStat) {
 
 	oldRegs := fi.usedRegs
 	a, _ := expToOpArg(fi, node.Exp, ARG_REG)
-	fi.resetRegs(oldRegs)
+	fi.usedRegs = oldRegs
 
 	line := lastLineOf(node.Exp)
 	fi.emitTest(line, a, 0)
@@ -84,7 +90,7 @@ func cgWhileStat(fi *funcInfo, node *WhileStat) {
 
 	oldRegs := fi.usedRegs
 	a, _ := expToOpArg(fi, node.Exp, ARG_REG)
-	fi.resetRegs(oldRegs)
+	fi.usedRegs = oldRegs
 
 	line := lastLineOf(node.Exp)
 	fi.emitTest(line, a, 0)
@@ -118,14 +124,16 @@ func cgIfStat(fi *funcInfo, node *IfStat) {
 
 		oldRegs := fi.usedRegs
 		a, _ := expToOpArg(fi, exp, ARG_REG)
-		fi.resetRegs(oldRegs)
+		fi.usedRegs = oldRegs
 
 		line := lastLineOf(exp)
 		fi.emitTest(line, a, 0)
 		pcJmpToElseif = fi.emitJmp(line, 0)
 
 		block := node.Blocks[i]
-		cgBlockWithNewScope(fi, block, false)
+		fi.enterScope(false)
+		cgBlock(fi, block)
+		fi.exitScope(fi.pc() + 1)
 		if i < len(node.Exps)-1 {
 			pcJmpToEnds[i] = fi.emitJmp(block.LastLine, 0)
 		} else {
@@ -236,7 +244,7 @@ func cgLocalAssignStat(fi *funcInfo, node *LocalAssignStat) {
 		}
 	}
 
-	fi.resetRegs(oldRegs)
+	fi.usedRegs = oldRegs
 	startPC := fi.pc() + 1
 	for _, name := range node.NameList {
 		fi.addLocVar(name, startPC)
@@ -327,5 +335,5 @@ func cgAssignStat(fi *funcInfo, node *AssignStat) {
 	}
 
 	// todo
-	fi.resetRegs(oldRegs)
+	fi.usedRegs = oldRegs
 }

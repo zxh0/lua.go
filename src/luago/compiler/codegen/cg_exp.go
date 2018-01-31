@@ -190,7 +190,7 @@ func cgTableAccessExp(fi *funcInfo, node *TableAccessExp, a int) {
 	oldRegs := fi.usedRegs
 	b, kindB := expToOpArg(fi, node.PrefixExp, ARG_RU)
 	c, _ := expToOpArg(fi, node.KeyExp, ARG_RK)
-	fi.resetRegs(oldRegs)
+	fi.usedRegs = oldRegs
 
 	if kindB == ARG_UPVAL {
 		fi.emitGetTabUp(node.LastLine, a, b, c)
@@ -204,7 +204,7 @@ func cgUnopExp(fi *funcInfo, node *UnopExp, a int) {
 	oldRegs := fi.usedRegs
 	b, _ := expToOpArg(fi, node.Exp, ARG_REG)
 	fi.emitUnaryOp(node.Line, node.Op, a, b)
-	fi.resetRegs(oldRegs)
+	fi.usedRegs = oldRegs
 }
 
 // r[a] := exp1 op exp2
@@ -214,7 +214,7 @@ func cgBinopExp(fi *funcInfo, node *BinopExp, a int) {
 		oldRegs := fi.usedRegs
 
 		b, _ := expToOpArg(fi, node.Exp1, ARG_REG)
-		fi.resetRegs(oldRegs)
+		fi.usedRegs = oldRegs
 		if node.Op == TOKEN_OP_AND {
 			fi.emitTestSet(node.Line, a, b, 0)
 		} else {
@@ -223,7 +223,7 @@ func cgBinopExp(fi *funcInfo, node *BinopExp, a int) {
 		pcOfJmp := fi.emitJmp(node.Line, 0)
 
 		b, _ = expToOpArg(fi, node.Exp2, ARG_REG)
-		fi.resetRegs(oldRegs)
+		fi.usedRegs = oldRegs
 		fi.emitMove(node.Line, a, b)
 		fi.fixSbx(pcOfJmp, fi.pc()-pcOfJmp)
 	default:
@@ -231,7 +231,7 @@ func cgBinopExp(fi *funcInfo, node *BinopExp, a int) {
 		b, _ := expToOpArg(fi, node.Exp1, ARG_RK)
 		c, _ := expToOpArg(fi, node.Exp2, ARG_RK)
 		fi.emitBinaryOp(node.Line, node.Op, a, b, c)
-		fi.resetRegs(oldRegs)
+		fi.usedRegs = oldRegs
 	}
 }
 

@@ -28,7 +28,7 @@ type upvalInfo struct {
 type locVarInfo struct {
 	prev    *locVarInfo
 	name    string
-	level   int
+	scopeLv int
 	slot    int
 	startPC int
 	endPC   int
@@ -39,7 +39,7 @@ type funcInfo struct {
 	subFuncs  []*funcInfo
 	usedRegs  int
 	maxRegs   int
-	level     int // blockLevel
+	scopeLv   int
 	locVars   []*locVarInfo
 	locNames  map[string]*locVarInfo
 	upvalues  map[string]upvalInfo
@@ -71,23 +71,6 @@ func newFuncInfo(parent *funcInfo, fd *FuncDefExp) *funcInfo {
 	}
 }
 
-/* code */
-
-func (self *funcInfo) pc() int {
-	return len(self.insts) - 1
-}
-
-// todo: rename?
-func (self *funcInfo) fixEndPC(name string, delta int) {
-	for i := len(self.locVars) - 1; i >= 0; i-- {
-		locVar := self.locVars[i]
-		if locVar.name == name {
-			locVar.endPC += delta
-			return
-		}
-	}
-}
-
 /* constants */
 
 func (self *funcInfo) indexOfConstant(k interface{}) int {
@@ -102,11 +85,6 @@ func (self *funcInfo) indexOfConstant(k interface{}) int {
 
 /* registers */
 
-// todo
-func (self *funcInfo) resetRegs(n int) {
-	self.usedRegs = n
-}
-
 func (self *funcInfo) allocReg() int {
 	self.usedRegs++
 	if self.usedRegs > self.maxRegs {
@@ -116,50 +94,36 @@ func (self *funcInfo) allocReg() int {
 }
 
 func (self *funcInfo) freeReg() {
-	if self.usedRegs > 0 {
-		self.usedRegs--
-	} else {
-		panic("usedRegs == 0 !")
+	if self.usedRegs <= 0 {
+		panic("usedRegs <= 0 !")
 	}
+	self.usedRegs--
 }
 
 func (self *funcInfo) allocRegs(n int) int {
-	if n > 0 {
-		slot := self.allocReg()
-		for i := 1; i < n; i++ {
-			self.allocReg()
-		}
-		return slot
-	} else {
+	if n <= 0 {
 		panic("n <= 0 !")
 	}
+	slot := self.allocReg()
+	for i := 1; i < n; i++ {
+		self.allocReg()
+	}
+	return slot
 }
 
 func (self *funcInfo) freeRegs(n int) {
-	if n >= 0 {
-		for i := 0; i < n; i++ {
-			self.freeReg()
-		}
-	} else {
+	if n < 0 {
 		panic("n < 0 !")
+	}
+	for i := 0; i < n; i++ {
+		self.freeReg()
 	}
 }
 
 /* lexical scope */
 
 func (self *funcInfo) enterScope(breakable bool) {
-	self.incrLevel(breakable)
-}
-
-func (self *funcInfo) exitScope(endPC int) {
-	pendingBreakJmps := self.decrLevel(endPC)
-	for _, pc := range pendingBreakJmps {
-		self.fixSbx(pc, self.pc()-pc)
-	}
-}
-
-func (self *funcInfo) incrLevel(breakable bool) {
-	self.level++
+	self.scopeLv++
 	if breakable {
 		self.breaks = append(self.breaks, []int{})
 	} else {
@@ -167,25 +131,28 @@ func (self *funcInfo) incrLevel(breakable bool) {
 	}
 }
 
-func (self *funcInfo) decrLevel(endPC int) []int {
-	self.level--
+func (self *funcInfo) exitScope(endPC int) {
+	self.scopeLv--
 	for _, locVar := range self.locNames {
-		if locVar.level > self.level { // out of scope
+		if locVar.scopeLv > self.scopeLv { // out of scope
 			locVar.endPC = endPC
 			self.removeLocVar(locVar)
 		}
 	}
 
-	breaks := self.breaks[len(self.breaks)-1]
+	pendingBreakJmps := self.breaks[len(self.breaks)-1]
 	self.breaks = self.breaks[:len(self.breaks)-1]
-	return breaks
+
+	for _, pc := range pendingBreakJmps {
+		self.fixSbx(pc, self.pc()-pc)
+	}
 }
 
 func (self *funcInfo) removeLocVar(locVar *locVarInfo) {
 	self.freeReg()
 	if locVar.prev == nil {
 		delete(self.locNames, locVar.name)
-	} else if locVar.prev.level == locVar.level {
+	} else if locVar.prev.scopeLv == locVar.scopeLv {
 		self.removeLocVar(locVar.prev)
 	} else {
 		self.locNames[locVar.name] = locVar.prev
@@ -196,7 +163,7 @@ func (self *funcInfo) addLocVar(name string, startPC int) int {
 	newVar := &locVarInfo{
 		prev:    self.locNames[name],
 		name:    name,
-		level:   self.level,
+		scopeLv: self.scopeLv,
 		slot:    self.allocReg(),
 		startPC: startPC,
 		endPC:   0,
@@ -217,7 +184,7 @@ func (self *funcInfo) slotOfLocVar(name string) int {
 }
 
 func (self *funcInfo) addBreakJmp(pc int) {
-	for i := self.level; i >= 0; i-- {
+	for i := self.scopeLv; i >= 0; i-- {
 		if self.breaks[i] != nil { // breakable
 			self.breaks[i] = append(self.breaks[i], pc)
 			return
@@ -228,14 +195,6 @@ func (self *funcInfo) addBreakJmp(pc int) {
 }
 
 /* upvalues */
-
-func (self *funcInfo) setupEnv() {
-	self.upvalues["_ENV"] = upvalInfo{
-		locVarSlot: 0,
-		upvalIndex: -1,
-		index:      0,
-	}
-}
 
 func (self *funcInfo) indexOfUpval(name string) int {
 	if upval, ok := self.upvalues[name]; ok {
@@ -265,6 +224,21 @@ func (self *funcInfo) indexOfUpval(name string) int {
 }
 
 /* code */
+
+func (self *funcInfo) pc() int {
+	return len(self.insts) - 1
+}
+
+// todo: rename?
+func (self *funcInfo) fixEndPC(name string, delta int) {
+	for i := len(self.locVars) - 1; i >= 0; i-- {
+		locVar := self.locVars[i]
+		if locVar.name == name {
+			locVar.endPC += delta
+			return
+		}
+	}
+}
 
 func (self *funcInfo) emitABC(line, opcode, a, b, c int) {
 	i := b<<23 | c<<14 | a<<6 | opcode
