@@ -46,7 +46,7 @@ type funcInfo struct {
 	constants map[interface{}]int
 	breaks    [][]int
 	insts     []uint32
-	lines     []uint32
+	lineNums  []uint32
 	line      int
 	lastLine  int
 	numParams int
@@ -63,7 +63,7 @@ func newFuncInfo(parent *funcInfo, fd *FuncDefExp) *funcInfo {
 		constants: map[interface{}]int{},
 		breaks:    make([][]int, 1),
 		insts:     make([]uint32, 0, 8),
-		lines:     make([]uint32, 0, 8),
+		lineNums:  make([]uint32, 0, 8),
 		line:      fd.Line,
 		lastLine:  fd.LastLine,
 		numParams: len(fd.ParList),
@@ -87,6 +87,9 @@ func (self *funcInfo) indexOfConstant(k interface{}) int {
 
 func (self *funcInfo) allocReg() int {
 	self.usedRegs++
+	if self.usedRegs >= 255 {
+		panic("function or expression needs too many registers")
+	}
 	if self.usedRegs > self.maxRegs {
 		self.maxRegs = self.usedRegs
 	}
@@ -104,11 +107,10 @@ func (self *funcInfo) allocRegs(n int) int {
 	if n <= 0 {
 		panic("n <= 0 !")
 	}
-	slot := self.allocReg()
-	for i := 1; i < n; i++ {
+	for i := 0; i < n; i++ {
 		self.allocReg()
 	}
-	return slot
+	return self.usedRegs - n
 }
 
 func (self *funcInfo) freeRegs(n int) {
@@ -161,8 +163,8 @@ func (self *funcInfo) removeLocVar(locVar *locVarInfo) {
 
 func (self *funcInfo) addLocVar(name string, startPC int) int {
 	newVar := &locVarInfo{
-		prev:    self.locNames[name],
 		name:    name,
+		prev:    self.locNames[name],
 		scopeLv: self.scopeLv,
 		slot:    self.allocReg(),
 		startPC: startPC,
@@ -178,9 +180,8 @@ func (self *funcInfo) addLocVar(name string, startPC int) int {
 func (self *funcInfo) slotOfLocVar(name string) int {
 	if locVar, found := self.locNames[name]; found {
 		return locVar.slot
-	} else {
-		return -1
 	}
+	return -1
 }
 
 func (self *funcInfo) addBreakJmp(pc int) {
@@ -202,22 +203,14 @@ func (self *funcInfo) indexOfUpval(name string) int {
 	}
 	if self.parent != nil {
 		if locVar, found := self.parent.locNames[name]; found {
-			upval := upvalInfo{
-				upvalIndex: -1,
-				locVarSlot: locVar.slot,
-				index:      len(self.upvalues),
-			}
-			self.upvalues[name] = upval
-			return upval.index
+			idx := len(self.upvalues)
+			self.upvalues[name] = upvalInfo{locVar.slot, -1, idx}
+			return idx
 		}
-		if idx := self.parent.indexOfUpval(name); idx >= 0 {
-			upval := upvalInfo{
-				locVarSlot: -1,
-				upvalIndex: idx,
-				index:      len(self.upvalues),
-			}
-			self.upvalues[name] = upval
-			return upval.index
+		if uvIdx := self.parent.indexOfUpval(name); uvIdx >= 0 {
+			idx := len(self.upvalues)
+			self.upvalues[name] =  upvalInfo{-1, uvIdx, idx}
+			return idx
 		}
 	}
 	return -1
@@ -227,6 +220,13 @@ func (self *funcInfo) indexOfUpval(name string) int {
 
 func (self *funcInfo) pc() int {
 	return len(self.insts) - 1
+}
+
+func (self *funcInfo) fixSbx(pc, sBx int) {
+	i := self.insts[pc]
+	i = i << 18 >> 18                  // clear sBx
+	i = i | uint32(sBx+MAXARG_sBx)<<14 // reset sBx
+	self.insts[pc] = i
 }
 
 // todo: rename?
@@ -243,32 +243,25 @@ func (self *funcInfo) fixEndPC(name string, delta int) {
 func (self *funcInfo) emitABC(line, opcode, a, b, c int) {
 	i := b<<23 | c<<14 | a<<6 | opcode
 	self.insts = append(self.insts, uint32(i))
-	self.lines = append(self.lines, uint32(line))
+	self.lineNums = append(self.lineNums, uint32(line))
 }
 
 func (self *funcInfo) emitABx(line, opcode, a, bx int) {
 	i := bx<<14 | a<<6 | opcode
 	self.insts = append(self.insts, uint32(i))
-	self.lines = append(self.lines, uint32(line))
+	self.lineNums = append(self.lineNums, uint32(line))
 }
 
 func (self *funcInfo) emitAsBx(line, opcode, a, b, c int) {
 	i := (b+MAXARG_sBx)<<14 | a<<6 | opcode
 	self.insts = append(self.insts, uint32(i))
-	self.lines = append(self.lines, uint32(line))
+	self.lineNums = append(self.lineNums, uint32(line))
 }
 
 func (self *funcInfo) emitAx(line, opcode, ax int) {
 	i := ax<<6 | opcode
 	self.insts = append(self.insts, uint32(i))
-	self.lines = append(self.lines, uint32(line))
-}
-
-func (self *funcInfo) fixSbx(pc, sBx int) {
-	i := self.insts[pc]
-	i = i << 18 >> 18                  // clear sBx
-	i = i | uint32(sBx+MAXARG_sBx)<<14 // reset sBx
-	self.insts[pc] = i
+	self.lineNums = append(self.lineNums, uint32(line))
 }
 
 // r[a] = r[b]

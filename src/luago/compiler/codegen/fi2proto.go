@@ -12,7 +12,7 @@ func toProto(fi *funcInfo) *binchunk.Prototype {
 		Constants:       getConstants(fi),
 		Upvalues:        getUpvalues(fi),
 		Protos:          toProtos(fi.subFuncs),
-		LineInfo:        fi.lines,
+		LineInfo:        fi.lineNums,
 		LocVars:         getLocVars(fi),
 		UpvalueNames:    getUpvalueNames(fi),
 	}
