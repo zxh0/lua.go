@@ -209,7 +209,7 @@ func (self *funcInfo) indexOfUpval(name string) int {
 		}
 		if uvIdx := self.parent.indexOfUpval(name); uvIdx >= 0 {
 			idx := len(self.upvalues)
-			self.upvalues[name] =  upvalInfo{-1, uvIdx, idx}
+			self.upvalues[name] = upvalInfo{-1, uvIdx, idx}
 			return idx
 		}
 	}

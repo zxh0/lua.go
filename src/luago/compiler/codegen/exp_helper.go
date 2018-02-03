@@ -6,9 +6,8 @@ func isVarargOrFuncCall(exp Exp) bool {
 	switch exp.(type) {
 	case *VarargExp, *FuncCallExp:
 		return true
-	default:
-		return false
 	}
+	return false
 }
 
 func removeTailNils(exps []Exp) []Exp {

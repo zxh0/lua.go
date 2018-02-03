@@ -27,9 +27,6 @@ func toProto(fi *funcInfo) *binchunk.Prototype {
 		proto.IsVararg = 1 // todo
 	}
 
-	proto.Code = append(proto.Code, 0x00800026) // todo
-	proto.LineInfo = append(proto.LineInfo, uint32(fi.lastLine))
-
 	return proto
 }
 

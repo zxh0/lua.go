@@ -118,8 +118,8 @@ func cgFuncDefExp(fi *funcInfo, node *FuncDefExp, a int) {
 	}
 
 	cgBlock(subFI, node.Block)
-	endPC := subFI.pc() + 2
-	subFI.exitScope(endPC)
+	subFI.exitScope(subFI.pc() + 2)
+	subFI.emitReturn(node.LastLine, 0, 0)
 
 	bx := len(fi.subFuncs) - 1
 	fi.emitClosure(node.LastLine, a, bx)
