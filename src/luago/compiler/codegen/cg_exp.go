@@ -29,83 +29,34 @@ func cgExp(fi *funcInfo, node Exp, a, n int) {
 		fi.emitLoadK(exp.Line, a, exp.Val)
 	case *StringExp:
 		fi.emitLoadK(exp.Line, a, exp.Str)
-	case *VarargExp:
-		fi.emitVararg(exp.Line, a, n)
 	case *ParensExp:
 		cgExp(fi, exp.Exp, a, 1)
-	case *NameExp:
-		cgNameExp(fi, exp, a)
-	case *TableConstructorExp:
-		cgTableConstructorExp(fi, exp, a)
+	case *VarargExp:
+		cgVarargExp(fi, exp, a, n)
 	case *FuncDefExp:
 		cgFuncDefExp(fi, exp, a)
-	case *FuncCallExp:
-		cgFuncCallExp(fi, exp, a, n)
-	case *TableAccessExp:
-		cgTableAccessExp(fi, exp, a)
-	case *ConcatExp:
-		cgConcatExp(fi, exp, a)
+	case *TableConstructorExp:
+		cgTableConstructorExp(fi, exp, a)
 	case *UnopExp:
 		cgUnopExp(fi, exp, a)
 	case *BinopExp:
 		cgBinopExp(fi, exp, a)
+	case *ConcatExp:
+		cgConcatExp(fi, exp, a)
+	case *NameExp:
+		cgNameExp(fi, exp, a)
+	case *TableAccessExp:
+		cgTableAccessExp(fi, exp, a)
+	case *FuncCallExp:
+		cgFuncCallExp(fi, exp, a, n)
 	}
 }
 
-func cgTableConstructorExp(fi *funcInfo, node *TableConstructorExp, a int) {
-	nArr := 0
-	for _, keyExp := range node.KeyExps {
-		if keyExp == nil {
-			nArr++
-		}
+func cgVarargExp(fi *funcInfo, node *VarargExp, a, n int) {
+	if !fi.isVararg {
+		panic("cannot use '...' outside a vararg function")
 	}
-	nExps := len(node.KeyExps)
-	multRet := nExps > 0 &&
-		isVarargOrFuncCall(node.ValExps[nExps-1])
-
-	fi.emitNewTable(node.Line, a, nArr, nExps-nArr)
-
-	idx := 0
-	for i, keyExp := range node.KeyExps {
-		valExp := node.ValExps[i]
-
-		if nArr > 0 { // todo: c > 0xFF
-			if keyExp == nil {
-				idx++
-				_a := fi.allocReg()
-				if i == nExps-1 && multRet {
-					cgExp(fi, valExp, _a, -1)
-				} else {
-					cgExp(fi, valExp, _a, 1)
-				}
-
-				if idx%50 == 0 || idx == nArr { // LFIELDS_PER_FLUSH
-					n := idx % 50
-					if n == 0 {
-						n = 50
-					}
-					fi.freeRegs(n)
-					line := lastLineOf(valExp)
-					if i == nExps-1 && multRet {
-						fi.emitSetList(line, a, 0, (idx-1)/50+1)
-					} else {
-						fi.emitSetList(line, a, n, (idx-1)/50+1)
-					}
-				}
-
-				continue
-			}
-		}
-
-		b := fi.allocReg()
-		cgExp(fi, keyExp, b, 1)
-		c := fi.allocReg()
-		cgExp(fi, valExp, c, 1)
-		fi.freeRegs(2)
-
-		line := lastLineOf(valExp)
-		fi.emitSetTable(line, a, b, c)
-	}
+	fi.emitVararg(node.Line, a, n)
 }
 
 // f[a] := function(args) body end
@@ -125,77 +76,58 @@ func cgFuncDefExp(fi *funcInfo, node *FuncDefExp, a int) {
 	fi.emitClosure(node.LastLine, a, bx)
 }
 
-// r[a] := f(args)
-func cgFuncCallExp(fi *funcInfo, node *FuncCallExp, a, n int) {
-	nArgs := prepFuncCall(fi, node, a)
-	fi.emitCall(node.Line, a, nArgs, n)
-}
-
-// return f(args)
-func cgTailCallExp(fi *funcInfo, node *FuncCallExp, a int) {
-	nArgs := prepFuncCall(fi, node, a)
-	fi.emitTailCall(node.Line, a, nArgs)
-}
-
-func prepFuncCall(fi *funcInfo, node *FuncCallExp, a int) int {
-	nArgs := len(node.Args)
-	lastArgIsVarargOrFuncCall := false
-
-	cgExp(fi, node.PrefixExp, a, 1)
-	if node.NameExp != nil {
-		fi.allocReg()
-		c, _ := expToOpArg(fi, node.NameExp, ARG_RK)
-		fi.emitSelf(node.Line, a, a, c)
-	}
-	for i, arg := range node.Args {
-		tmp := fi.allocReg()
-		if i == nArgs-1 && isVarargOrFuncCall(arg) {
-			lastArgIsVarargOrFuncCall = true
-			cgExp(fi, arg, tmp, -1)
-		} else {
-			cgExp(fi, arg, tmp, 1)
+func cgTableConstructorExp(fi *funcInfo, node *TableConstructorExp, a int) {
+	nArr := 0
+	for _, keyExp := range node.KeyExps {
+		if keyExp == nil {
+			nArr++
 		}
 	}
-	fi.freeRegs(nArgs)
+	nExps := len(node.KeyExps)
+	multRet := nExps > 0 &&
+		isVarargOrFuncCall(node.ValExps[nExps-1])
 
-	if lastArgIsVarargOrFuncCall {
-		nArgs = -1
-	}
-	if node.NameExp != nil {
-		fi.freeReg()
-		nArgs++
-	}
+	fi.emitNewTable(node.Line, a, nArr, nExps-nArr)
 
-	return nArgs
-}
+	arrIdx := 0
+	for i, keyExp := range node.KeyExps {
+		valExp := node.ValExps[i]
 
-// r[a] := name
-func cgNameExp(fi *funcInfo, node *NameExp, a int) {
-	if r := fi.slotOfLocVar(node.Name); r >= 0 {
-		fi.emitMove(node.Line, a, r)
-	} else if idx := fi.indexOfUpval(node.Name); idx >= 0 {
-		fi.emitGetUpval(node.Line, a, idx)
-	} else { // x => _ENV['x']
-		taExp := &TableAccessExp{
-			LastLine:  node.Line,
-			PrefixExp: &NameExp{node.Line, "_ENV"},
-			KeyExp:    &StringExp{node.Line, node.Name},
+		if keyExp == nil {
+			arrIdx++
+			tmp := fi.allocReg()
+			if i == nExps-1 && multRet {
+				cgExp(fi, valExp, tmp, -1)
+			} else {
+				cgExp(fi, valExp, tmp, 1)
+			}
+
+			if arrIdx%50 == 0 || arrIdx == nArr { // LFIELDS_PER_FLUSH
+				n := arrIdx % 50
+				if n == 0 {
+					n = 50
+				}
+				fi.freeRegs(n)
+				line := lastLineOf(valExp)
+				c := (arrIdx-1)/50 + 1 // todo: c > 0xFF
+				if i == nExps-1 && multRet {
+					fi.emitSetList(line, a, 0, c)
+				} else {
+					fi.emitSetList(line, a, n, c)
+				}
+			}
+
+			continue
 		}
-		cgTableAccessExp(fi, taExp, a)
-	}
-}
 
-// r[a] := prefix[key]
-func cgTableAccessExp(fi *funcInfo, node *TableAccessExp, a int) {
-	oldRegs := fi.usedRegs
-	b, kindB := expToOpArg(fi, node.PrefixExp, ARG_RU)
-	c, _ := expToOpArg(fi, node.KeyExp, ARG_RK)
-	fi.usedRegs = oldRegs
+		b := fi.allocReg()
+		cgExp(fi, keyExp, b, 1)
+		c := fi.allocReg()
+		cgExp(fi, valExp, c, 1)
+		fi.freeRegs(2)
 
-	if kindB == ARG_UPVAL {
-		fi.emitGetTabUp(node.LastLine, a, b, c)
-	} else {
-		fi.emitGetTable(node.LastLine, a, b, c)
+		line := lastLineOf(valExp)
+		fi.emitSetTable(line, a, b, c)
 	}
 }
 
@@ -246,6 +178,80 @@ func cgConcatExp(fi *funcInfo, node *ConcatExp, a int) {
 	b := c - len(node.Exps) + 1
 	fi.freeRegs(c - b + 1)
 	fi.emitABC(node.Line, OP_CONCAT, a, b, c)
+}
+
+// r[a] := name
+func cgNameExp(fi *funcInfo, node *NameExp, a int) {
+	if r := fi.slotOfLocVar(node.Name); r >= 0 {
+		fi.emitMove(node.Line, a, r)
+	} else if idx := fi.indexOfUpval(node.Name); idx >= 0 {
+		fi.emitGetUpval(node.Line, a, idx)
+	} else { // x => _ENV['x']
+		taExp := &TableAccessExp{
+			LastLine:  node.Line,
+			PrefixExp: &NameExp{node.Line, "_ENV"},
+			KeyExp:    &StringExp{node.Line, node.Name},
+		}
+		cgTableAccessExp(fi, taExp, a)
+	}
+}
+
+// r[a] := prefix[key]
+func cgTableAccessExp(fi *funcInfo, node *TableAccessExp, a int) {
+	oldRegs := fi.usedRegs
+	b, kindB := expToOpArg(fi, node.PrefixExp, ARG_RU)
+	c, _ := expToOpArg(fi, node.KeyExp, ARG_RK)
+	fi.usedRegs = oldRegs
+
+	if kindB == ARG_UPVAL {
+		fi.emitGetTabUp(node.LastLine, a, b, c)
+	} else {
+		fi.emitGetTable(node.LastLine, a, b, c)
+	}
+}
+
+// r[a] := f(args)
+func cgFuncCallExp(fi *funcInfo, node *FuncCallExp, a, n int) {
+	nArgs := prepFuncCall(fi, node, a)
+	fi.emitCall(node.Line, a, nArgs, n)
+}
+
+// return f(args)
+func cgTailCallExp(fi *funcInfo, node *FuncCallExp, a int) {
+	nArgs := prepFuncCall(fi, node, a)
+	fi.emitTailCall(node.Line, a, nArgs)
+}
+
+func prepFuncCall(fi *funcInfo, node *FuncCallExp, a int) int {
+	nArgs := len(node.Args)
+	lastArgIsVarargOrFuncCall := false
+
+	cgExp(fi, node.PrefixExp, a, 1)
+	if node.NameExp != nil {
+		fi.allocReg()
+		c, _ := expToOpArg(fi, node.NameExp, ARG_RK)
+		fi.emitSelf(node.Line, a, a, c)
+	}
+	for i, arg := range node.Args {
+		tmp := fi.allocReg()
+		if i == nArgs-1 && isVarargOrFuncCall(arg) {
+			lastArgIsVarargOrFuncCall = true
+			cgExp(fi, arg, tmp, -1)
+		} else {
+			cgExp(fi, arg, tmp, 1)
+		}
+	}
+	fi.freeRegs(nArgs)
+
+	if node.NameExp != nil {
+		fi.freeReg()
+		nArgs++
+	}
+	if lastArgIsVarargOrFuncCall {
+		nArgs = -1
+	}
+
+	return nArgs
 }
 
 func expToOpArg(fi *funcInfo, node Exp, argKinds int) (arg, argKind int) {

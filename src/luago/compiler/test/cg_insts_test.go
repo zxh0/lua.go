@@ -88,6 +88,7 @@ setlist(0,3,1)`)
 
 func TestLocalFuncDefStat(t *testing.T) {
 	testInsts(t, "local function f() g() end; local a", "[2/2] closure(0,0); loadnil(1,0,_)")
+	//testInsts(t, "local function f() return ... end", "!") // cannot use '...' outside a vararg function near '...'
 }
 
 func TestFuncCallStat(t *testing.T) {
@@ -101,6 +102,9 @@ gettabup(2,0,-3); loadk(3,-4);
 gettabup(4,0,-5); loadk(5,-6);
 call(4,2,0); call(2,0,0); call(0,0,1)`)
 	testInsts(t, "obj:f()", "[2/0] gettabup(0,0,-1); self(0,0,-2); call(0,2,1)")
+	testInsts(t, "obj:f(...)", "[3/0] gettabup(0,0,-1); self(0,0,-2); vararg(2,0,_); call(0,0,1)")
+	//testInsts(t, "local a,b,c; a:f()", "[5/3] loadnil(0,2,_); move(3,0,_); self(3,3,-1); call(3,2,1)")
+	//testInsts(t, "a.b.c:f()", "[3/0] gettabup(2,0,-1); gettable(1,2,-2); gettable(0,1,-3); self(0,0,-4); call(0,2,1)")
 }
 
 func TestRepeatStat(t *testing.T) {
