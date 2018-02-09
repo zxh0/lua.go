@@ -8,8 +8,7 @@ import "luago/stdlib"
 // [-0, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#luaL_error
 func (self *luaState) Error2(fmt string, a ...interface{}) int {
-	// todo
-	self.PushFString(fmt, a...)
+	self.PushFString(fmt, a...) // todo
 	return self.Error()
 }
 
@@ -33,7 +32,7 @@ func (self *luaState) Where(lvl int) {
 func (self *luaState) CheckStack2(sz int, msg string) {
 	if !self.CheckStack(sz) {
 		if msg != "" {
-			self.Error2("stack overflow (" + msg + ")")
+			self.Error2("stack overflow (%s)", msg)
 		} else {
 			self.Error2("stack overflow")
 		}
@@ -59,43 +58,6 @@ func (self *luaState) CheckAny(arg int) {
 }
 
 // [-0, +0, v]
-// http://www.lua.org/manual/5.3/manual.html#luaL_checkinteger
-// lua-5.3.4/src/lauxlib.c#luaL_checkinteger()
-func (self *luaState) CheckInteger(arg int) int64 {
-	if i, ok := self.ToIntegerX(arg); ok {
-		return i
-	} else {
-		self.intError(arg)
-		panic("unreachable!")
-	}
-}
-
-// [-0, +0, v]
-// http://www.lua.org/manual/5.3/manual.html#luaL_checknumber
-// lua-5.3.4/src/lauxlib.c#luaL_checknumber()
-func (self *luaState) CheckNumber(arg int) float64 {
-	if f, ok := self.ToNumberX(arg); ok {
-		return f
-	} else {
-		self.tagError(arg, LUA_TNUMBER)
-		panic("unreachable!")
-	}
-}
-
-// [-0, +0, v]
-// http://www.lua.org/manual/5.3/manual.html#luaL_checkstring
-// http://www.lua.org/manual/5.3/manual.html#luaL_checklstring
-// lua-5.3.4/src/lauxlib.c#luaL_checklstring()
-func (self *luaState) CheckString(arg int) string {
-	if s, ok := self.ToString(arg); ok {
-		return s
-	} else {
-		self.tagError(arg, LUA_TSTRING)
-		panic("unreachable!")
-	}
-}
-
-// [-0, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#luaL_checktype
 // lua-5.3.4/src/lauxlib.c#luaL_checktype()
 func (self *luaState) CheckType(arg int, t LuaType) {
@@ -105,14 +67,47 @@ func (self *luaState) CheckType(arg int, t LuaType) {
 }
 
 // [-0, +0, v]
+// http://www.lua.org/manual/5.3/manual.html#luaL_checkinteger
+// lua-5.3.4/src/lauxlib.c#luaL_checkinteger()
+func (self *luaState) CheckInteger(arg int) int64 {
+	i, ok := self.ToIntegerX(arg)
+	if !ok {
+		self.intError(arg)
+	}
+	return i
+}
+
+// [-0, +0, v]
+// http://www.lua.org/manual/5.3/manual.html#luaL_checknumber
+// lua-5.3.4/src/lauxlib.c#luaL_checknumber()
+func (self *luaState) CheckNumber(arg int) float64 {
+	f, ok := self.ToNumberX(arg)
+	if !ok {
+		self.tagError(arg, LUA_TNUMBER)
+	}
+	return f
+}
+
+// [-0, +0, v]
+// http://www.lua.org/manual/5.3/manual.html#luaL_checkstring
+// http://www.lua.org/manual/5.3/manual.html#luaL_checklstring
+// lua-5.3.4/src/lauxlib.c#luaL_checklstring()
+func (self *luaState) CheckString(arg int) string {
+	s, ok := self.ToString(arg)
+	if !ok {
+		self.tagError(arg, LUA_TSTRING)
+	}
+	return s
+}
+
+// [-0, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#luaL_optinteger
 // lua-5.3.4/src/lauxlib.c#luaL_optinteger()
 func (self *luaState) OptInteger(arg int, def int64) int64 {
 	if self.IsNoneOrNil(arg) {
 		return def
-	} else {
-		return self.CheckInteger(arg)
 	}
+	return self.CheckInteger(arg)
 }
 
 // [-0, +0, v]
@@ -121,9 +116,8 @@ func (self *luaState) OptInteger(arg int, def int64) int64 {
 func (self *luaState) OptNumber(arg int, def float64) float64 {
 	if self.IsNoneOrNil(arg) {
 		return def
-	} else {
-		return self.CheckNumber(arg)
 	}
+	return self.CheckNumber(arg)
 }
 
 // [-0, +0, v]
@@ -132,9 +126,8 @@ func (self *luaState) OptNumber(arg int, def float64) float64 {
 func (self *luaState) OptString(arg int, def string) string {
 	if self.IsNoneOrNil(arg) {
 		return def
-	} else {
-		return self.CheckString(arg)
 	}
+	return self.CheckString(arg)
 }
 
 // [-0, +?, e]
@@ -157,25 +150,22 @@ func (self *luaState) DoString(str string) bool {
 // http://www.lua.org/manual/5.3/manual.html#luaL_loadfile
 // lua-5.3.4/src/lauxlib.h#luaL_loadfile()
 func (self *luaState) LoadFile(filename string) ThreadStatus {
-	return self.LoadFileX(filename, "")
+	return self.LoadFileX(filename, "bt")
 }
 
 // [-0, +1, m]
 // http://www.lua.org/manual/5.3/manual.html#luaL_loadfilex
 func (self *luaState) LoadFileX(filename, mode string) ThreadStatus {
-	data, err := ioutil.ReadFile(filename)
-	if err != nil {
-		panic(err)
+	if data, err := ioutil.ReadFile(filename); err == nil {
+		return self.Load(data, filename, mode)
 	}
-	self.Load(data, filename, mode)
-	// panic("todo!")
-	return LUA_OK
+	return LUA_ERRFILE
 }
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#luaL_loadstring
 func (self *luaState) LoadString(s string) ThreadStatus {
-	panic("todo: LoadString!")
+	return self.Load([]byte(s), s, "bt")
 }
 
 // [-0, +0, v]
@@ -374,7 +364,6 @@ func (self *luaState) intError(arg int) {
 	if self.IsNumber(arg) {
 		self.ArgError(arg, "number has no integer representation")
 	} else {
-
 		self.tagError(arg, LUA_TNUMBER)
 	}
 }

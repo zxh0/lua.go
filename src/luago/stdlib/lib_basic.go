@@ -76,8 +76,7 @@ func basePrint(ls LuaState) int {
 func baseAssert(ls LuaState) int {
 	if ls.ToBoolean(1) { /* condition is true? */
 		return ls.GetTop() /* return all arguments */
-	} else {
-		/* error */
+	} else { /* error */
 		ls.CheckAny(1)                     /* there must be a condition */
 		ls.Remove(1)                       /* remove it */
 		ls.PushString("assertion failed!") /* default message */
@@ -173,28 +172,66 @@ func baseNext(ls LuaState) int {
 
 // load (chunk [, chunkname [, mode [, env]]])
 // http://www.lua.org/manual/5.3/manual.html#pdf-load
+// lua-5.3.4/src/lbaselib.c#luaB_load()
 func baseLoad(ls LuaState) int {
-	panic("todo! baseLoad")
+	var status int
+	s, isStr := ls.ToString(1)
+	mode := ls.OptString(3, "bt")
+	env := 0 /* 'env' index or 0 if no 'env' */
+	if !ls.IsNone(4) {
+		env = 4
+	}
+	if isStr { /* loading a string? */
+		chunkname := ls.OptString(2, s)
+		status = ls.Load([]byte(s), chunkname, mode)
+	} else { /* loading from a reader function */
+		panic("loading from a reader function") // todo
+	}
+	return loadAux(ls, status, env)
+}
+
+// lua-5.3.4/src/lbaselib.c#load_aux()
+func loadAux(ls LuaState, status, envIdx int) int {
+	if status == LUA_OK {
+		if envIdx != 0 { /* 'env' parameter? */
+			ls.PushValue(envIdx)                          /* environment for loaded function */
+			if name := ls.SetUpvalue(-2, 1); name != "" { /* set it as 1st upvalue */
+				ls.Pop(1) /* remove 'env' if not used by previous call */
+			}
+		}
+		return 1
+	} else { /* error (message is on top of the stack) */
+		ls.PushNil()
+		ls.Insert(-2) /* put before error message */
+		return 2      /* return nil plus error message */
+	}
 }
 
 // loadfile ([filename [, mode [, env]]])
 // http://www.lua.org/manual/5.3/manual.html#pdf-loadfile
+// lua-5.3.4/src/lbaselib.c#luaB_loadfile()
 func baseLoadFile(ls LuaState) int {
-	panic("todo! baseLoadFile")
+	fname := ls.OptString(1, "")
+	mode := ls.OptString(1, "bt")
+	env := 0 /* 'env' index or 0 if no 'env' */
+	if !ls.IsNone(3) {
+		env = 3
+	}
+	status := ls.LoadFileX(fname, mode)
+	return loadAux(ls, status, env)
 }
 
 // dofile ([filename])
 // http://www.lua.org/manual/5.3/manual.html#pdf-dofile
+// lua-5.3.4/src/lbaselib.c#luaB_dofile()
 func baseDoFile(ls LuaState) int {
-	fname := ls.OptString(1, "")
+	fname := ls.OptString(1, "bt")
 	ls.SetTop(1)
 	if ls.LoadFile(fname) != LUA_OK {
-		//return lua_error(L);
-		panic("todo!")
+		return ls.Error()
 	}
-	//ls.CallK(0, LUA_MULTRET, 0, dofilecont);
-	//return dofilecont(L, 0, 0);
-	panic("todo!")
+	ls.Call(0, LUA_MULTRET)
+	return ls.GetTop() - 1
 }
 
 // pcall (f [, arg1, ···])

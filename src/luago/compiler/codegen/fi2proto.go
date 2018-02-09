@@ -1,9 +1,9 @@
 package codegen
 
-import "luago/binchunk"
+import . "luago/binchunk"
 
-func toProto(fi *funcInfo) *binchunk.Prototype {
-	proto := &binchunk.Prototype{
+func toProto(fi *funcInfo) *Prototype {
+	proto := &Prototype{
 		LineDefined:     uint32(fi.line),
 		LastLineDefined: uint32(fi.lastLine),
 		NumParams:       byte(fi.numParams),
@@ -30,8 +30,8 @@ func toProto(fi *funcInfo) *binchunk.Prototype {
 	return proto
 }
 
-func toProtos(fis []*funcInfo) []*binchunk.Prototype {
-	protos := make([]*binchunk.Prototype, len(fis))
+func toProtos(fis []*funcInfo) []*Prototype {
+	protos := make([]*Prototype, len(fis))
 	for i, fi := range fis {
 		protos[i] = toProto(fi)
 	}
@@ -46,10 +46,10 @@ func getConstants(fi *funcInfo) []interface{} {
 	return consts
 }
 
-func getLocVars(fi *funcInfo) []binchunk.LocVar {
-	locVars := make([]binchunk.LocVar, len(fi.locVars))
+func getLocVars(fi *funcInfo) []LocVar {
+	locVars := make([]LocVar, len(fi.locVars))
 	for i, locVar := range fi.locVars {
-		locVars[i] = binchunk.LocVar{
+		locVars[i] = LocVar{
 			VarName: locVar.name,
 			StartPC: uint32(locVar.startPC),
 			EndPC:   uint32(locVar.endPC),
@@ -58,13 +58,13 @@ func getLocVars(fi *funcInfo) []binchunk.LocVar {
 	return locVars
 }
 
-func getUpvalues(fi *funcInfo) []binchunk.Upvalue {
-	upvals := make([]binchunk.Upvalue, len(fi.upvalues))
+func getUpvalues(fi *funcInfo) []Upvalue {
+	upvals := make([]Upvalue, len(fi.upvalues))
 	for _, uv := range fi.upvalues {
 		if uv.locVarSlot >= 0 { // instack
-			upvals[uv.index] = binchunk.Upvalue{1, byte(uv.locVarSlot)}
+			upvals[uv.index] = Upvalue{1, byte(uv.locVarSlot)}
 		} else {
-			upvals[uv.index] = binchunk.Upvalue{0, byte(uv.upvalIndex)}
+			upvals[uv.index] = Upvalue{0, byte(uv.upvalIndex)}
 		}
 	}
 	return upvals

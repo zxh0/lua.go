@@ -12,10 +12,10 @@ type AuxLib interface {
 	CheckStack2(sz int, msg string)               //
 	ArgCheck(cond bool, arg int, extraMsg string) //
 	CheckAny(arg int)                             // r[arg] is None ?
+	CheckType(arg int, t LuaType)                 // r[arg] is LuaType ?
 	CheckInteger(arg int) int64                   // r[arg] is LuaInteger ?
 	CheckNumber(arg int) float64                  // r[arg] is LuaNumber ?
 	CheckString(arg int) string                   // r[arg] is string ?
-	CheckType(arg int, t LuaType)                 // r[arg] is LuaType ?
 	OptInteger(arg int, d int64) int64            // r[arg] or d
 	OptNumber(arg int, d float64) float64         // r[arg] or d
 	OptString(arg int, d string) string           // r[arg] or d
