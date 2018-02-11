@@ -11,8 +11,8 @@ var strLib = map[string]GoFunction{
 	"lower":    strLower,
 	"upper":    strUpper,
 	"sub":      strSub,
-	"char":     strChar,
 	"byte":     strByte,
+	"char":     strChar,
 	"dump":     strDump,
 	"format":   strFormat,
 	"packsize": strPackSize,
@@ -135,35 +135,6 @@ func strSub(ls LuaState) int {
 	return 1
 }
 
-/* translate a relative string position: negative means back from end */
-func posRelat(pos int64, _len int) int {
-	_pos := int(pos)
-	if _pos >= 0 {
-		return _pos
-	} else if -_pos > _len {
-		return 0
-	} else {
-		return _len + _pos + 1
-	}
-}
-
-// string.char (···)
-// http://www.lua.org/manual/5.3/manual.html#pdf-string.char
-// lua-5.3.4/src/lstrlib.c#str_char()
-func strChar(ls LuaState) int {
-	nArgs := ls.GetTop()
-
-	s := make([]byte, nArgs)
-	for i := 1; i <= nArgs; i++ {
-		c := ls.CheckInteger(i)
-		ls.ArgCheck(int64(byte(c)) == c, i, "value out of range")
-		s[i-1] = byte(c)
-	}
-
-	ls.PushString(string(s))
-	return 1
-}
-
 // string.byte (s [, i [, j]])
 // http://www.lua.org/manual/5.3/manual.html#pdf-string.byte
 // lua-5.3.4/src/lstrlib.c#str_byte()
@@ -194,6 +165,23 @@ func strByte(ls LuaState) int {
 		ls.PushInteger(int64(s[i+k-1]))
 	}
 	return n
+}
+
+// string.char (···)
+// http://www.lua.org/manual/5.3/manual.html#pdf-string.char
+// lua-5.3.4/src/lstrlib.c#str_char()
+func strChar(ls LuaState) int {
+	nArgs := ls.GetTop()
+
+	s := make([]byte, nArgs)
+	for i := 1; i <= nArgs; i++ {
+		c := ls.CheckInteger(i)
+		ls.ArgCheck(int64(byte(c)) == c, i, "value out of range")
+		s[i-1] = byte(c)
+	}
+
+	ls.PushString(string(s))
+	return 1
 }
 
 // string.dump (function [, strip])
@@ -380,4 +368,18 @@ func strGmatch(ls LuaState) int {
 
 	ls.PushGoFunction(gmatchAux)
 	return 1
+}
+
+/* helper */
+
+/* translate a relative string position: negative means back from end */
+func posRelat(pos int64, _len int) int {
+	_pos := int(pos)
+	if _pos >= 0 {
+		return _pos
+	} else if -_pos > _len {
+		return 0
+	} else {
+		return _len + _pos + 1
+	}
 }

@@ -16,9 +16,9 @@ const (
 )
 
 var tabFuncs = map[string]GoFunction{
+	"move":   tabMove,
 	"insert": tabInsert,
 	"remove": tabRemove,
-	"move":   tabMove,
 	"sort":   tabSort,
 	"concat": tabConcat,
 	"pack":   tabPack,
@@ -27,6 +27,42 @@ var tabFuncs = map[string]GoFunction{
 
 func OpenTableLib(ls LuaState) int {
 	ls.NewLib(tabFuncs)
+	return 1
+}
+
+// table.move (a1, f, e, t [,a2])
+// http://www.lua.org/manual/5.3/manual.html#pdf-table.move
+// lua-5.3.4/src/ltablib.c#tremove()
+func tabMove(ls LuaState) int {
+	f := ls.CheckInteger(2)
+	e := ls.CheckInteger(3)
+	t := ls.CheckInteger(4)
+	tt := 1 /* destination table */
+	if !ls.IsNoneOrNil(5) {
+		tt = 5
+	}
+	_checkTab(ls, 1, TAB_R)
+	_checkTab(ls, tt, TAB_W)
+	if e >= f { /* otherwise, nothing to move */
+		var n, i int64
+		ls.ArgCheck(f > 0 || e < LUA_MAXINTEGER+f, 3,
+			"too many elements to move")
+		n = e - f + 1 /* number of elements to move */
+		ls.ArgCheck(t <= LUA_MAXINTEGER-n+1, 4,
+			"destination wrap around")
+		if t > e || t <= f || (tt != 1 && !ls.Compare(1, tt, LUA_OPEQ)) {
+			for i = 0; i < n; i++ {
+				ls.GetI(1, f+i)
+				ls.SetI(tt, t+i)
+			}
+		} else {
+			for i = n - 1; i >= 0; i-- {
+				ls.GetI(1, f+i)
+				ls.SetI(tt, t+i)
+			}
+		}
+	}
+	ls.PushValue(tt) /* return destination table */
 	return 1
 }
 
@@ -69,42 +105,6 @@ func tabRemove(ls LuaState) int {
 	}
 	ls.PushNil()
 	ls.SetI(1, pos) /* t[pos] = nil */
-	return 1
-}
-
-// table.move (a1, f, e, t [,a2])
-// http://www.lua.org/manual/5.3/manual.html#pdf-table.move
-// lua-5.3.4/src/ltablib.c#tremove()
-func tabMove(ls LuaState) int {
-	f := ls.CheckInteger(2)
-	e := ls.CheckInteger(3)
-	t := ls.CheckInteger(4)
-	tt := 1 /* destination table */
-	if !ls.IsNoneOrNil(5) {
-		tt = 5
-	}
-	_checkTab(ls, 1, TAB_R)
-	_checkTab(ls, tt, TAB_W)
-	if e >= f { /* otherwise, nothing to move */
-		var n, i int64
-		ls.ArgCheck(f > 0 || e < LUA_MAXINTEGER+f, 3,
-			"too many elements to move")
-		n = e - f + 1 /* number of elements to move */
-		ls.ArgCheck(t <= LUA_MAXINTEGER-n+1, 4,
-			"destination wrap around")
-		if t > e || t <= f || (tt != 1 && !ls.Compare(1, tt, LUA_OPEQ)) {
-			for i = 0; i < n; i++ {
-				ls.GetI(1, f+i)
-				ls.SetI(tt, t+i)
-			}
-		} else {
-			for i = n - 1; i >= 0; i-- {
-				ls.GetI(1, f+i)
-				ls.SetI(tt, t+i)
-			}
-		}
-	}
-	ls.PushValue(tt) /* return destination table */
 	return 1
 }
 
