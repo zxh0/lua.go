@@ -16,3 +16,8 @@ print(utf8.codepoint(s, 1))    --> 20320
 print(utf8.codepoint(s, 4, 8)) --> 22909 65292
 print(utf8.char(20320, 22909)) --> 你好
 for p, c in utf8.codes(s) do print(p, c) end
+
+
+co = coroutine.create(function()end)
+assert(not coroutine.isyieldable(co))
+assert(not coroutine.isyieldable(coroutine.running()))

@@ -112,11 +112,8 @@ func (self *luaState) SetTop(idx int) {
 
 // [-?, +?, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_xmove
-// lua-5.3.4/src/lapi.c#lua_rotate()
+// lua-5.3.4/src/lapi.c#lua_xmove()
 func (self *luaState) XMove(to LuaState, n int) {
-	lsFrom := self
-	lsTo := to.(*luaState)
-
-	elems := lsFrom.stack.popN(n)
-	lsTo.stack.pushN(elems, n)
+	vals := self.stack.popN(n)
+	to.(*luaState).stack.pushN(vals, n)
 }

@@ -44,14 +44,14 @@ func OpenPackageLib(ls LuaState) int {
 	ls.NewLib(pkgFuncs) /* create 'package' table */
 	createSearchersTable(ls)
 	/* set field 'path' */
-	ls.PushString("./?.lua")
+	ls.PushString("./?.lua;./?/init.lua")
 	ls.SetField(-2, "path")
 	// setPath(ls, "path", LUA_PATHVARVERSION, LUA_PATH_VAR, LUA_PATH_DEFAULT)
 	/* set field 'cpath' */
 	// setpath(L, "cpath", LUA_CPATHVARVERSION, LUA_CPATH_VAR, LUA_CPATH_DEFAULT);
 	/* store config information */
-	ls.PushString(LUA_DIRSEP + "\n" + LUA_PATH_SEP + "\n" + LUA_PATH_MARK + "\n" +
-		LUA_EXEC_DIR + "\n" + LUA_IGMARK + "\n")
+	ls.PushString(LUA_DIRSEP + "\n" + LUA_PATH_SEP + "\n" +
+		LUA_PATH_MARK + "\n" + LUA_EXEC_DIR + "\n" + LUA_IGMARK + "\n")
 	ls.SetField(-2, "config")
 	/* set field 'loaded' */
 	ls.GetSubTable(LUA_REGISTRYINDEX, LUA_LOADED_TABLE)

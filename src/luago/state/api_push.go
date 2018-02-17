@@ -59,9 +59,9 @@ func (self *luaState) PushGoClosure(f GoFunction, n int) {
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_pushthread
-func (self *luaState) PushThread(ls LuaState) bool {
-	self.stack.push(ls)
-	return false // todo
+func (self *luaState) PushThread() bool {
+	self.stack.push(self)
+	return self.isMainThread()
 }
 
 // [-0, +1, –]

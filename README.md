@@ -23,6 +23,7 @@ bin/lua test/Pil4/ch01/hello_world.lua
 * [A No-Frills Introduction to Lua 5.1 VM Instructions](http://luaforge.net/docman/83/98/ANoFrillsIntroToLua51VMInstructions.pdf)
 * [The Evolution of Lua](http://www.lua.org/doc/hopl.pdf)
 * [The Implementation of Lua 5.0](http://www.lua.org/doc/jucs05.pdf)
+* [Revisiting Coroutines](http://www.inf.puc-rio.br/~roberto/docs/MCC15-04.pdf)
 * [Syntax-Diagrams for Lua 5.0](http://lua.lickert.net/syntax/Lua_syntax.pdf)
 * [Lua-Source-Internal](https://github.com/lichuang/Lua-Source-Internal)
 * [Linear Scan Register Allocation](http://www.cs.ucla.edu/~palsberg/course/cs132/linearscan.pdf)

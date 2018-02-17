@@ -46,6 +46,32 @@ func coResume(ls LuaState) int {
 	}
 }
 
+func _auxResume(ls, co LuaState, narg int) int {
+	if !ls.CheckStack(narg) {
+		ls.PushString("too many arguments to resume")
+		return -1 /* error flag */
+	}
+	if co.Status() == LUA_OK && co.GetTop() == 0 {
+		ls.PushString("cannot resume dead coroutine")
+		return -1 /* error flag */
+	}
+	ls.XMove(co, narg)
+	status := co.Resume(ls, narg)
+	if status == LUA_OK || status == LUA_YIELD {
+		nres := co.GetTop()
+		if !ls.CheckStack(nres + 1) {
+			co.Pop(nres) /* remove results anyway */
+			ls.PushString("too many results to resume")
+			return -1 /* error flag */
+		}
+		co.XMove(ls, nres) /* move yielded values */
+		return nres
+	} else {
+		co.XMove(ls, 1) /* move error message */
+		return -1       /* error flag */
+	}
+}
+
 // coroutine.yield (···)
 // http://www.lua.org/manual/5.3/manual.html#pdf-coroutine.yield
 // lua-5.3.4/src/lcorolib.c#luaB_yield()
@@ -83,44 +109,22 @@ func coStatus(ls LuaState) int {
 
 // coroutine.isyieldable ()
 // http://www.lua.org/manual/5.3/manual.html#pdf-coroutine.isyieldable
+// lua-5.3.4/src/lcorolib.c#luaB_yieldable()
 func coYieldable(ls LuaState) int {
-	panic("todo: coYieldable!")
+	ls.PushBoolean(ls.IsYieldable())
+	return 1
 }
 
 // coroutine.running ()
 // http://www.lua.org/manual/5.3/manual.html#pdf-coroutine.running
 func coRunning(ls LuaState) int {
-	panic("todo: coRunning!")
+	isMain := ls.PushThread()
+	ls.PushBoolean(isMain)
+	return 2
 }
 
 // coroutine.wrap (f)
 // http://www.lua.org/manual/5.3/manual.html#pdf-coroutine.wrap
 func coWrap(ls LuaState) int {
 	panic("todo: coWrap!")
-}
-
-func _auxResume(ls, co LuaState, narg int) int {
-	if !ls.CheckStack(narg) {
-		ls.PushString("too many arguments to resume")
-		return -1 /* error flag */
-	}
-	if co.Status() == LUA_OK && co.GetTop() == 0 {
-		ls.PushString("cannot resume dead coroutine")
-		return -1 /* error flag */
-	}
-	ls.XMove(co, narg)
-	status := co.Resume(ls, narg)
-	if status == LUA_OK || status == LUA_YIELD {
-		nres := co.GetTop()
-		if !ls.CheckStack(nres + 1) {
-			co.Pop(nres) /* remove results anyway */
-			ls.PushString("too many results to resume")
-			return -1 /* error flag */
-		}
-		co.XMove(ls, nres) /* move yielded values */
-		return nres
-	} else {
-		co.XMove(ls, 1) /* move error message */
-		return -1       /* error flag */
-	}
 }

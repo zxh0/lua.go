@@ -68,9 +68,9 @@ type BasicAPI interface {
 	PushFString(fmt string, a ...interface{}) // push(fmt*a)
 	PushGoFunction(f GoFunction)              // push(f)
 	PushGoClosure(f GoFunction, n int)        // push(f)
-	PushThread(ls LuaState) bool              // push(ls)
 	PushUserData(d UserData)                  // push(d)
 	PushGlobalTable()                         // push(global)
+	PushThread() bool                         // push(thread)
 	/* Comparison and arithmetic functions */
 	Arith(op ArithOp)                          // b=pop(); a=pop(); push(a op b)
 	Compare(idx1, idx2 int, op CompareOp) bool // r[idx1] op r[idx2]
@@ -113,10 +113,10 @@ type BasicAPI interface {
 	Error() int                   // panic(r[-1])
 	/* coroutine functions */
 	NewThread() LuaState                          // todo
+	Resume(from LuaState, nArgs int) ThreadStatus // todo
 	Yield(nResults int) int                       // todo
 	YieldK()                                      // todo
 	Status() ThreadStatus                         // todo
-	Resume(from LuaState, nArgs int) ThreadStatus // todo
 	IsYieldable() bool                            // todo
 	/* garbage-collection function and options */
 	GC(what, data int) int //

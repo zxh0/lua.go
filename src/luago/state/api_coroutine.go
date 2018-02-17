@@ -8,15 +8,8 @@ import . "luago/api"
 func (self *luaState) NewThread() LuaState {
 	t := &luaState{registry: self.registry}
 	t.pushLuaStack(newLuaStack(LUA_MINSTACK, t))
-	self.PushThread(t)
+	self.stack.push(t)
 	return t
-}
-
-// [-0, +0, –]
-// http://www.lua.org/manual/5.3/manual.html#lua_status
-// lua-5.3.4/src/lapi.c#lua_status()
-func (self *luaState) Status() ThreadStatus {
-	return self.coStatus
 }
 
 // [-?, +?, –]
@@ -63,5 +56,15 @@ func (self *luaState) YieldK() {
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_isyieldable
 func (self *luaState) IsYieldable() bool {
-	panic("todo!")
+	if self.isMainThread() {
+		return false
+	}
+	return self.coStatus != LUA_YIELD // todo
+}
+
+// [-0, +0, –]
+// http://www.lua.org/manual/5.3/manual.html#lua_status
+// lua-5.3.4/src/lapi.c#lua_status()
+func (self *luaState) Status() ThreadStatus {
+	return self.coStatus
 }
