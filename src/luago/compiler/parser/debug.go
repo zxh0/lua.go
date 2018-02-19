@@ -51,8 +51,8 @@ func statToString(stat Stat) string {
 		return forInStatToString(x)
 	case *AssignStat:
 		return assignStatToString(x)
-	case *LocalAssignStat:
-		return localAssignStatToString(x)
+	case *LocalVarDeclStat:
+		return LocalVarDeclStatToString(x)
 	case *LocalFuncDefStat:
 		return "local " + funcDefExpToString(x.Exp, x.Name)
 	}
@@ -96,7 +96,7 @@ func assignStatToString(stat *AssignStat) string {
 	return str
 }
 
-func localAssignStatToString(stat *LocalAssignStat) string {
+func LocalVarDeclStatToString(stat *LocalVarDeclStat) string {
 	str := "local "
 	for i, name := range stat.NameList {
 		str += name
