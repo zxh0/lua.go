@@ -186,7 +186,7 @@ jmp(0,1);
 jmp(0,-7)`)
 }
 
-func TestLocalAssignStat(t *testing.T) {
+func TestLocalVarDeclStat(t *testing.T) {
 	testInsts(t, "local a", "[2/1] loadnil(0,0,_)")
 	testInsts(t, "local a=nil", "[2/1] loadnil(0,0,_)")
 	testInsts(t, "local a=true", "[2/1] loadbool(0,1,0)")

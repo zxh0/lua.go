@@ -5,11 +5,11 @@ import . "luago/api"
 var coFuncs = map[string]GoFunction{
 	"create":      coCreate,
 	"resume":      coResume,
-	"running":     coRunning,
-	"status":      coStatus,
-	"wrap":        coWrap,
 	"yield":       coYield,
+	"status":      coStatus,
 	"isyieldable": coYieldable,
+	"running":     coRunning,
+	"wrap":        coWrap,
 }
 
 func OpenCoroutineLib(ls LuaState) int {
