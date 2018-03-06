@@ -4,6 +4,10 @@ A TOY Lua 5.3 implementation written in Go (WORK IN PROGRESS).
 ![lua.go Logo](https://github.com/zxh0/lua.go/blob/master/logo.png?raw=true)
 
 # Build & Test
+
+(Go1.9 required)
+
+
 ```shell
 cd .
 git clone https://github.com/zxh0/lua.go.git
