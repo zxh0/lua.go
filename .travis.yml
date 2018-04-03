@@ -3,6 +3,8 @@ language: go
 go:
   - "1.9"
 
+install: true
+
 script:
   go install luago/standalone/lua
 
