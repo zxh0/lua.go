@@ -6,3 +6,6 @@ go:
 
 script:
   go install luago/standalone/lua
+
+env:
+  - GOPATH=$PWD
