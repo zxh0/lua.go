@@ -195,7 +195,7 @@ func loadAux(ls LuaState, status, envIdx int) int {
 	if status == LUA_OK {
 		if envIdx != 0 { /* 'env' parameter? */
 			ls.PushValue(envIdx)                          /* environment for loaded function */
-			if name := ls.SetUpvalue(-2, 1); name != "" { /* set it as 1st upvalue */
+			if name := ls.SetUpvalue(-2, 1); name == "" { /* set it as 1st upvalue */
 				ls.Pop(1) /* remove 'env' if not used by previous call */
 			}
 		}
