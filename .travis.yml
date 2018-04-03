@@ -6,7 +6,5 @@ go:
 install: true
 
 script:
-  go install luago/standalone/lua
-
-env:
-  - GOPATH=$PWD
+  - export GOPATH=$PWD
+  - go install luago/standalone/lua
