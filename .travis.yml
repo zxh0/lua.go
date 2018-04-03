@@ -8,6 +8,4 @@ install: true
 script:
   - export GOPATH=$PWD
   - go install luago/standalone/lua
-
-after_success:
   - ./bin/lua ./test/Lua534TestSuites/vararg.lua | grep -q ok
