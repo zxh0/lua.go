@@ -50,6 +50,7 @@ func cgBreakStat(fi *funcInfo, node *BreakStat) {
 func cgDoStat(fi *funcInfo, node *DoStat) {
 	fi.enterScope(false)
 	cgBlock(fi, node.Block)
+	fi.closeOpenUpvals(node.Block.LastLine)
 	fi.exitScope(fi.pc() + 1)
 }
 
@@ -319,6 +320,13 @@ func cgAssignStat(fi *funcInfo, node *AssignStat) {
 				fi.emitMove(lastLine, a, vRegs[i])
 			} else if a := fi.indexOfUpval(varName); a >= 0 {
 				fi.emitSetUpval(lastLine, a, vRegs[i])
+			} else if a := fi.slotOfLocVar("_ENV"); a >= 0 {
+				if kRegs[i] < 0 {
+					b := 0x100 + fi.indexOfConstant(varName)
+					fi.emitSetTable(lastLine, a, b, vRegs[i])
+				} else {
+					fi.emitSetTable(lastLine, a, kRegs[i], vRegs[i])
+				}
 			} else { // global var
 				a := fi.indexOfUpval("_ENV")
 				if kRegs[i] < 0 {

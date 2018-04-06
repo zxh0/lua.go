@@ -28,19 +28,32 @@ func (self *luaState) GetRK(rk int) {
 }
 
 func (self *luaState) LoadProto(idx int) {
-	proto := self.stack.closure.proto.Protos[idx]
-	closure := newLuaClosure(proto)
+	stack := self.stack
+	subProto := stack.closure.proto.Protos[idx]
+	closure := newLuaClosure(subProto)
 
-	// todo
-	for i, uvInfo := range proto.Upvalues {
+	for i, uvInfo := range subProto.Upvalues {
 		if uvInfo.Instack == 1 {
-			closure.upvals[i] = &(self.stack.slots[uvInfo.Idx])
+			closure.upvals[i] = &upvalue{&stack.slots[uvInfo.Idx]}
+			if stack.openuvs == nil {
+				stack.openuvs = map[int]*upvalue{}
+			}
+			stack.openuvs[int(uvInfo.Idx)] = closure.upvals[i]
 		} else {
-			closure.upvals[i] = self.stack.closure.upvals[uvInfo.Idx]
+			closure.upvals[i] = stack.closure.upvals[uvInfo.Idx]
 		}
 	}
 
-	self.stack.push(closure)
+	stack.push(closure)
+}
+
+func (self *luaState) CloseUpvalues(a int) {
+	for i, openuv := range self.stack.openuvs {
+		if i >= a-1 {
+			val := *openuv.val
+			openuv.val = &val
+		}
+	}
 }
 
 func (self *luaState) LoadVararg(n int) {

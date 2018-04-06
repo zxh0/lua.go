@@ -26,12 +26,13 @@ type upvalInfo struct {
 }
 
 type locVarInfo struct {
-	prev    *locVarInfo
-	name    string
-	scopeLv int
-	slot    int
-	startPC int
-	endPC   int
+	prev     *locVarInfo
+	name     string
+	scopeLv  int
+	slot     int
+	startPC  int
+	endPC    int
+	captured bool
 }
 
 type funcInfo struct {
@@ -205,6 +206,7 @@ func (self *funcInfo) indexOfUpval(name string) int {
 		if locVar, found := self.parent.locNames[name]; found {
 			idx := len(self.upvalues)
 			self.upvalues[name] = upvalInfo{locVar.slot, -1, idx}
+			locVar.captured = true
 			return idx
 		}
 		if uvIdx := self.parent.indexOfUpval(name); uvIdx >= 0 {
@@ -214,6 +216,35 @@ func (self *funcInfo) indexOfUpval(name string) int {
 		}
 	}
 	return -1
+}
+
+func (self *funcInfo) closeOpenUpvals(line int) {
+	a := self.getJmpArgA()
+	if a > 0 {
+		self.emitAsBx(line, OP_JMP, a, 0, 0) // todo
+	}
+}
+
+func (self *funcInfo) getJmpArgA() int {
+	hasCapturedLocVars := false
+	minSlotOfLocVars := self.maxRegs
+	for _, locVar := range self.locNames {
+		if locVar.scopeLv == self.scopeLv {
+			for v := locVar; v != nil && v.scopeLv == self.scopeLv; v = v.prev {
+				if v.captured {
+					hasCapturedLocVars = true
+				}
+				if v.slot < minSlotOfLocVars {
+					minSlotOfLocVars = v.slot
+				}
+			}
+		}
+	}
+	if hasCapturedLocVars {
+		return minSlotOfLocVars + 1
+	} else {
+		return 0
+	}
 }
 
 /* code */

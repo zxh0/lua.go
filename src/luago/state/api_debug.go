@@ -81,7 +81,7 @@ func (self *luaState) GetUpvalue(funcIdx, n int) string {
 	val := self.stack.get(funcIdx)
 	if c, ok := val.(*closure); ok {
 		if len(c.upvals) >= n {
-			uv := *(c.upvals[n-1])
+			uv := *(c.upvals[n-1].val)
 			self.stack.push(uv)
 			return c.getUpvalueName(n - 1)
 		}
@@ -95,7 +95,7 @@ func (self *luaState) SetUpvalue(funcIdx, n int) string {
 	val := self.stack.get(funcIdx)
 	if c, ok := val.(*closure); ok {
 		if len(c.upvals) >= n {
-			*(c.upvals[n-1]) = self.stack.pop()
+			*(c.upvals[n-1].val) = self.stack.pop()
 			return c.getUpvalueName(n - 1)
 		}
 	}
