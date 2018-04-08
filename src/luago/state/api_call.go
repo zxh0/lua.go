@@ -130,8 +130,8 @@ func (self *luaState) runLuaClosure() {
 
 // Calls a function in protected mode.
 // http://www.lua.org/manual/5.3/manual.html#lua_pcall
-func (self *luaState) PCall(nArgs, nResults, msgh int) ThreadStatus {
-	status := LUA_ERRRUN
+func (self *luaState) PCall(nArgs, nResults, msgh int) (status ThreadStatus) {
+	status = LUA_ERRRUN
 	caller := self.stack
 
 	// catch error
@@ -152,7 +152,7 @@ func (self *luaState) PCall(nArgs, nResults, msgh int) ThreadStatus {
 
 	self.Call(nArgs, nResults)
 	status = LUA_OK
-	return status
+	return
 }
 
 func _getErrObj(err interface{}) luaValue {
