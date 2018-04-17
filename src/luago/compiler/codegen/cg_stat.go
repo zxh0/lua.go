@@ -76,6 +76,7 @@ func cgWhileStat(fi *funcInfo, node *WhileStat) {
 
 	fi.enterScope(true)
 	cgBlock(fi, node.Block)
+	fi.closeOpenUpvals(node.Block.LastLine)
 	fi.emitJmp(node.Block.LastLine, pcBeforeExp-fi.pc()-1)
 	fi.exitScope(fi.pc())
 
@@ -100,7 +101,8 @@ func cgRepeatStat(fi *funcInfo, node *RepeatStat) {
 
 	line := lastLineOf(node.Exp)
 	fi.emitTest(line, a, 0)
-	fi.emitJmp(line, pcBeforeBlock-fi.pc()-1)
+	fi.emitJmpA(line, fi.getJmpArgA(), pcBeforeBlock-fi.pc()-1)
+	fi.closeOpenUpvals(line)
 
 	fi.exitScope(fi.pc() + 1)
 }
@@ -134,6 +136,7 @@ func cgIfStat(fi *funcInfo, node *IfStat) {
 		block := node.Blocks[i]
 		fi.enterScope(false)
 		cgBlock(fi, block)
+		fi.closeOpenUpvals(block.LastLine)
 		fi.exitScope(fi.pc() + 1)
 		if i < len(node.Exps)-1 {
 			pcJmpToEnds[i] = fi.emitJmp(block.LastLine, 0)
@@ -163,6 +166,7 @@ func cgForNumStat(fi *funcInfo, node *ForNumStat) {
 	a := fi.usedRegs - 4
 	pcForPrep := fi.emitForPrep(node.LineOfDo, a, 0)
 	cgBlock(fi, node.Block)
+	fi.closeOpenUpvals(node.Block.LastLine)
 	pcForLoop := fi.emitForLoop(node.LineOfFor, a, 0)
 
 	fi.fixSbx(pcForPrep, pcForLoop-pcForPrep-1)
@@ -192,10 +196,12 @@ func cgForInStat(fi *funcInfo, node *ForInStat) {
 
 	pcJmpToTFC := fi.emitJmp(node.LineOfDo, 0)
 	cgBlock(fi, node.Block)
-	fi.fixSbx(pcJmpToTFC, fi.pc()-pcJmpToTFC)
 
 	line := lineOf(node.ExpList[0])
 	rGenerator := fi.slotOfLocVar(forGeneratorVar)
+	fi.closeOpenUpvals(node.Block.LastLine)
+	fi.fixSbx(pcJmpToTFC, fi.pc()-pcJmpToTFC)
+
 	fi.emitTForCall(line, rGenerator, len(node.NameList))
 	fi.emitTForLoop(line, rGenerator+2, pcJmpToTFC-fi.pc()-1)
 
@@ -318,8 +324,8 @@ func cgAssignStat(fi *funcInfo, node *AssignStat) {
 			varName := nameExp.Name
 			if a := fi.slotOfLocVar(varName); a >= 0 {
 				fi.emitMove(lastLine, a, vRegs[i])
-			} else if a := fi.indexOfUpval(varName); a >= 0 {
-				fi.emitSetUpval(lastLine, a, vRegs[i])
+			} else if b := fi.indexOfUpval(varName); b >= 0 {
+				fi.emitSetUpval(lastLine, vRegs[i], b)
 			} else if a := fi.slotOfLocVar("_ENV"); a >= 0 {
 				if kRegs[i] < 0 {
 					b := 0x100 + fi.indexOfConstant(varName)

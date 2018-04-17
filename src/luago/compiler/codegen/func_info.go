@@ -135,19 +135,22 @@ func (self *funcInfo) enterScope(breakable bool) {
 }
 
 func (self *funcInfo) exitScope(endPC int) {
+	pendingBreakJmps := self.breaks[len(self.breaks)-1]
+	self.breaks = self.breaks[:len(self.breaks)-1]
+
+	a := self.getJmpArgA()
+	for _, pc := range pendingBreakJmps {
+		sBx := self.pc()-pc
+		i := (sBx+MAXARG_sBx)<<14 | a<<6 | OP_JMP
+		self.insts[pc] = uint32(i)
+	}
+
 	self.scopeLv--
 	for _, locVar := range self.locNames {
 		if locVar.scopeLv > self.scopeLv { // out of scope
 			locVar.endPC = endPC
 			self.removeLocVar(locVar)
 		}
-	}
-
-	pendingBreakJmps := self.breaks[len(self.breaks)-1]
-	self.breaks = self.breaks[:len(self.breaks)-1]
-
-	for _, pc := range pendingBreakJmps {
-		self.fixSbx(pc, self.pc()-pc)
 	}
 }
 
@@ -234,7 +237,7 @@ func (self *funcInfo) getJmpArgA() int {
 				if v.captured {
 					hasCapturedLocVars = true
 				}
-				if v.slot < minSlotOfLocVars {
+				if v.slot < minSlotOfLocVars && v.name[0] != '(' {
 					minSlotOfLocVars = v.slot
 				}
 			}
@@ -394,8 +397,11 @@ func (self *funcInfo) emitSelf(line, a, b, c int) {
 
 // pc+=sBx; if (a) close all upvalues >= r[a - 1]
 func (self *funcInfo) emitJmp(line, sBx int) int {
-	self.emitAsBx(line, OP_JMP, 0, sBx, 0) // todo: a?
+	self.emitAsBx(line, OP_JMP, 0, sBx, 0)
 	return len(self.insts) - 1
+}
+func (self *funcInfo) emitJmpA(line, a, sBx int) {
+	self.emitAsBx(line, OP_JMP, a, sBx, 0)
 }
 
 // if not (r[a] <=> c) then pc++
