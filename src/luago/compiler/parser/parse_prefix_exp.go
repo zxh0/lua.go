@@ -26,9 +26,9 @@ func parsePrefixExp(lexer *Lexer) Exp {
 }
 
 func parseParensExp(lexer *Lexer) Exp {
-	lexer.NextTokenOfKind(TOKEN_SEP_LPAREN)
-	exp := parseExp(lexer)
-	lexer.NextTokenOfKind(TOKEN_SEP_RPAREN)
+	lexer.NextTokenOfKind(TOKEN_SEP_LPAREN) // (
+	exp := parseExp(lexer)                  // exp
+	lexer.NextTokenOfKind(TOKEN_SEP_RPAREN) // )
 
 	switch exp.(type) {
 	case *VarargExp, *FuncCallExp, *NameExp, *TableAccessExp:

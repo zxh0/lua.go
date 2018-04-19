@@ -20,24 +20,20 @@ exp ::=  nil | false | true | Numeral | LiteralString | ‘...’ | functiondef 
 	 prefixexp | tableconstructor | exp binop exp | unop exp
 */
 /*
-exp12 ::= exp11 ‘or’ exp11
-exp11 ::= exp10 ‘and’ exp10
-exp10 ::= exp9 ‘<’ exp9 | exp9 ‘>’ exp9
-		| exp9 ‘<=’ exp9 | exp9 ‘>=’ exp9
-		| exp9 ‘~=’ exp9 | exp9 ‘==’ exp9
-exp9  ::= exp8 ‘|’ exp8
-exp8  ::= exp7 ‘~’ exp7
-exp7  ::= exp6 ‘&’ exp6
-exp6  ::= exp5 ‘<<’ exp5 | exp5 ‘>>’ exp5
-exp5  ::= exp4 ‘..’ exp4
-exp4  ::= exp3 ‘+’ exp3 | exp3 ‘-’ exp3
-exp3  ::= exp2 ‘*’ exp2 | exp2 ‘/’ exp2
-		| exp2 ‘//’ exp2 | exp2 ‘%’ exp2
-exp2  ::= ‘not’ exp1 | ‘#’ exp1 | ‘-’ exp1 | ‘~’ exp1
-exp1  ::= exp0 ‘~’ exp0
-exp0  ::= nil | false | true | Numeral
-		| LiteralString | ‘...’ | functiondef
-		| prefixexp | tableconstructor
+exp   ::= exp12
+exp12 ::= exp11 {or exp11}
+exp11 ::= exp10 {and exp10}
+exp10 ::= exp9 {(‘<’ | ‘>’ | ‘<=’ | ‘>=’ | ‘~=’ | ‘==’) exp9}
+exp9  ::= exp8 {‘|’ exp8}
+exp8  ::= exp7 {‘~’ exp7}
+exp7  ::= exp6 {‘&’ exp6}
+exp6  ::= exp5 {(‘<<’ | ‘>>’) exp5}
+exp5  ::= exp4 {‘..’ exp4}
+exp4  ::= exp3 {(‘+’ | ‘-’ | ‘*’ | ‘/’ | ‘//’ | ‘%’) exp3}
+exp2  ::= {(‘not’ | ‘#’ | ‘-’ | ‘~’)} exp1
+exp1  ::= exp0 {‘^’ exp0}
+exp0  ::= nil | false | true | Numeral | LiteralString
+		| ‘...’ | functiondef | prefixexp | tableconstructor
 */
 func parseExp(lexer *Lexer) Exp {
 	return parseExp12(lexer)
@@ -243,20 +239,13 @@ func parseNumberExp(lexer *Lexer) Exp {
 // functiondef ::= function funcbody
 // funcbody ::= ‘(’ [parlist] ‘)’ block end
 func parseFuncDefExp(lexer *Lexer) *FuncDefExp {
-	line := lexer.Line()                    // function
-	lexer.NextTokenOfKind(TOKEN_SEP_LPAREN) // (
-	names, isVararg := _parseParList(lexer) // [parlist]
-	lexer.NextTokenOfKind(TOKEN_SEP_RPAREN) // )
-	block := parseBlock(lexer)              // block
-	lexer.NextTokenOfKind(TOKEN_KW_END)     // end
-
-	return &FuncDefExp{
-		Line:     line,
-		LastLine: lexer.Line(),
-		ParList:  names,
-		IsVararg: isVararg,
-		Block:    block,
-	}
+	line := lexer.Line()                               // function
+	lexer.NextTokenOfKind(TOKEN_SEP_LPAREN)            // (
+	parList, isVararg := _parseParList(lexer)          // [parlist]
+	lexer.NextTokenOfKind(TOKEN_SEP_RPAREN)            // )
+	block := parseBlock(lexer)                         // block
+	lastLine, _ := lexer.NextTokenOfKind(TOKEN_KW_END) // end
+	return &FuncDefExp{line, lastLine, parList, isVararg, block}
 }
 
 // [parlist]
@@ -336,7 +325,8 @@ func _parseField(lexer *Lexer) (k, v Exp) {
 	exp := parseExp(lexer)
 	if nameExp, ok := exp.(*NameExp); ok {
 		if lexer.LookAhead() == TOKEN_OP_ASSIGN {
-			lexer.NextToken() // =
+			// Name ‘=’ exp => ‘[’ LiteralString ‘]’ = exp
+			lexer.NextToken()
 			k = &StringExp{nameExp.Line, nameExp.Name}
 			v = parseExp(lexer)
 			return
