@@ -196,12 +196,11 @@ func cgForInStat(fi *funcInfo, node *ForInStat) {
 
 	pcJmpToTFC := fi.emitJmp(node.LineOfDo, 0, 0)
 	cgBlock(fi, node.Block)
-
-	line := lineOf(node.ExpList[0])
-	rGenerator := fi.slotOfLocVar(forGeneratorVar)
 	fi.closeOpenUpvals(node.Block.LastLine)
 	fi.fixSbx(pcJmpToTFC, fi.pc()-pcJmpToTFC)
 
+	line := lineOf(node.ExpList[0])
+	rGenerator := fi.slotOfLocVar(forGeneratorVar)
 	fi.emitTForCall(line, rGenerator, len(node.NameList))
 	fi.emitTForLoop(line, rGenerator+2, pcJmpToTFC-fi.pc()-1)
 
