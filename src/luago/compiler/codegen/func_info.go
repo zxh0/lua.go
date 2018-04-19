@@ -396,12 +396,9 @@ func (self *funcInfo) emitSelf(line, a, b, c int) {
 }
 
 // pc+=sBx; if (a) close all upvalues >= r[a - 1]
-func (self *funcInfo) emitJmp(line, sBx int) int {
-	self.emitAsBx(line, OP_JMP, 0, sBx, 0)
-	return len(self.insts) - 1
-}
-func (self *funcInfo) emitJmpA(line, a, sBx int) {
+func (self *funcInfo) emitJmp(line, a, sBx int) int {
 	self.emitAsBx(line, OP_JMP, a, sBx, 0)
+	return len(self.insts) - 1
 }
 
 // if not (r[a] <=> c) then pc++
@@ -466,7 +463,7 @@ func (self *funcInfo) emitBinaryOp(line, op, a, b, c int) {
 		case TOKEN_OP_GE:
 			self.emitABC(line, OP_LE, 1, c, b)
 		}
-		self.emitJmp(line, 1)
+		self.emitJmp(line, 0, 1)
 		self.emitLoadBool(line, a, 0, 1)
 		self.emitLoadBool(line, a, 1, 0)
 	}

@@ -43,7 +43,7 @@ func cgFuncCallStat(fi *funcInfo, node *FuncCallStat) {
 }
 
 func cgBreakStat(fi *funcInfo, node *BreakStat) {
-	pc := fi.emitJmp(node.Line, 0)
+	pc := fi.emitJmp(node.Line, 0, 0)
 	fi.addBreakJmp(pc)
 }
 
@@ -72,12 +72,12 @@ func cgWhileStat(fi *funcInfo, node *WhileStat) {
 
 	line := lastLineOf(node.Exp)
 	fi.emitTest(line, a, 0)
-	pcJmpToEnd := fi.emitJmp(line, 0)
+	pcJmpToEnd := fi.emitJmp(line, 0, 0)
 
 	fi.enterScope(true)
 	cgBlock(fi, node.Block)
 	fi.closeOpenUpvals(node.Block.LastLine)
-	fi.emitJmp(node.Block.LastLine, pcBeforeExp-fi.pc()-1)
+	fi.emitJmp(node.Block.LastLine, 0, pcBeforeExp-fi.pc()-1)
 	fi.exitScope(fi.pc())
 
 	fi.fixSbx(pcJmpToEnd, fi.pc()-pcJmpToEnd)
@@ -101,7 +101,7 @@ func cgRepeatStat(fi *funcInfo, node *RepeatStat) {
 
 	line := lastLineOf(node.Exp)
 	fi.emitTest(line, a, 0)
-	fi.emitJmpA(line, fi.getJmpArgA(), pcBeforeBlock-fi.pc()-1)
+	fi.emitJmp(line, fi.getJmpArgA(), pcBeforeBlock-fi.pc()-1)
 	fi.closeOpenUpvals(line)
 
 	fi.exitScope(fi.pc() + 1)
@@ -131,7 +131,7 @@ func cgIfStat(fi *funcInfo, node *IfStat) {
 
 		line := lastLineOf(exp)
 		fi.emitTest(line, a, 0)
-		pcJmpToNextExp = fi.emitJmp(line, 0)
+		pcJmpToNextExp = fi.emitJmp(line, 0, 0)
 
 		block := node.Blocks[i]
 		fi.enterScope(false)
@@ -139,7 +139,7 @@ func cgIfStat(fi *funcInfo, node *IfStat) {
 		fi.closeOpenUpvals(block.LastLine)
 		fi.exitScope(fi.pc() + 1)
 		if i < len(node.Exps)-1 {
-			pcJmpToEnds[i] = fi.emitJmp(block.LastLine, 0)
+			pcJmpToEnds[i] = fi.emitJmp(block.LastLine, 0, 0)
 		} else {
 			pcJmpToEnds[i] = pcJmpToNextExp
 		}
@@ -194,7 +194,7 @@ func cgForInStat(fi *funcInfo, node *ForInStat) {
 		fi.addLocVar(name, fi.pc()+2)
 	}
 
-	pcJmpToTFC := fi.emitJmp(node.LineOfDo, 0)
+	pcJmpToTFC := fi.emitJmp(node.LineOfDo, 0, 0)
 	cgBlock(fi, node.Block)
 
 	line := lineOf(node.ExpList[0])
