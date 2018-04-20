@@ -12,6 +12,7 @@ install: true
 script:
   - export GOPATH=$PWD
   - go install luago/standalone/lua
-  - ./bin/lua ./test/Lua534TestSuites/vararg.lua  | grep -q OK
-  - ./bin/lua ./test/Lua534TestSuites/locals.lua  | grep -q OK
-  - ./bin/lua ./test/Lua534TestSuites/closure.lua | grep -q OK
+  - ./bin/lua ./test/Lua534TestSuites/vararg.lua     | grep -q OK
+  - ./bin/lua ./test/Lua534TestSuites/locals.lua     | grep -q OK
+  - ./bin/lua ./test/Lua534TestSuites/closure.lua    | grep -q OK
+  - ./bin/lua ./test/Lua534TestSuites/constructs.lua | grep -q OK

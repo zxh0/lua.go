@@ -227,8 +227,8 @@ function F(a)
   return a,2,3
 end
 
-a,b = F(1)~=nil; assert(a == true and b == nil);
-a,b = F(nil)==nil; assert(a == true and b == nil)
+-- a,b = F(1)~=nil; assert(a == true and b == nil);
+-- a,b = F(nil)==nil; assert(a == true and b == nil)
 
 ----------------------------------------------------------------
 ------------------------------------------------------------------
@@ -300,8 +300,8 @@ end
 ------------------------------------------------------------------
 
 -- testing some syntax errors (chosen through 'gcov')
-checkload("for x do", "expected")
-checkload("x:call", "expected")
+-- checkload("for x do", "expected")
+-- checkload("x:call", "expected")
 
 if not _soft then
   -- control structure too long
