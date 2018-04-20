@@ -257,6 +257,10 @@ func (self *funcInfo) pc() int {
 }
 
 func (self *funcInfo) fixSbx(pc, sBx int) {
+	if sBx > 0 && sBx > MAXARG_sBx || sBx < 0 && -sBx > MAXARG_sBx {
+		panic("control structure too long")
+	}
+
 	i := self.insts[pc]
 	i = i << 18 >> 18                  // clear sBx
 	i = i | uint32(sBx+MAXARG_sBx)<<14 // reset sBx
