@@ -14,7 +14,16 @@ func (self *luaState) Dump(strip bool) []byte {
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_load
-func (self *luaState) Load(chunk []byte, chunkName, mode string) ThreadStatus {
+func (self *luaState) Load(chunk []byte, chunkName, mode string) (status ThreadStatus) {
+	status = LUA_ERRSYNTAX
+
+	// catch error
+	defer func() {
+		if r := recover(); r != nil {
+			self.stack.push(_getErrObj(r))
+		}
+	}()
+
 	var proto *binchunk.Prototype
 	if binchunk.IsBinaryChunk(chunk) {
 		proto = binchunk.Undump(chunk)
@@ -28,7 +37,8 @@ func (self *luaState) Load(chunk []byte, chunkName, mode string) ThreadStatus {
 		c.upvals[0] = &upvalue{&env}
 	}
 	self.stack.push(c)
-	return LUA_OK
+	status = LUA_OK
+	return
 }
 
 // [-(nargs+1), +nresults, e]
