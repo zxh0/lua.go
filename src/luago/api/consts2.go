@@ -20,6 +20,9 @@ const LUA_PATH_DEFAULT = "?.lua" // todo
  */
 const MAXUPVAL = 255
 
+/* limit for table tag-method chains (to avoid loops) */
+const MAXTAGLOOP = 2000
+
 func LuaUpvalueIndex(i int) int {
 	return LUA_REGISTRYINDEX - i
 }

@@ -20,21 +20,21 @@ func (self *luaState) CreateTable(nArr, nRec int) {
 func (self *luaState) GetTable(idx int) LuaType {
 	t := self.stack.get(idx)
 	k := self.stack.pop()
-	return self.getTable(t, k, false)
+	return self.getTable(t, k, 1)
 }
 
 // [-0, +1, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_getfield
 func (self *luaState) GetField(idx int, k string) LuaType {
 	t := self.stack.get(idx)
-	return self.getTable(t, k, false)
+	return self.getTable(t, k, 1)
 }
 
 // [-0, +1, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_geti
 func (self *luaState) GetI(idx int, i int64) LuaType {
 	t := self.stack.get(idx)
-	return self.getTable(t, i, false)
+	return self.getTable(t, i, 1)
 }
 
 // [-1, +1, –]
@@ -42,28 +42,28 @@ func (self *luaState) GetI(idx int, i int64) LuaType {
 func (self *luaState) RawGet(idx int) LuaType {
 	t := self.stack.get(idx)
 	k := self.stack.pop()
-	return self.getTable(t, k, true)
+	return self.getTable(t, k, 0)
 }
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_rawgeti
 func (self *luaState) RawGetI(idx int, i int64) LuaType {
 	t := self.stack.get(idx)
-	return self.getTable(t, i, true)
+	return self.getTable(t, i, 0)
 }
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_rawgetp
 func (self *luaState) RawGetP(idx int, p UserData) LuaType {
 	t := self.stack.get(idx)
-	return self.getTable(t, p, true)
+	return self.getTable(t, p, 0)
 }
 
 // [-0, +1, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_getglobal
 func (self *luaState) GetGlobal(name string) LuaType {
 	t := self.registry.get(LUA_RIDX_GLOBALS)
-	return self.getTable(t, name, false)
+	return self.getTable(t, name, 1)
 }
 
 // [-0, +(0|1), –]
@@ -86,20 +86,24 @@ func (self *luaState) GetUserValue(idx int) LuaType {
 }
 
 // push(t[k])
-func (self *luaState) getTable(t, k luaValue, raw bool) LuaType {
+func (self *luaState) getTable(t, k luaValue, mtLv int) LuaType {
+	if mtLv > MAXTAGLOOP {
+		panic("'__index' chain too long; possible loop")
+	}
+
 	if tbl, ok := t.(*luaTable); ok {
 		v := tbl.get(k)
-		if raw || v != nil || !tbl.hasMetafield("__index") {
+		if mtLv == 0 || v != nil || !tbl.hasMetafield("__index") {
 			self.stack.push(v)
 			return typeOf(v)
 		}
 	}
 
-	if !raw {
+	if mtLv > 0 {
 		if mf := getMetafield(t, "__index", self); mf != nil {
 			switch x := mf.(type) {
 			case *luaTable:
-				return self.getTable(x, k, false)
+				return self.getTable(x, k, mtLv+1)
 			case *closure:
 				self.stack.push(mf)
 				self.stack.push(t)
