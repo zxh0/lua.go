@@ -86,8 +86,6 @@ func (self *luaState) lt(a, b luaValue) bool {
 			return x < y
 		case float64:
 			return float64(x) < y
-		default:
-			return false
 		}
 	case float64:
 		switch y := b.(type) {
@@ -95,17 +93,15 @@ func (self *luaState) lt(a, b luaValue) bool {
 			return x < y
 		case int64:
 			return x < float64(y)
-		default:
-			return false
 		}
-	default:
-		if result, ok := callMetamethod(a, b, "__lt", self); ok {
-			return convertToBoolean(result)
-		}
-		typeName1 := self.TypeName(typeOf(a))
-		typeName2 := self.TypeName(typeOf(b))
-		panic("attempt to compare " + typeName1 + " with " + typeName2)
 	}
+
+	if result, ok := callMetamethod(a, b, "__lt", self); ok {
+		return convertToBoolean(result)
+	}
+	typeName1 := self.TypeName(typeOf(a))
+	typeName2 := self.TypeName(typeOf(b))
+	panic("attempt to compare " + typeName1 + " with " + typeName2)
 }
 
 func (self *luaState) le(a, b luaValue) bool {
@@ -119,8 +115,6 @@ func (self *luaState) le(a, b luaValue) bool {
 			return x <= y
 		case float64:
 			return float64(x) <= y
-		default:
-			return false
 		}
 	case float64:
 		switch y := b.(type) {
@@ -128,18 +122,16 @@ func (self *luaState) le(a, b luaValue) bool {
 			return x <= y
 		case int64:
 			return x <= float64(y)
-		default:
-			return false
 		}
-	default:
-		if result, ok := callMetamethod(a, b, "__le", self); ok {
-			return convertToBoolean(result)
-		}
-		if result, ok := callMetamethod(b, a, "__lt", self); ok {
-			return !convertToBoolean(result)
-		}
-		typeName1 := self.TypeName(typeOf(a))
-		typeName2 := self.TypeName(typeOf(b))
-		panic("attempt to compare " + typeName1 + " with " + typeName2)
 	}
+
+	if result, ok := callMetamethod(a, b, "__le", self); ok {
+		return convertToBoolean(result)
+	}
+	if result, ok := callMetamethod(b, a, "__lt", self); ok {
+		return !convertToBoolean(result)
+	}
+	typeName1 := self.TypeName(typeOf(a))
+	typeName2 := self.TypeName(typeOf(b))
+	panic("attempt to compare " + typeName1 + " with " + typeName2)
 }
