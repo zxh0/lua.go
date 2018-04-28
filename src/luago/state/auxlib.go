@@ -159,7 +159,7 @@ func (self *luaState) LoadFileX(filename, mode string) ThreadStatus {
 	if data, err := ioutil.ReadFile(filename); err == nil {
 		return self.Load(data, filename, mode)
 	}
-	return LUA_ERRFILE
+	return LUA_ERRFILE // todo
 }
 
 // [-0, +1, –]

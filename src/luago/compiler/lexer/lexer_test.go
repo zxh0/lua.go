@@ -171,6 +171,16 @@ long string]=]
 	assert.IntEqual(t, lexer.line, 15)
 }
 
+func TestNextToken_strings2(t *testing.T) {
+	strs := `'\\' --'foo' 
+	'\
+'`
+	lexer := NewLexer("str", strs)
+	assertNextString(t, lexer, "\\")
+	assertNextString(t, lexer, "\n")
+	assertNextTokenKind(t, lexer, TOKEN_EOF)
+}
+
 func TestNextToken_whiteSpaces(t *testing.T) {
 	strs := "\r\n \r\n \n\r \n \r \n \t\v\f"
 	lexer := NewLexer("str", strs)

@@ -64,7 +64,7 @@ func (self *luaState) GetInfo(what string, ar *LuaDebug) bool {
 			panic("function expected")
 		}
 	}
-	panic("todo: GetInfo!" + what)
+	panic("todo: GetInfo! what=" + what)
 }
 
 func (self *luaState) GetLocal(ar *LuaDebug, n int) string {

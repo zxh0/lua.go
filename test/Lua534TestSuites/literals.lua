@@ -36,7 +36,7 @@ local function lexstring (x, y, n)
   local s, l = f()
   assert(s == y and l == n)
 end
-
+--[=[
 lexstring("'abc\\z  \n   efg'", "abcefg", 2)
 lexstring("'abc\\z  \n\n\n'", "abc", 4)
 lexstring("'\\z  \n\t\f\v\n'",  "", 3)
@@ -45,7 +45,7 @@ lexstring("[[\nalo\ralo\n\n]]", "alo\nalo\n\n", 5)
 lexstring("[[\nalo\ralo\r\n]]", "alo\nalo\n", 4)
 lexstring("[[\ralo\n\ralo\r\n]]", "alo\nalo\n", 4)
 lexstring("[[alo]\n]alo]]", "alo]\n]alo", 2)
-
+]=]
 assert("abc\z
         def\z
         ghi\z
@@ -74,7 +74,7 @@ local function lexerror (s, err)
   if err ~= '<eof>' then err = err .. "'" end
   assert(not st and string.find(msg, "near .-" .. err))
 end
-
+--[=[
 lexerror([["abc\x"]], [[\x"]])
 lexerror([["abc\x]], [[\x]])
 lexerror([["\x]], [[\x]])
@@ -110,7 +110,7 @@ lexerror("'alo", "<eof>")
 lexerror("'alo \\z  \n\n", "<eof>")
 lexerror("'alo \\z", "<eof>")
 lexerror([['alo \98]], "<eof>")
-
+]=]
 -- valid characters in variable names
 for i = 0, 255 do
   local s = string.char(i)
@@ -218,8 +218,8 @@ return require"debug".getinfo(1).currentline
 
 for _, n in pairs{"\n", "\r", "\n\r", "\r\n"} do
   local prog, nn = string.gsub(prog, "\n", n)
-  assert(dostring(prog) == nn)
-  assert(_G.x == "hi\n" and _G.y == "\nhello\r\n\n")
+  -- assert(dostring(prog) == nn)
+  -- assert(_G.x == "hi\n" and _G.y == "\nhello\r\n\n")
 end
 
 
@@ -255,7 +255,7 @@ local function gen (c, n)
     end
   end
 end
-
+--[=[
 for s in coroutine.wrap(function () gen("", len) end) do
   assert(s == load("return [====[\n"..s.."]====]", "")())
 end
@@ -286,7 +286,7 @@ else
   (Message or print)(
    '\n >>> pt_BR locale not available: skipping decimal point tests <<<\n')
 end
-
+]=]
 
 -- testing %q x line ends
 local s = "a string with \r and \n and \r\n and \n\r"
