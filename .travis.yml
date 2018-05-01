@@ -7,11 +7,12 @@ language: go
 go:
   - "1.9"
 
-install: go get github.com/stretchr/testify
+install: true
 
 script:
-  - go test luago/...
   - export GOPATH=$PWD
+  - go get github.com/stretchr/testify
+  - go test luago/...
   - go install luago/standalone/lua
   - ./bin/lua ./test/Lua534TestSuites/vararg.lua     | grep -q OK
   - ./bin/lua ./test/Lua534TestSuites/locals.lua     | grep -q OK
