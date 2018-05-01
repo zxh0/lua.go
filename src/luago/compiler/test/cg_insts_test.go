@@ -3,7 +3,7 @@ package test
 import "fmt"
 import "strings"
 import "testing"
-import "assert"
+import "github.com/stretchr/testify/assert"
 import "luago/compiler"
 
 func TestLocVar(t *testing.T) {
@@ -218,13 +218,13 @@ func testInsts(t *testing.T, chunk, expected string) {
 	insts := compile(chunk, false)
 	expected = strings.Replace(expected, "\n", " ", -1)
 	expected += "; return(0,1,_);"
-	assert.StringEqual(t, insts, expected)
+	assert.Equal(t, insts, expected)
 }
 
 func testDbg(t *testing.T, chunk, expected string) {
 	insts := compile(chunk, true)
 	expected = strings.Replace(expected, "\n", " ", -1)
-	assert.StringEqual(t, insts, expected)
+	assert.Equal(t, insts, expected)
 }
 
 func compile(chunk string, dbgFlag bool) string {

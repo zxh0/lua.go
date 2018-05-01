@@ -1,7 +1,7 @@
 package lexer
 
 import "testing"
-import "assert"
+import "github.com/stretchr/testify/assert"
 
 func TestNextToken(t *testing.T) {
 	lexer := NewLexer("str", `;,()[]{}+-*^%%&|#`)
@@ -168,7 +168,7 @@ long string]=]
 	assertNextString(t, lexer, "\b \b @ z \b z z 我 zzz")
 	assertNextString(t, lexer, "foo bar")
 	assertNextTokenKind(t, lexer, TOKEN_EOF)
-	assert.IntEqual(t, lexer.line, 15)
+	assert.Equal(t, lexer.line, 15)
 }
 
 func TestNextToken_strings2(t *testing.T) {
@@ -185,7 +185,7 @@ func TestNextToken_whiteSpaces(t *testing.T) {
 	strs := "\r\n \r\n \n\r \n \r \n \t\v\f"
 	lexer := NewLexer("str", strs)
 	assertNextTokenKind(t, lexer, TOKEN_EOF)
-	assert.IntEqual(t, lexer.line, 7)
+	assert.Equal(t, lexer.line, 7)
 }
 
 func TestNextToken_hw(t *testing.T) {
@@ -203,15 +203,15 @@ func TestLookAhead(t *testing.T) {
 	src := `print("Hello, World!")`
 	lexer := NewLexer("str", src)
 
-	assert.IntEqual(t, lexer.LookAhead(), TOKEN_IDENTIFIER)
+	assert.Equal(t, lexer.LookAhead(), TOKEN_IDENTIFIER)
 	lexer.NextToken()
-	assert.IntEqual(t, lexer.LookAhead(), TOKEN_SEP_LPAREN)
+	assert.Equal(t, lexer.LookAhead(), TOKEN_SEP_LPAREN)
 	lexer.NextToken()
-	assert.IntEqual(t, lexer.LookAhead(), TOKEN_STRING)
+	assert.Equal(t, lexer.LookAhead(), TOKEN_STRING)
 	lexer.NextToken()
-	assert.IntEqual(t, lexer.LookAhead(), TOKEN_SEP_RPAREN)
+	assert.Equal(t, lexer.LookAhead(), TOKEN_SEP_RPAREN)
 	lexer.NextToken()
-	assert.IntEqual(t, lexer.LookAhead(), TOKEN_EOF)
+	assert.Equal(t, lexer.LookAhead(), TOKEN_EOF)
 }
 
 func TestErrors(t *testing.T) {
@@ -227,30 +227,30 @@ func TestErrors(t *testing.T) {
 
 func testError(t *testing.T, chunk, expectedErr string) {
 	err := safeNextToken(NewLexer("src", chunk))
-	assert.StringEqual(t, err, expectedErr)
+	assert.Equal(t, err, expectedErr)
 }
 
 func assertNextTokenKind(t *testing.T, lexer *Lexer, expectedKind int) {
 	_, kind, _ := lexer.NextToken()
-	assert.IntEqual(t, kind, expectedKind)
+	assert.Equal(t, kind, expectedKind)
 }
 
 func assertNextIdentifier(t *testing.T, lexer *Lexer, expectedToken string) {
 	_, kind, token := lexer.NextToken()
-	assert.IntEqual(t, kind, TOKEN_IDENTIFIER)
-	assert.StringEqual(t, token, expectedToken)
+	assert.Equal(t, kind, TOKEN_IDENTIFIER)
+	assert.Equal(t, token, expectedToken)
 }
 
 func assertNextNumber(t *testing.T, lexer *Lexer, expectedToken string) {
 	_, kind, token := lexer.NextToken()
-	assert.IntEqual(t, kind, TOKEN_NUMBER)
-	assert.StringEqual(t, token, expectedToken)
+	assert.Equal(t, kind, TOKEN_NUMBER)
+	assert.Equal(t, token, expectedToken)
 }
 
 func assertNextString(t *testing.T, lexer *Lexer, expectedToken string) {
 	_, kind, token := lexer.NextToken()
-	assert.IntEqual(t, kind, TOKEN_STRING)
-	assert.StringEqual(t, token, expectedToken)
+	assert.Equal(t, kind, TOKEN_STRING)
+	assert.Equal(t, token, expectedToken)
 }
 
 func safeNextToken(lexer *Lexer) (err string) {

@@ -3,7 +3,7 @@ package binchunk
 import "encoding/hex"
 import "strings"
 import "testing"
-import "assert"
+import "github.com/stretchr/testify/assert"
 
 var fibonacciSrc = `
 function fibonacci(n)
@@ -139,11 +139,11 @@ func TestString(t *testing.T) {
 	writer.writeString(longStr2)
 
 	reader := &reader{writer.data()}
-	assert.StringEqual(t, reader.readString(), emptyStr)
-	assert.StringEqual(t, reader.readString(), shortStr1)
-	assert.StringEqual(t, reader.readString(), shortStr2)
-	assert.StringEqual(t, reader.readString(), longStr1)
-	assert.StringEqual(t, reader.readString(), longStr2)
+	assert.Equal(t, reader.readString(), emptyStr)
+	assert.Equal(t, reader.readString(), shortStr1)
+	assert.Equal(t, reader.readString(), shortStr2)
+	assert.Equal(t, reader.readString(), longStr1)
+	assert.Equal(t, reader.readString(), longStr2)
 }
 
 func TestFibonacci(t *testing.T) {
@@ -151,7 +151,7 @@ func TestFibonacci(t *testing.T) {
 	bytes2 := Dump(Undump(bytes1))
 	hex1 := hex.EncodeToString(bytes1)
 	hex2 := hex.EncodeToString(bytes2)
-	assert.StringEqual(t, hex1, hex2)
+	assert.Equal(t, hex1, hex2)
 }
 
 func TestStripDebug(t *testing.T) {
@@ -160,7 +160,7 @@ func TestStripDebug(t *testing.T) {
 	bytes2 := Dump(_stripDebug(Undump(bytes1)))
 	hex0 := hex.EncodeToString(bytes0)
 	hex2 := hex.EncodeToString(bytes2)
-	assert.StringEqual(t, hex0, hex2)
+	assert.Equal(t, hex0, hex2)
 }
 
 func TestList(t *testing.T) {

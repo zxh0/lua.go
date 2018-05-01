@@ -1,7 +1,7 @@
 package parser
 
 import "testing"
-import "assert"
+import "github.com/stretchr/testify/assert"
 import "luago/compiler/lexer"
 
 func TestExpLiteral(t *testing.T) {
@@ -198,13 +198,13 @@ func testExp2(t *testing.T, str, str2 string) {
 func testStat(t *testing.T, src string) {
 	stat := parseStat(lexer.NewLexer("", src))
 	str := statToString(stat)
-	assert.StringEqual(t, str, src)
+	assert.Equal(t, str, src)
 }
 
 func testStat2(t *testing.T, src, src2 string) {
 	stat := parseStat(lexer.NewLexer("", src))
 	str := statToString(stat)
-	assert.StringEqual(t, str, src2)
+	assert.Equal(t, str, src2)
 }
 
 func testBlock(t *testing.T, str string) {
@@ -225,7 +225,7 @@ func testBlock2(t *testing.T, str, str2 string) {
 
 func testError(t *testing.T, str, err string) {
 	_err := getError(str)
-	assert.StringEqual(t, _err, err)
+	assert.Equal(t, _err, err)
 }
 
 func getError(str string) (err string) {
