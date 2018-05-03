@@ -26,7 +26,9 @@ func TestParseFloat(t *testing.T) {
 	testFloat(t, ".3e1", "3")
 	testFloat(t, "0x1.p1", "2")
 	testFloat(t, "0x.1p1", "0.125")
-	//testFloat(t, "0x", "0") todo
+	testFloat(t, "+0x2", "2")
+	testFloatFail(t, "0x")
+	testFloatFail(t, "-0x")
 	//testFloat(t, "0x.p1", "?") todo
 }
 
@@ -45,5 +47,12 @@ func testFloat(t *testing.T, str string, x string) {
 	y := fmt.Sprintf("%g", f)
 	if y != x {
 		t.Errorf("%s != %s", y, x)
+	}
+}
+
+func testFloatFail(t *testing.T, str string) {
+	_, ok := ParseFloat(str)
+	if ok {
+		t.Fail()
 	}
 }

@@ -14,7 +14,14 @@ func IMod(a, b int64) int64 {
 }
 
 // a % b == a - ((a // b) * b)
+// lua-5.3.4/src/llimits.h#luai_nummod
 func FMod(a, b float64) float64 {
+	if a > 0 && math.IsInf(b, 1) || a < 0 && math.IsInf(b, -1) {
+		return a
+	}
+	if a > 0 && math.IsInf(b, -1) || a < 0 && math.IsInf(b, 1) {
+		return b
+	}
 	return a - math.Floor(a/b)*b
 }
 

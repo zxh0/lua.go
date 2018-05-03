@@ -2,6 +2,7 @@ package stdlib
 
 import "fmt"
 import "strconv"
+import "strings"
 import . "luago/api"
 
 var baseFuncs = map[string]GoFunction{
@@ -362,6 +363,7 @@ func baseToNumber(ls LuaState) int {
 	} else {
 		ls.CheckType(1, LUA_TSTRING) /* no numbers as strings */
 		s, _ := ls.ToString(1)
+		s = strings.TrimSpace(s)
 		base := int(ls.CheckInteger(2))
 		ls.ArgCheck(2 <= base && base <= 36, 2, "base out of range")
 		if n, err := strconv.ParseInt(s, base, 64); err == nil {

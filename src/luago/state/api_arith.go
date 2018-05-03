@@ -66,6 +66,10 @@ func (self *luaState) Arith(op ArithOp) {
 		return
 	}
 
+	if operator.floatFunc == nil {
+		panic("number has no integer representation")
+	}
+
 	var typeName string
 	if _, ok := convertToFloat(a); !ok {
 		typeName = self.TypeName(typeOf(a))
