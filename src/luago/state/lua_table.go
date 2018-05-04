@@ -10,10 +10,11 @@ type pair struct {
 
 type luaTable struct {
 	metatable *luaTable
-	_map      map[luaValue]luaValue
 	arr       []luaValue
-	pairs     []pair // used by next()
-	nextPairs []pair // used by next()
+	_map      map[luaValue]luaValue
+	keys      map[luaValue]luaValue // used by next()
+	lastKey   luaValue              // used by next()
+	changed   bool                  // used by next()
 }
 
 func newLuaTable(nArr, nRec int) *luaTable {
@@ -38,9 +39,8 @@ func (self *luaTable) len() int {
 
 func (self *luaTable) get(key luaValue) luaValue {
 	key = _floatToIntger(key)
-	if idx, ok := key.(int64); ok && idx >= 1 {
-		arrLen := int64(len(self.arr))
-		if idx <= arrLen {
+	if idx, ok := key.(int64); ok {
+		if idx >= 1 && idx <= int64(len(self.arr)) {
 			return self.arr[idx-1]
 		}
 	}
@@ -64,8 +64,7 @@ func (self *luaTable) put(key, val luaValue) {
 		panic("table index is NaN!")
 	}
 
-	self.pairs = nil // invalidate pairs
-
+	self.changed = true
 	key = _floatToIntger(key)
 	if idx, ok := key.(int64); ok && idx >= 1 {
 		arrLen := int64(len(self.arr))
@@ -114,40 +113,34 @@ func (self *luaTable) _expandArray() {
 	}
 }
 
-func (self *luaTable) next(key luaValue) (nextKey, nextVal luaValue) {
-	if key == nil {
-		if self.pairs == nil {
-			self.initPairs()
-		}
-		self.nextPairs = self.pairs
+func (self *luaTable) nextKey(key luaValue) luaValue {
+	if self.keys == nil || (key == nil && self.changed) {
+		self.initKeys()
+		self.changed = false
 	}
 
-	if self.len() > 0 {
-		if key == nil {
-			return int64(1), self.arr[0]
-		}
-		if idx, ok := key.(int64); ok && idx >= 1 {
-			if idx < int64(len(self.arr)) {
-				return int64(idx + 1), self.arr[idx]
-			}
-		}
+	nextKey := self.keys[key]
+	if nextKey == nil && key != nil && key != self.lastKey {
+		panic("invalid key to 'next'")
 	}
 
-	if len(self.nextPairs) > 0 {
-		pair := self.nextPairs[0]
-		self.nextPairs = self.nextPairs[1:]
-		return pair.key, pair.val
-	} else {
-		return nil, nil
-	}
+	return nextKey
 }
 
-func (self *luaTable) initPairs() {
-	n := len(self._map)
-	if n > 0 {
-		self.pairs = make([]pair, 0, n)
-		for key, val := range self._map {
-			self.pairs = append(self.pairs, pair{key, val})
+func (self *luaTable) initKeys() {
+	self.keys = make(map[luaValue]luaValue)
+	var key luaValue = nil
+	for i, v := range self.arr {
+		if v != nil {
+			self.keys[key] = int64(i + 1)
+			key = int64(i + 1)
 		}
 	}
+	for k, v := range self._map {
+		if v != nil {
+			self.keys[key] = k
+			key = k
+		}
+	}
+	self.lastKey = key
 }
