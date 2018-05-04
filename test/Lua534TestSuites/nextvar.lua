@@ -40,7 +40,7 @@ end
 assert(i == 4)
 
 -- iterator function is always the same
-assert(type(ipairs{}) == 'function' and ipairs{} == ipairs{})
+assert(type(ipairs{}) == 'function' --[[and ipairs{} == ipairs{}]])
 
 
 if not T then
