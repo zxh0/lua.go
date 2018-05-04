@@ -8,6 +8,19 @@ func forPrep(i Instruction, vm LuaVM) {
 	a += 1
 
 	//vm.CheckStack(2)
+	if vm.Type(a) == LUA_TSTRING {
+		vm.PushNumber(vm.ToNumber(a))
+		vm.Replace(a)
+	}
+	if vm.Type(a+1) == LUA_TSTRING {
+		vm.PushNumber(vm.ToNumber(a + 1))
+		vm.Replace(a + 1)
+	}
+	if vm.Type(a+2) == LUA_TSTRING {
+		vm.PushNumber(vm.ToNumber(a + 2))
+		vm.Replace(a + 2)
+	}
+
 	vm.PushValue(a)     // ~/r[a]
 	vm.PushValue(a + 2) // ~/r[a]/r[a+2]
 	vm.Arith(LUA_OPSUB) // ~/r[a]-r[a+2]
@@ -23,8 +36,8 @@ func forLoop(i Instruction, vm LuaVM) {
 	a, sBx := i.AsBx()
 	a += 1
 
-	// R(A)+=R(A+2);
 	//vm.CheckStack(2)
+	// R(A)+=R(A+2);
 	vm.PushValue(a + 2) // ~/r[a+2]
 	vm.PushValue(a)     // ~/r[a+2]/r[a]
 	vm.Arith(LUA_OPADD) // ~/r[a]+r[a+2]
