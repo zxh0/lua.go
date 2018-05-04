@@ -14,19 +14,19 @@ type closure struct {
 }
 
 func newLuaClosure(proto *binchunk.Prototype) *closure {
-	upvals := make([]*upvalue, len(proto.Upvalues))
-	return &closure{
-		proto:  proto,
-		upvals: upvals,
+	c := &closure{proto: proto}
+	if nUpvals := len(proto.Upvalues); nUpvals > 0 {
+		c.upvals = make([]*upvalue, nUpvals)
 	}
+	return c
 }
 
 func newGoClosure(f GoFunction, nUpvals int) *closure {
-	upvals := make([]*upvalue, nUpvals)
-	return &closure{
-		goFunc: f,
-		upvals: upvals,
+	c := &closure{goFunc: f}
+	if nUpvals > 0 {
+		c.upvals = make([]*upvalue, nUpvals)
 	}
+	return c
 }
 
 func (self *closure) getUpvalueName(n int) string {
