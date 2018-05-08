@@ -3,11 +3,6 @@ package state
 import "math"
 import "luago/number"
 
-type pair struct {
-	key luaValue
-	val luaValue
-}
-
 type luaTable struct {
 	metatable *luaTable
 	arr       []luaValue
