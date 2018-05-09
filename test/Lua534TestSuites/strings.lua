@@ -99,13 +99,13 @@ assert(string.lower("\0ABCc%$") == "\0abcc%$")
 assert(string.rep('teste', 0) == '')
 assert(string.rep('tés\00tê', 2) == 'tés\0têtés\000tê')
 assert(string.rep('', 10) == '')
-
--- if string.packsize("i") == 4 then
---   -- result length would be 2^31 (int overflow)
---   checkerror("too large", string.rep, 'aa', (1 << 30))
---   checkerror("too large", string.rep, 'a', (1 << 30), ',')
--- end
-
+--[[
+if string.packsize("i") == 4 then
+  -- result length would be 2^31 (int overflow)
+  checkerror("too large", string.rep, 'aa', (1 << 30))
+  checkerror("too large", string.rep, 'a', (1 << 30), ',')
+end
+]]
 -- repetitions with separator
 assert(string.rep('teste', 0, 'xuxu') == '')
 assert(string.rep('teste', 1, 'xuxu') == 'teste')
@@ -253,7 +253,7 @@ do   -- assume at least 32 bits
   end
 end
 
-
+--[[
 do print("testing 'format %a %A'")
   local function matchhexa (n)
     local s = string.format("%a", n)
@@ -264,29 +264,29 @@ do print("testing 'format %a %A'")
     assert(string.find(s, "^%-?0X[1-9A-F]%.?[0-9A-F]*P[-+]?%d+$"))
     assert(tonumber(s) == n)
   end
-  -- for _, n in ipairs{0.1, -0.1, 1/3, -1/3, 1e30, -1e30,
-  --                    -45/247, 1, -1, 2, -2, 3e-20, -3e-20} do
-  --   matchhexa(n)
-  -- end
+  for _, n in ipairs{0.1, -0.1, 1/3, -1/3, 1e30, -1e30,
+                     -45/247, 1, -1, 2, -2, 3e-20, -3e-20} do
+    matchhexa(n)
+  end
 
-  -- assert(string.find(string.format("%A", 0.0), "^0X0%.?0?P%+?0$"))
-  -- assert(string.find(string.format("%a", -0.0), "^%-0x0%.?0?p%+?0$"))
+  assert(string.find(string.format("%A", 0.0), "^0X0%.?0?P%+?0$"))
+  assert(string.find(string.format("%a", -0.0), "^%-0x0%.?0?p%+?0$"))
 
-  -- if not _port then   -- test inf, -inf, NaN, and -0.0
-  --   assert(string.find(string.format("%a", 1/0), "^inf"))
-  --   assert(string.find(string.format("%A", -1/0), "^%-INF"))
-  --   assert(string.find(string.format("%a", 0/0), "^%-?nan"))
-  --   assert(string.find(string.format("%a", -0.0), "^%-0x0"))
-  -- end
+  if not _port then   -- test inf, -inf, NaN, and -0.0
+    assert(string.find(string.format("%a", 1/0), "^inf"))
+    assert(string.find(string.format("%A", -1/0), "^%-INF"))
+    assert(string.find(string.format("%a", 0/0), "^%-?nan"))
+    assert(string.find(string.format("%a", -0.0), "^%-0x0"))
+  end
   
-  -- if not pcall(string.format, "%.3a", 0) then
-  --   (Message or print)("\n >>> modifiers for format '%a' not available <<<\n")
-  -- else
-  --   assert(string.find(string.format("%+.2A", 12), "^%+0X%x%.%x0P%+?%d$"))
-  --   assert(string.find(string.format("%.4A", -12), "^%-0X%x%.%x000P%+?%d$"))
-  -- end
+  if not pcall(string.format, "%.3a", 0) then
+    (Message or print)("\n >>> modifiers for format '%a' not available <<<\n")
+  else
+    assert(string.find(string.format("%+.2A", 12), "^%+0X%x%.%x0P%+?%d$"))
+    assert(string.find(string.format("%.4A", -12), "^%-0X%x%.%x000P%+?%d$"))
+  end
 end
-
+]]
 
 -- errors in format
 
@@ -333,38 +333,38 @@ assert(table.concat(a, ",", 1, 2) == "a,b")
 assert(table.concat(a, ",", 2) == "b,c")
 assert(table.concat(a, ",", 3) == "c")
 assert(table.concat(a, ",", 4) == "")
+--[[
+if not _port then
 
--- if not _port then
+  local locales = { "ptb", "pt_BR.iso88591", "ISO-8859-1" }
+  local function trylocale (w)
+    for i = 1, #locales do
+      if os.setlocale(locales[i], w) then
+        print(string.format("'%s' locale set to '%s'", w, locales[i]))
+        return locales[i]
+      end
+    end
+    print(string.format("'%s' locale not found", w))
+    return false
+  end
 
---   local locales = { "ptb", "pt_BR.iso88591", "ISO-8859-1" }
---   local function trylocale (w)
---     for i = 1, #locales do
---       if os.setlocale(locales[i], w) then
---         print(string.format("'%s' locale set to '%s'", w, locales[i]))
---         return locales[i]
---       end
---     end
---     print(string.format("'%s' locale not found", w))
---     return false
---   end
+  if trylocale("collate")  then
+    assert("alo" < "álo" and "álo" < "amo")
+  end
 
---   if trylocale("collate")  then
---     assert("alo" < "álo" and "álo" < "amo")
---   end
+  if trylocale("ctype") then
+    assert(string.gsub("áéíóú", "%a", "x") == "xxxxx")
+    assert(string.gsub("áÁéÉ", "%l", "x") == "xÁxÉ")
+    assert(string.gsub("áÁéÉ", "%u", "x") == "áxéx")
+    assert(string.upper"áÁé{xuxu}ção" == "ÁÁÉ{XUXU}ÇÃO")
+  end
 
---   if trylocale("ctype") then
---     assert(string.gsub("áéíóú", "%a", "x") == "xxxxx")
---     assert(string.gsub("áÁéÉ", "%l", "x") == "xÁxÉ")
---     assert(string.gsub("áÁéÉ", "%u", "x") == "áxéx")
---     assert(string.upper"áÁé{xuxu}ção" == "ÁÁÉ{XUXU}ÇÃO")
---   end
+  os.setlocale("C")
+  assert(os.setlocale() == 'C')
+  assert(os.setlocale(nil, "numeric") == 'C')
 
---   os.setlocale("C")
---   assert(os.setlocale() == 'C')
---   assert(os.setlocale(nil, "numeric") == 'C')
-
--- end
-
+end
+]]
 
 -- -- bug in Lua 5.3.2
 -- -- 'gmatch' iterator does not work across coroutines
