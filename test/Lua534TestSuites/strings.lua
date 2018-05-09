@@ -62,7 +62,7 @@ assert(string.find("", "") == 1)
 assert(string.find("", "", 1) == 1)
 assert(not string.find("", "", 2))
 assert(string.find('', 'aaa', 1) == nil)
--- assert(('alo(.)alo'):find('(.)', 1, 1) == 4)
+assert(('alo(.)alo'):find('(.)', 1, 1) == 4)
 
 assert(string.len("") == 0)
 assert(string.len("\0\0\0") == 3)
