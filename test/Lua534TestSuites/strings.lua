@@ -366,8 +366,8 @@ if not _port then
 end
 ]]
 
--- -- bug in Lua 5.3.2
--- -- 'gmatch' iterator does not work across coroutines
+-- bug in Lua 5.3.2
+-- 'gmatch' iterator does not work across coroutines
 -- do
 --   local f = string.gmatch("1 2 3 4 5", "%d+")
 --   assert(f() == "1")
