@@ -21,4 +21,5 @@ script:
   - ./bin/lua ./test/Lua534TestSuites/locals.lua     | grep -q OK
   - ./bin/lua ./test/Lua534TestSuites/nextvar.lua    | grep -q OK
   - ./bin/lua ./test/Lua534TestSuites/math.lua       | grep -q OK
+  - ./bin/lua ./test/Lua534TestSuites/strings.lua    | grep -q OK
   - ./bin/lua ./test/Lua534TestSuites/vararg.lua     | grep -q OK
