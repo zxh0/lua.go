@@ -320,19 +320,19 @@ assert(table.concat(a, "3", 299) == "xuxu3xuxu")
 assert(table.concat({}, "x", maxi, maxi - 1) == "")
 assert(table.concat({}, "x", mini + 1, mini) == "")
 assert(table.concat({}, "x", maxi, mini) == "")
--- assert(table.concat({[maxi] = "alo"}, "x", maxi, maxi) == "alo")
--- assert(table.concat({[maxi] = "alo", [maxi - 1] = "y"}, "-", maxi - 1, maxi)
---        == "y-alo")
+assert(table.concat({[maxi] = "alo"}, "x", maxi, maxi) == "alo")
+assert(table.concat({[maxi] = "alo", [maxi - 1] = "y"}, "-", maxi - 1, maxi)
+       == "y-alo")
 
--- assert(not pcall(table.concat, {"a", "b", {}}))
+assert(not pcall(table.concat, {"a", "b", {}}))
 
--- a = {"a","b","c"}
--- assert(table.concat(a, ",", 1, 0) == "")
--- assert(table.concat(a, ",", 1, 1) == "a")
--- assert(table.concat(a, ",", 1, 2) == "a,b")
--- assert(table.concat(a, ",", 2) == "b,c")
--- assert(table.concat(a, ",", 3) == "c")
--- assert(table.concat(a, ",", 4) == "")
+a = {"a","b","c"}
+assert(table.concat(a, ",", 1, 0) == "")
+assert(table.concat(a, ",", 1, 1) == "a")
+assert(table.concat(a, ",", 1, 2) == "a,b")
+assert(table.concat(a, ",", 2) == "b,c")
+assert(table.concat(a, ",", 3) == "c")
+assert(table.concat(a, ",", 4) == "")
 
 -- if not _port then
 
