@@ -4,7 +4,7 @@ import "sort"
 import "strings"
 import . "luago/api"
 
-const MAX_LEN = 1000000
+const MAX_LEN = 1000000 // TODO
 
 /*
 ** Operations that an object must define to mimic a table
