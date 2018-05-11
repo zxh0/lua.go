@@ -12,8 +12,8 @@ var characterClasses = map[byte]string{
 	'C': "[[:^cntrl:]]",  //
 	'd': "[[:digit:]]",   // digits
 	'D': "[[:^digit:]]",  //
-	'g': "[[:print:]]",   // printable characters except spaces
-	'G': "[[:^print:]]",  //
+	'g': "[[:graph:]]",   // printable characters except spaces
+	'G': "[[:^graph:]]",  //
 	'l': "[[:lower:]]",   // lower-case letters
 	'L': "[[:^lower:]]",  //
 	'p': "[[:punct:]]",   // punctuation characters
