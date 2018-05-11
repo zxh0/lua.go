@@ -166,6 +166,16 @@ func _toRegexp(pattern string) (re, err string) {
 			} else {
 				buf.WriteString("*?")
 			}
+		case '^':
+			if !inBrackets && buf.Len() > 0 {
+				buf.WriteString("\\")
+			}
+			buf.WriteByte(b0)
+		case '$':
+			if len(pattern) > 0 {
+				buf.WriteString("\\")
+			}
+			buf.WriteByte(b0)
 		default:
 			buf.WriteByte(b0)
 		}
