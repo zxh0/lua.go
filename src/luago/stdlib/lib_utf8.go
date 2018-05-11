@@ -41,7 +41,21 @@ func utfLen(ls LuaState) int {
 	if i > j {
 		ls.PushInteger(0)
 	} else {
-		n := utf8.RuneCountInString(s[i-1 : j])
+		n := 0
+		s = s[i-1 : j]
+		for len(s) > 0 {
+			r, size := utf8.DecodeRuneInString(s)
+			if r == utf8.RuneError {
+				ls.PushNil()
+				ls.PushInteger(int64(i))
+				return 2
+			}
+
+			n++
+			i += size
+			s = s[size:]
+		}
+
 		ls.PushInteger(int64(n))
 	}
 
@@ -68,7 +82,7 @@ func utfByteOffset(ls LuaState) int {
 			i--
 		}
 	} else {
-		if _isCont(s[i]) {
+		if i < sLen && _isCont(s[i]) {
 			ls.Error2("initial position is a continuation byte")
 		}
 		if n < 0 {
@@ -86,7 +100,7 @@ func utfByteOffset(ls LuaState) int {
 			for n > 0 && i < sLen {
 				for { /* find beginning of next character */
 					i++
-					if !(_isCont(s[i])) {
+					if i >= sLen || !_isCont(s[i]) {
 						break /* (cannot pass final '\0') */
 					}
 				}
