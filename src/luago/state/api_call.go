@@ -9,6 +9,10 @@ import "luago/vm"
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_dump
 func (self *luaState) Dump(strip bool) []byte {
+	v := self.stack.get(-1)
+	if c, ok := v.(*closure); ok {
+		return binchunk.Dump(c.proto)
+	}
 	panic("todo!")
 }
 
@@ -26,8 +30,14 @@ func (self *luaState) Load(chunk []byte, chunkName, mode string) (status ThreadS
 
 	var proto *binchunk.Prototype
 	if binchunk.IsBinaryChunk(chunk) {
+		if mode == "t" {
+			panic("attempt to load a binary chunk (mode is '" + mode + "')")
+		}
 		proto = binchunk.Undump(chunk)
 	} else {
+		if mode == "b" {
+			panic("attempt to load a text chunk (mode is '" + mode + "')")
+		}
 		proto = compiler.Compile(chunkName, string(chunk))
 	}
 
