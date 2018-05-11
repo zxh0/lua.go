@@ -37,3 +37,21 @@ func (self *closure) getUpvalueName(n int) string {
 	}
 	return ""
 }
+
+func (self *closure) getUpvalue(n int) luaValue {
+	if self.upvals[n] == nil || self.upvals[n].val == nil {
+		return nil
+	}
+	return *(self.upvals[n].val)
+}
+
+func (self *closure) setUpvalue(n int, uv luaValue) {
+	if self.upvals[n] == nil {
+		self.upvals[n] = &upvalue{}
+	}
+	if self.upvals[n].val == nil {
+		self.upvals[n].val = &uv
+	} else {
+		*(self.upvals[n].val) = uv
+	}
+}

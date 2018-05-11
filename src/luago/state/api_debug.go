@@ -81,8 +81,7 @@ func (self *luaState) GetUpvalue(funcIdx, n int) string {
 	val := self.stack.get(funcIdx)
 	if c, ok := val.(*closure); ok {
 		if len(c.upvals) >= n {
-			uv := *(c.upvals[n-1].val)
-			self.stack.push(uv)
+			self.stack.push(c.getUpvalue(n - 1))
 			return c.getUpvalueName(n - 1)
 		}
 	}
@@ -95,7 +94,7 @@ func (self *luaState) SetUpvalue(funcIdx, n int) string {
 	val := self.stack.get(funcIdx)
 	if c, ok := val.(*closure); ok {
 		if len(c.upvals) >= n {
-			*(c.upvals[n-1].val) = self.stack.pop()
+			c.setUpvalue(n-1, self.stack.pop())
 			return c.getUpvalueName(n - 1)
 		}
 	}
@@ -117,5 +116,11 @@ func (self *luaState) UpvalueId(funcIdx, n int) interface{} {
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_upvaluejoin
 func (self *luaState) UpvalueJoin(funcIdx1, n1, funcIdx2, n2 int) {
-	panic("todo: UpvalueJoin!")
+	v1 := self.stack.get(funcIdx1)
+	v2 := self.stack.get(funcIdx2)
+	if c1, ok := v1.(*closure); ok && len(c1.upvals) >= n1 {
+		if c2, ok := v2.(*closure); ok && len(c2.upvals) >= n2 {
+			c1.upvals[n1-1] = c2.upvals[n2-1]
+		}
+	}
 }

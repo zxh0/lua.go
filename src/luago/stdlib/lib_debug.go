@@ -173,7 +173,20 @@ func dbUpvalueId(ls LuaState) int {
 }
 
 func dbUpvalueJoin(ls LuaState) int {
-	panic("todo: dbUpvalueJoin!")
+	n1 := _checkUpval(ls, 1, 2)
+	n2 := _checkUpval(ls, 3, 4)
+	ls.ArgCheck(!ls.IsGoFunction(1), 1, "Lua function expected")
+	ls.ArgCheck(!ls.IsGoFunction(3), 3, "Lua function expected")
+	ls.UpvalueJoin(1, n1, 3, n2)
+	return 0
+}
+
+func _checkUpval(ls LuaState, argf, argnup int) int {
+	nup := int(ls.CheckInteger(argnup)) /* upvalue index */
+	ls.CheckType(argf, LUA_TFUNCTION)   /* closure */
+	ls.ArgCheck((ls.GetUpvalue(argf, nup) != ""), argnup,
+		"invalid upvalue index")
+	return nup
 }
 
 func dbSetUserValue(ls LuaState) int {
