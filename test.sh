@@ -7,6 +7,7 @@ go install luago/standalone/lua
 ./bin/lua ./test/Lua534TestSuites/closure.lua    | grep -q OK
 ./bin/lua ./test/Lua534TestSuites/constructs.lua | grep -q OK
 ./bin/lua ./test/Lua534TestSuites/events.lua     | grep -q OK
+./bin/lua ./test/Lua534TestSuites/goto.lua       | grep -q OK
 ./bin/lua ./test/Lua534TestSuites/locals.lua     | grep -q OK
 ./bin/lua ./test/Lua534TestSuites/nextvar.lua    | grep -q OK
 ./bin/lua ./test/Lua534TestSuites/math.lua       | grep -q OK

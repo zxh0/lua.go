@@ -1,5 +1,6 @@
 package codegen
 
+import "fmt"
 import . "luago/compiler/ast"
 import . "luago/compiler/lexer"
 import . "luago/vm"
@@ -35,6 +36,18 @@ type locVarInfo struct {
 	captured bool
 }
 
+type labelInfo struct {
+	line    int
+	pc      int
+	scopeLv int
+}
+
+type gotoInfo struct {
+	jmpPC   int
+	scopeLv int
+	label   string
+}
+
 type funcInfo struct {
 	parent    *funcInfo
 	subFuncs  []*funcInfo
@@ -45,6 +58,8 @@ type funcInfo struct {
 	locNames  map[string]*locVarInfo
 	upvalues  map[string]upvalInfo
 	constants map[interface{}]int
+	labels    map[string]labelInfo
+	gotos     []*gotoInfo
 	breaks    [][]int
 	insts     []uint32
 	lineNums  []uint32
@@ -62,6 +77,8 @@ func newFuncInfo(parent *funcInfo, fd *FuncDefExp) *funcInfo {
 		locNames:  map[string]*locVarInfo{},
 		upvalues:  map[string]upvalInfo{},
 		constants: map[interface{}]int{},
+		labels:    map[string]labelInfo{},
+		gotos:     nil,
 		breaks:    make([][]int, 1),
 		insts:     make([]uint32, 0, 8),
 		lineNums:  make([]uint32, 0, 8),
@@ -144,6 +161,8 @@ func (self *funcInfo) exitScope(endPC int) {
 		i := (sBx+MAXARG_sBx)<<14 | a<<6 | OP_JMP
 		self.insts[pc] = uint32(i)
 	}
+
+	self.fixGotoJmps()
 
 	self.scopeLv--
 	for _, locVar := range self.locNames {
@@ -248,6 +267,72 @@ func (self *funcInfo) getJmpArgA() int {
 	} else {
 		return 0
 	}
+}
+
+/* labels */
+
+func (self *funcInfo) addLabel(label string, line int) {
+	key := fmt.Sprintf("%s@%d", label, self.scopeLv)
+	if labelInfo, ok := self.labels[key]; ok {
+		panic(fmt.Sprintf("label '%s' already defined on line %d",
+			label, labelInfo.line))
+	}
+	self.labels[key] = labelInfo{line, self.pc() + 1, self.scopeLv}
+}
+
+func (self *funcInfo) addGoto(jmpPC, scopeLv int, label string) {
+	self.gotos = append(self.gotos, &gotoInfo{jmpPC, scopeLv, label})
+}
+
+func (self *funcInfo) fixGotoJmps() {
+	for i, gotoInfo := range self.gotos {
+		if gotoInfo == nil || gotoInfo.scopeLv < self.scopeLv {
+			continue
+		}
+
+		dstPC := self.getGotoDst(gotoInfo.label)
+		if dstPC >= 0 {
+			if dstPC > gotoInfo.jmpPC && dstPC < self.pc() {
+				for _, locVar := range self.locNames {
+					if locVar.startPC > gotoInfo.jmpPC && locVar.startPC <= dstPC {
+						panic(fmt.Sprintf("<goto %s> at line %d jumps into the scope of local '%s'",
+							gotoInfo.label, self.lineNums[gotoInfo.jmpPC], locVar.name))
+					}
+				}
+			}
+
+			a := 0
+			for _, locVar := range self.locVars {
+				if locVar.startPC > dstPC {
+					a = locVar.slot + 1
+					break
+				}
+			}
+
+			sBx := dstPC - gotoInfo.jmpPC - 1
+			inst := (sBx+MAXARG_sBx)<<14 | a<<6 | OP_JMP
+			self.insts[gotoInfo.jmpPC] = uint32(inst)
+			self.gotos[i] = nil
+		} else if self.scopeLv == 0 {
+			panic(fmt.Sprintf("no visible label '%s' for <goto> at line %d",
+				gotoInfo.label, self.lineNums[gotoInfo.jmpPC]))
+		}
+	}
+	for key, labelInfo := range self.labels {
+		if labelInfo.scopeLv == self.scopeLv {
+			delete(self.labels, key)
+		}
+	}
+}
+
+func (self *funcInfo) getGotoDst(label string) int {
+	for i := self.scopeLv; i >= 0; i-- {
+		key := fmt.Sprintf("%s@%d", label, i)
+		if labelInfo, ok := self.labels[key]; ok {
+			return labelInfo.pc
+		}
+	}
+	return -1
 }
 
 /* code */

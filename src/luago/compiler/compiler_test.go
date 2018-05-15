@@ -613,17 +613,33 @@ end
 @f[20,21]`)
 }
 
+func TestGoto(t *testing.T) {
+	testDbg(t,
+		`
+local a=1
+::L1::
+local b=2
+goto L1`,
+`[2/2]
+[ 2]loadk(0,-1);
+[ 4]loadk(1,-2);
+[ 5]jmp(2,-2);
+[ 5]return(0,1,_);
+@a[2,5]
+@b[3,5]`)
+}
+
 func testInsts(t *testing.T, chunk, expected string) {
 	insts := compile(chunk, false)
 	expected = strings.Replace(expected, "\n", " ", -1)
 	expected += "; return(0,1,_);"
-	assert.Equal(t, insts, expected)
+	assert.Equal(t, expected, insts)
 }
 
 func testDbg(t *testing.T, chunk, expected string) {
 	insts := compile(chunk, true)
 	expected = strings.Replace(expected, "\n", " ", -1)
-	assert.Equal(t, insts, expected)
+	assert.Equal(t, expected, insts)
 }
 
 func compile(chunk string, dbgFlag bool) string {

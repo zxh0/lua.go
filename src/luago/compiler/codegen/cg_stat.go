@@ -26,9 +26,20 @@ func cgStat(fi *funcInfo, node Stat) {
 		cgLocalVarDeclStat(fi, stat)
 	case *LocalFuncDefStat:
 		cgLocalFuncDefStat(fi, stat)
-	case *LabelStat, *GotoStat:
-		panic("label and goto statements are not supported!")
+	case *LabelStat:
+		cgLabelStat(fi, stat)
+	case *GotoStat:
+		cgGotoStat(fi, stat)
 	}
+}
+
+func cgLabelStat(fi *funcInfo, node *LabelStat) {
+	fi.addLabel(node.Name, node.Line)
+}
+
+func cgGotoStat(fi *funcInfo, node *GotoStat) {
+	pc := fi.emitJmp(node.Line, 0, 0)
+	fi.addGoto(pc, fi.scopeLv, node.Name)
 }
 
 func cgLocalFuncDefStat(fi *funcInfo, node *LocalFuncDefStat) {

@@ -66,16 +66,16 @@ func parseBreakStat(lexer *Lexer) *BreakStat {
 // ‘::’ Name ‘::’
 func parseLabelStat(lexer *Lexer) *LabelStat {
 	lexer.NextTokenOfKind(TOKEN_SEP_LABEL) // ::
-	_, name := lexer.NextIdentifier()      // name
+	line, name := lexer.NextIdentifier()   // name
 	lexer.NextTokenOfKind(TOKEN_SEP_LABEL) // ::
-	return &LabelStat{name}
+	return &LabelStat{line, name}
 }
 
 // goto Name
 func parseGotoStat(lexer *Lexer) *GotoStat {
 	lexer.NextTokenOfKind(TOKEN_KW_GOTO) // goto
-	_, name := lexer.NextIdentifier()    // name
-	return &GotoStat{name}
+	line, name := lexer.NextIdentifier() // name
+	return &GotoStat{line, name}
 }
 
 // do block end

@@ -159,20 +159,20 @@ end
 
 local a = foo()
 assert(#a == 6)
-
+--[[
 -- all functions share same 'a'
 for i = 2, 6 do
   assert(debug.upvalueid(a[1], 1) == debug.upvalueid(a[i], 1))
 end
 
--- 'b' and 'c' are shared among some of them
+-- -- 'b' and 'c' are shared among some of them
 for i = 2, 6 do
   -- only a[1] uses external 'b'/'b'
   assert(debug.upvalueid(a[1], 2) ~= debug.upvalueid(a[i], 2))
   assert(debug.upvalueid(a[1], 3) ~= debug.upvalueid(a[i], 3))
 end
 
-for i = 3, 5, 2 do
+-- for i = 3, 5, 2 do
   -- inner functions share 'b'/'c' with previous ones
   assert(debug.upvalueid(a[i], 2) == debug.upvalueid(a[i - 1], 2))
   assert(debug.upvalueid(a[i], 3) == debug.upvalueid(a[i - 1], 3))
@@ -193,7 +193,7 @@ for i = 3, 5, 2 do
       == (i == j))
   end
 end
-
+]]
 --------------------------------------------------------------------------------
 -- testing if x goto optimizations
 
@@ -221,11 +221,11 @@ local function testG (a)
   ::l1:: return "1"
 end
 
-assert(testG(1) == "1")
-assert(testG(2) == "2")
-assert(testG(3) == "3")
-assert(testG(4) == 5)
-assert(testG(5) == 10)
+-- assert(testG(1) == "1")
+-- assert(testG(2) == "2")
+-- assert(testG(3) == "3")
+-- assert(testG(4) == 5)
+-- assert(testG(5) == 10)
 --------------------------------------------------------------------------------
 
 
