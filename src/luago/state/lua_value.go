@@ -24,7 +24,7 @@ func typeOf(val luaValue) LuaType {
 		return LUA_TFUNCTION
 	case *luaState:
 		return LUA_TTHREAD
-	case *userData:
+	case *userdata:
 		return LUA_TUSERDATA
 	default:
 		panic("unkonwn type!")
@@ -88,7 +88,7 @@ func getMetatable(val luaValue, ls *luaState) *luaTable {
 	switch x := val.(type) {
 	case *luaTable:
 		return x.metatable
-	case *userData:
+	case *userdata:
 		return x.metatable
 	default:
 		key := fmt.Sprintf("_MT%d", typeOf(val))
@@ -103,7 +103,7 @@ func setMetatable(val luaValue, mt *luaTable, ls *luaState) {
 	switch x := val.(type) {
 	case *luaTable:
 		x.metatable = mt
-	case *userData:
+	case *userdata:
 		x.metatable = mt
 	default:
 		key := fmt.Sprintf("_MT%d", typeOf(val))

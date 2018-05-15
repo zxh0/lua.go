@@ -68,7 +68,7 @@ type BasicAPI interface {
 	PushFString(fmt string, a ...interface{}) // push(fmt*a)
 	PushGoFunction(f GoFunction)              // push(f)
 	PushGoClosure(f GoFunction, n int)        // push(f)
-	PushUserData(d UserData)                  // push(d)
+	PushLightUserData(d UserData)             // push(d)
 	PushGlobalTable()                         // push(global)
 	PushThread() bool                         // push(thread)
 	/* Comparison and arithmetic functions */
@@ -141,7 +141,6 @@ type BasicAPI interface {
 // GetExtraSpace()
 // IsLightUserData(idx int)
 // NewUserData(size uint)
-// PushLightUserData()
 // PushLiteral
 // PushLString
 // PushVFString()

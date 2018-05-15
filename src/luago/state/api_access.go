@@ -232,7 +232,7 @@ func (self *luaState) ToThread(idx int) LuaState {
 func (self *luaState) ToUserData(idx int) UserData {
 	val := self.stack.get(idx)
 	if val != nil {
-		if ud, ok := val.(*userData); ok {
+		if ud, ok := val.(*userdata); ok {
 			return ud.data
 		}
 	}

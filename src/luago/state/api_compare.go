@@ -70,6 +70,11 @@ func (self *luaState) eq(a, b luaValue, raw bool) bool {
 			}
 		}
 		return a == b
+	case *userdata:
+		if y, ok := b.(*userdata); ok {
+			return x.data == y.data
+		}
+		return false
 	default:
 		return a == b
 	}

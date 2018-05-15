@@ -168,10 +168,9 @@ func _auxUpvalue(ls LuaState, get int) int {
 	return get + 1
 }
 
-func dbUpvalueId(ls LuaState) int {
-	panic("todo: dbUpvalueId!")
-}
-
+// debug.upvaluejoin (f1, n1, f2, n2)
+// http://www.lua.org/manual/5.3/manual.html#pdf-debug.upvaluejoin
+// lua-5.3.4/src/ldblib.c#db_upvaluejoin()
 func dbUpvalueJoin(ls LuaState) int {
 	n1 := _checkUpval(ls, 1, 2)
 	n2 := _checkUpval(ls, 3, 4)
@@ -187,6 +186,15 @@ func _checkUpval(ls LuaState, argf, argnup int) int {
 	ls.ArgCheck((ls.GetUpvalue(argf, nup) != ""), argnup,
 		"invalid upvalue index")
 	return nup
+}
+
+// debug.upvalueid (f, n)
+// http://www.lua.org/manual/5.3/manual.html#pdf-debug.upvalueid
+// lua-5.3.4/src/ldblib.c#db_upvalueid()
+func dbUpvalueId(ls LuaState) int {
+	n := _checkUpval(ls, 1, 2)
+	ls.PushLightUserData(ls.UpvalueId(1, n))
+	return 1
 }
 
 func dbSetUserValue(ls LuaState) int {

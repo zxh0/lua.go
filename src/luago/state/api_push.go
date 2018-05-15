@@ -58,17 +58,17 @@ func (self *luaState) PushGoClosure(f GoFunction, n int) {
 }
 
 // [-0, +1, –]
+// http://www.lua.org/manual/5.3/manual.html#lua_pushlightuserdata
+func (self *luaState) PushLightUserData(d UserData) {
+	ud := &userdata{data: d}
+	self.stack.push(ud)
+}
+
+// [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_pushthread
 func (self *luaState) PushThread() bool {
 	self.stack.push(self)
 	return self.isMainThread()
-}
-
-// [-0, +1, –]
-// http://www.lua.org/manual/5.3/manual.html#lua_pushlightuserdata
-func (self *luaState) PushUserData(d UserData) {
-	ud := &userData{data: d}
-	self.stack.push(ud)
 }
 
 // [-0, +1, –]

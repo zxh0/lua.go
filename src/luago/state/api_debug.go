@@ -107,7 +107,7 @@ func (self *luaState) UpvalueId(funcIdx, n int) interface{} {
 	val := self.stack.get(funcIdx)
 	if c, ok := val.(*closure); ok {
 		if len(c.upvals) >= n {
-			return *(c.upvals[n-1])
+			return c.upvals[n-1]
 		}
 	}
 	return nil // todo
