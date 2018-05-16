@@ -14,17 +14,17 @@ script:
   - go get github.com/stretchr/testify
   - go test luago/...
   - go install luago/standalone/lua
-  - ./bin/lua ./test/Lua534TestSuites/bitwise.lua    | grep -q OK
-  - ./bin/lua ./test/Lua534TestSuites/calls.lua      | grep -q OK
-  - ./bin/lua ./test/Lua534TestSuites/closure.lua    | grep -q OK
-  - ./bin/lua ./test/Lua534TestSuites/constructs.lua | grep -q OK
-  - ./bin/lua ./test/Lua534TestSuites/events.lua     | grep -q OK
-  - ./bin/lua ./test/Lua534TestSuites/goto.lua       | grep -q OK
-  - ./bin/lua ./test/Lua534TestSuites/locals.lua     | grep -q OK
-  - ./bin/lua ./test/Lua534TestSuites/nextvar.lua    | grep -q OK
-  - ./bin/lua ./test/Lua534TestSuites/math.lua       | grep -q OK
-  - ./bin/lua ./test/Lua534TestSuites/sort.lua       | grep -q OK
-  - ./bin/lua ./test/Lua534TestSuites/strings.lua    | grep -q OK
-  - ./bin/lua ./test/Lua534TestSuites/utf8.lua       | grep -q ok
-  - ./bin/lua ./test/Lua534TestSuites/vararg.lua     | grep -q OK
-  - ./bin/lua ./test/Lua534TestSuites/verybig.lua    | grep -q OK
+  - ./bin/lua ./test/lua-5.3.4-tests/bitwise.lua    | grep -q OK
+  - ./bin/lua ./test/lua-5.3.4-tests/calls.lua      | grep -q OK
+  - ./bin/lua ./test/lua-5.3.4-tests/closure.lua    | grep -q OK
+  - ./bin/lua ./test/lua-5.3.4-tests/constructs.lua | grep -q OK
+  - ./bin/lua ./test/lua-5.3.4-tests/events.lua     | grep -q OK
+  - ./bin/lua ./test/lua-5.3.4-tests/goto.lua       | grep -q OK
+  - ./bin/lua ./test/lua-5.3.4-tests/locals.lua     | grep -q OK
+  - ./bin/lua ./test/lua-5.3.4-tests/nextvar.lua    | grep -q OK
+  - ./bin/lua ./test/lua-5.3.4-tests/math.lua       | grep -q OK
+  - ./bin/lua ./test/lua-5.3.4-tests/sort.lua       | grep -q OK
+  - ./bin/lua ./test/lua-5.3.4-tests/strings.lua    | grep -q OK
+  - ./bin/lua ./test/lua-5.3.4-tests/utf8.lua       | grep -q ok
+  - ./bin/lua ./test/lua-5.3.4-tests/vararg.lua     | grep -q OK
+  - ./bin/lua ./test/lua-5.3.4-tests/verybig.lua    | grep -q OK
