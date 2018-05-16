@@ -162,34 +162,34 @@ assert(i == 11 and a[1]() == 1 and a[3]() == 3 and i == 4)
 
 
 -- testing closures created in 'then' and 'else' parts of 'if's
--- a = {}
--- for i = 1, 10 do
---   if i % 3 == 0 then
---     local y = 0
---     a[i] = function (x) local t = y; y = x; return t end
---   elseif i % 3 == 1 then
---     goto L1
---     error'not here'
---   ::L1::
---     local y = 1
---     a[i] = function (x) local t = y; y = x; return t end
---   elseif i % 3 == 2 then
---     local t
---     goto l4
---     ::l4a:: a[i] = t; goto l4b
---     error("should never be here!")
---     ::l4::
---     local y = 2
---     t = function (x) local t = y; y = x; return t end
---     goto l4a
---     error("should never be here!")
---     ::l4b::
---   end
--- end
+a = {}
+for i = 1, 10 do
+  if i % 3 == 0 then
+    local y = 0
+    a[i] = function (x) local t = y; y = x; return t end
+  elseif i % 3 == 1 then
+    goto L1
+    error'not here'
+  ::L1::
+    local y = 1
+    a[i] = function (x) local t = y; y = x; return t end
+  elseif i % 3 == 2 then
+    local t
+    goto l4
+    ::l4a:: a[i] = t; goto l4b
+    error("should never be here!")
+    ::l4::
+    local y = 2
+    t = function (x) local t = y; y = x; return t end
+    goto l4a
+    error("should never be here!")
+    ::l4b::
+  end
+end
 
--- for i = 1, 10 do
---   assert(a[i](i * 10) == i % 3 and a[i]() == i * 10)
--- end
+for i = 1, 10 do
+  assert(a[i](i * 10) == i % 3 and a[i]() == i * 10)
+end
 
 print'+'
 
