@@ -726,7 +726,7 @@ end
 
 print("testing 'math.random'")
 math.randomseed(0)
---[[
+
 do   -- test random for floats
   local max = -math.huge
   local min = math.huge
@@ -775,7 +775,7 @@ do
   aux({minint, minint + 9})
   aux({maxint - 3, maxint})
 end
-]]
+
 do
   local function aux(p1, p2)       -- test random for large intervals
     local max = minint
