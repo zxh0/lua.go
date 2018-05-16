@@ -221,11 +221,11 @@ local function testG (a)
   ::l1:: return "1"
 end
 
--- assert(testG(1) == "1")
--- assert(testG(2) == "2")
--- assert(testG(3) == "3")
--- assert(testG(4) == 5)
--- assert(testG(5) == 10)
+assert(testG(1) == "1")
+assert(testG(2) == "2")
+assert(testG(3) == "3")
+assert(testG(4) == 5)
+assert(testG(5) == 10)
 --------------------------------------------------------------------------------
 
 

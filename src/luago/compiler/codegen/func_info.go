@@ -46,6 +46,7 @@ type gotoInfo struct {
 	jmpPC   int
 	scopeLv int
 	label   string
+	pending bool
 }
 
 type funcInfo struct {
@@ -281,12 +282,15 @@ func (self *funcInfo) addLabel(label string, line int) {
 }
 
 func (self *funcInfo) addGoto(jmpPC, scopeLv int, label string) {
-	self.gotos = append(self.gotos, &gotoInfo{jmpPC, scopeLv, label})
+	self.gotos = append(self.gotos, &gotoInfo{jmpPC, scopeLv, label, false})
 }
 
 func (self *funcInfo) fixGotoJmps() {
 	for i, gotoInfo := range self.gotos {
 		if gotoInfo == nil || gotoInfo.scopeLv < self.scopeLv {
+			continue
+		}
+		if gotoInfo.scopeLv == self.scopeLv && gotoInfo.pending {
 			continue
 		}
 
@@ -316,6 +320,8 @@ func (self *funcInfo) fixGotoJmps() {
 		} else if self.scopeLv == 0 {
 			panic(fmt.Sprintf("no visible label '%s' for <goto> at line %d",
 				gotoInfo.label, self.lineNums[gotoInfo.jmpPC]))
+		} else {
+			gotoInfo.pending = true
 		}
 	}
 	for key, labelInfo := range self.labels {
