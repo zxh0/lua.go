@@ -2,6 +2,8 @@ package stdlib
 
 import . "luago/api"
 
+type any = interface{}
+
 /* state manipulation */
 func lua_close(ls LuaState)                            { ls.Close() }
 func lua_newthread(ls LuaState)                        { ls.NewThread() }
@@ -38,7 +40,7 @@ func lua_rawlen(ls LuaState, idx int) uint               { return ls.RawLen(idx)
 func lua_togofunction(ls LuaState, idx int) GoFunction   { return ls.ToGoFunction(idx) }
 func lua_touserdata(ls LuaState, idx int) UserData       { return ls.ToUserData(idx) }
 func lua_tothread(ls LuaState, idx int) LuaState         { return ls.ToThread(idx) }
-func lua_topointer(ls LuaState, idx int) interface{}     { return ls.ToPointer(idx) }
+func lua_topointer(ls LuaState, idx int) any             { return ls.ToPointer(idx) }
 func lua_tonumber(ls LuaState, idx int) float64          { return ls.ToNumber(idx) }
 func lua_tointeger(ls LuaState, idx int) int64           { return ls.ToInteger(idx) }
 func lua_isfunction(ls LuaState, idx int) bool           { return ls.IsFunction(idx) }
@@ -50,20 +52,18 @@ func lua_isnone(ls LuaState, idx int) bool               { return ls.IsNone(idx)
 func lua_isnoneornil(ls LuaState, idx int) bool          { return ls.IsNoneOrNil(idx) }
 
 /* push functions (C -> stack) */
-func lua_pushnil(ls LuaState)                            { ls.PushNil() }
-func lua_pushnumber(ls LuaState, n float64)              { ls.PushNumber(n) }
-func lua_pushinteger(ls LuaState, n int64)               { ls.PushInteger(n) }
-func lua_pushstring(ls LuaState, s string)               { ls.PushString(s) }
-func lua_pushgoclosure(ls LuaState, f GoFunction, n int) { ls.PushGoClosure(f, n) }
-func lua_pushboolean(ls LuaState, b bool)                { ls.PushBoolean(b) }
-func lua_pushlightuserdata(ls LuaState, d UserData)      { ls.PushLightUserData(d) }
-func lua_pushthread(ls LuaState) bool                    { return ls.PushThread() }
-func lua_pushgofunction(ls LuaState, f GoFunction)       { ls.PushGoFunction(f) }
-func lua_pushliteral(ls LuaState, s string)              { ls.PushString(s) }
-func lua_pushglobaltable(ls LuaState)                    { ls.PushGlobalTable() }
-func lua_pushfstring(ls LuaState, fmt string, a ...interface{}) string {
-	return ls.PushFString(fmt, a...)
-}
+func lua_pushnil(ls LuaState)                                  { ls.PushNil() }
+func lua_pushnumber(ls LuaState, n float64)                    { ls.PushNumber(n) }
+func lua_pushinteger(ls LuaState, n int64)                     { ls.PushInteger(n) }
+func lua_pushstring(ls LuaState, s string)                     { ls.PushString(s) }
+func lua_pushfstring(ls LuaState, fmt string, a ...any) string { return ls.PushFString(fmt, a...) }
+func lua_pushgoclosure(ls LuaState, f GoFunction, n int)       { ls.PushGoClosure(f, n) }
+func lua_pushboolean(ls LuaState, b bool)                      { ls.PushBoolean(b) }
+func lua_pushlightuserdata(ls LuaState, d UserData)            { ls.PushLightUserData(d) }
+func lua_pushthread(ls LuaState) bool                          { return ls.PushThread() }
+func lua_pushgofunction(ls LuaState, f GoFunction)             { ls.PushGoFunction(f) }
+func lua_pushliteral(ls LuaState, s string)                    { ls.PushString(s) }
+func lua_pushglobaltable(ls LuaState)                          { ls.PushGlobalTable() }
 
 /* Comparison and arithmetic functions */
 func lua_arith(ls LuaState, op ArithOp)                          { ls.Arith(op) }
@@ -127,7 +127,7 @@ func lua_getlocal(ls LuaState, ar *LuaDebug, n int) string    { return ls.GetLoc
 func lua_setlocal(ls LuaState, ar *LuaDebug, n int) string    { return ls.SetLocal(ar, n) }
 func lua_getupvalue(ls LuaState, funcIdx, n int) string       { return ls.GetUpvalue(funcIdx, n) }
 func lua_setupvalue(ls LuaState, funcIdx, n int) string       { return ls.SetUpvalue(funcIdx, n) }
-func lua_upvalueid(ls LuaState, funcIdx, n int) interface{}   { return ls.UpvalueId(funcIdx, n) }
+func lua_upvalueid(ls LuaState, funcIdx, n int) any           { return ls.UpvalueId(funcIdx, n) }
 func lua_upvaluejoin(ls LuaState, f1, n1, f2, n2 int)         { ls.UpvalueJoin(f1, n1, f2, n2) }
 func lua_gethook(ls LuaState) LuaHook                         { return ls.GetHook() }
 func lua_sethook(ls LuaState, f LuaHook, mask, count int)     { ls.SetHook(f, mask, count) }
@@ -150,7 +150,7 @@ func luaL_checkstack(ls LuaState, sz int, msg string)                { ls.CheckS
 func luaL_checktype(ls LuaState, arg int, t LuaType)                 { ls.CheckType(arg, t) }
 func luaL_checkany(ls LuaState, arg int)                             { ls.CheckAny(arg) }
 func luaL_where(ls LuaState, lvl int)                                { ls.Where(lvl) }
-func luaL_error(ls LuaState, fmt string, a ...interface{}) int       { return ls.Error2(fmt, a...) }
+func luaL_error(ls LuaState, fmt string, a ...any) int               { return ls.Error2(fmt, a...) }
 func luaL_loadfilex(ls LuaState, fn, mode string) ThreadStatus       { return ls.LoadFileX(fn, mode) }
 func luaL_loadfile(ls LuaState, filename string) ThreadStatus        { return ls.LoadFile(filename) }
 func luaL_loadstring(ls LuaState, s string) ThreadStatus             { return ls.LoadString(s) }
