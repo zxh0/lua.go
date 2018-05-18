@@ -9,6 +9,14 @@ const (
 	LUA_HOOKTAILCALL
 )
 
+// Event masks
+const (
+	LUA_MASKCALL  = (1 << LUA_HOOKCALL)
+	LUA_MASKRET   = (1 << LUA_HOOKRET)
+	LUA_MASKLINE  = (1 << LUA_HOOKLINE)
+	LUA_MASKCOUNT = (1 << LUA_HOOKCOUNT)
+)
+
 // http://www.lua.org/manual/5.3/manual.html#lua_Debug
 type LuaDebug struct {
 	Event           int

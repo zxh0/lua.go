@@ -50,17 +50,20 @@ func lua_isnone(ls LuaState, idx int) bool               { return ls.IsNone(idx)
 func lua_isnoneornil(ls LuaState, idx int) bool          { return ls.IsNoneOrNil(idx) }
 
 /* push functions (C -> stack) */
-func lua_pushnil(ls LuaState)                                   { ls.PushNil() }
-func lua_pushnumber(ls LuaState, n float64)                     { ls.PushNumber(n) }
-func lua_pushinteger(ls LuaState, n int64)                      { ls.PushInteger(n) }
-func lua_pushstring(ls LuaState, s string)                      { ls.PushString(s) }
-func lua_pushfstring(ls LuaState, fmt string, a ...interface{}) { ls.PushFString(fmt, a...) }
-func lua_pushgoclosure(ls LuaState, f GoFunction, n int)        { ls.PushGoClosure(f, n) }
-func lua_pushboolean(ls LuaState, b bool)                       { ls.PushBoolean(b) }
-func lua_pushlightuserdata(ls LuaState, d UserData)             { ls.PushLightUserData(d) }
-func lua_pushthread(ls LuaState) bool                           { return ls.PushThread() }
-func lua_pushgofunction(ls LuaState, f GoFunction)              { ls.PushGoFunction(f) }
-func lua_pushglobaltable(ls LuaState)                           { ls.PushGlobalTable() }
+func lua_pushnil(ls LuaState)                            { ls.PushNil() }
+func lua_pushnumber(ls LuaState, n float64)              { ls.PushNumber(n) }
+func lua_pushinteger(ls LuaState, n int64)               { ls.PushInteger(n) }
+func lua_pushstring(ls LuaState, s string)               { ls.PushString(s) }
+func lua_pushgoclosure(ls LuaState, f GoFunction, n int) { ls.PushGoClosure(f, n) }
+func lua_pushboolean(ls LuaState, b bool)                { ls.PushBoolean(b) }
+func lua_pushlightuserdata(ls LuaState, d UserData)      { ls.PushLightUserData(d) }
+func lua_pushthread(ls LuaState) bool                    { return ls.PushThread() }
+func lua_pushgofunction(ls LuaState, f GoFunction)       { ls.PushGoFunction(f) }
+func lua_pushliteral(ls LuaState, s string)              { ls.PushString(s) }
+func lua_pushglobaltable(ls LuaState)                    { ls.PushGlobalTable() }
+func lua_pushfstring(ls LuaState, fmt string, a ...interface{}) string {
+	return ls.PushFString(fmt, a...)
+}
 
 /* Comparison and arithmetic functions */
 func lua_arith(ls LuaState, op ArithOp)                          { ls.Arith(op) }

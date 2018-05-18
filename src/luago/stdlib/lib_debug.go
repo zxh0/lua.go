@@ -34,53 +34,53 @@ func dbDebug(ls LuaState) int {
 // debug.getinfo ([thread,] f [, what])
 // http://www.lua.org/manual/5.3/manual.html#pdf-debug.getinfo
 // lua-5.3.4/src/ldblib.c#db_getinfo()
-func dbGetInfo(ls LuaState) int {
+func dbGetInfo(L LuaState) int {
 	ar := &LuaDebug{}
-	arg, ls1 := _getThread(ls)
-	options := ls.OptString(arg+2, "flnStu")
-	_checkStack(ls, ls1, 3)
-	if ls.IsFunction(arg + 1) { /* info about a function? */
-		options = ">" + options /* add '>' to 'options' */
-		ls.PushString(options)
-		ls.PushValue(arg + 1) /* move function to 'L1' stack */
-		ls.XMove(ls1, 1)
+	var arg int
+	L1 := getthread(L, &arg)
+	options := luaL_optstring(L, arg+2, "flnStu")
+	checkstack(L, L1, 3)
+	if lua_isfunction(L, arg+1) { /* info about a function? */
+		options = lua_pushfstring(L, ">%s", options) /* add '>' to 'options' */
+		lua_pushvalue(L, arg+1)                      /* move function to 'L1' stack */
+		lua_xmove(L, L1, 1)
 	} else { /* stack level */
-		if !ls1.GetStack(int(ls.CheckInteger(arg+1)), ar) {
-			ls.PushNil() /* level out of range */
+		if !lua_getstack(L1, int(luaL_checkinteger(L, arg+1)), ar) {
+			lua_pushnil(L) /* level out of range */
 			return 1
 		}
 	}
-	if !ls1.GetInfo(options, ar) {
-		return ls.ArgError(arg+2, "invalid option")
+	if !lua_getinfo(L1, options, ar) {
+		return luaL_argerror(L, arg+2, "invalid option")
 	}
-	ls.NewTable() /* table to collect results */
-	if strings.IndexByte(options, 'S') >= 0 {
-		_setTabSS(ls, "source", ar.Source)
-		_setTabSS(ls, "short_src", ar.ShortSrc)
-		_setTabSI(ls, "linedefined", ar.LineDefined)
-		_setTabSI(ls, "lastlinedefined", ar.LastLineDefined)
-		_setTabSS(ls, "what", ar.What)
+	lua_newtable(L) /* table to collect results */
+	if strchr(options, 'S') {
+		settabss(L, "source", ar.Source)
+		settabss(L, "short_src", ar.ShortSrc)
+		settabsi(L, "linedefined", ar.LineDefined)
+		settabsi(L, "lastlinedefined", ar.LastLineDefined)
+		settabss(L, "what", ar.What)
 	}
-	if strings.IndexByte(options, 'l') >= 0 {
-		_setTabSI(ls, "currentline", ar.CurrentLine)
+	if strchr(options, 'l') {
+		settabsi(L, "currentline", ar.CurrentLine)
 	}
-	if strings.IndexByte(options, 'u') >= 0 {
-		_setTabSI(ls, "nups", ar.NUps)
-		_setTabSI(ls, "nparams", ar.NParams)
-		_setTabSB(ls, "isvararg", ar.IsVararg)
+	if strchr(options, 'u') {
+		settabsi(L, "nups", ar.NUps)
+		settabsi(L, "nparams", ar.NParams)
+		settabsb(L, "isvararg", ar.IsVararg)
 	}
-	if strings.IndexByte(options, 'n') >= 0 {
-		_setTabSS(ls, "name", ar.Name)
-		_setTabSS(ls, "namewhat", ar.NameWhat)
+	if strchr(options, 'n') {
+		settabss(L, "name", ar.Name)
+		settabss(L, "namewhat", ar.NameWhat)
 	}
-	if strings.IndexByte(options, 't') >= 0 {
-		_setTabSB(ls, "istailcall", ar.IsTailCall)
+	if strchr(options, 't') {
+		settabsb(L, "istailcall", ar.IsTailCall)
 	}
-	if strings.IndexByte(options, 'L') >= 0 {
-		_treatStackOption(ls, ls1, "activelines")
+	if strchr(options, 'L') {
+		treatstackoption(L, L1, "activelines")
 	}
-	if strings.IndexByte(options, 'f') >= 0 {
-		_treatStackOption(ls, ls1, "func")
+	if strchr(options, 'f') {
+		treatstackoption(L, L1, "func")
 	}
 	return 1 /* return table */
 }
@@ -97,8 +97,26 @@ func dbTraceback(ls LuaState) int {
 	panic("todo: dbTraceback!")
 }
 
-func dbGetHook(ls LuaState) int {
-	panic("todo: dbGetHook!")
+func dbGetHook(L LuaState) int {
+	var arg int
+	L1 := getthread(L, &arg)
+	mask := lua_gethookmask(L1)
+	hook := lua_gethook(L1)
+	if hook == nil { /* no hook? */
+		lua_pushnil(L)
+		// } else if hook != hookf { /* external hook? */
+		// 	lua_pushliteral(L, "external hook")
+		// } else { /* hook table must exist */
+		// 	lua_rawgetp(L, LUA_REGISTRYINDEX, &HOOKKEY)
+		// 	checkstack(L, L1, 1)
+		// 	lua_pushthread(L1)
+		// 	lua_xmove(L1, L, 1)
+		// 	lua_rawget(L, -2) /* 1st result = hooktable[L1] */
+		// 	lua_remove(L, -2) /* remove hook table */
+	}
+	lua_pushstring(L, unmakemask(mask))             /* 2nd result = mask */
+	lua_pushinteger(L, int64(lua_gethookcount(L1))) /* 3rd result = count */
+	return 3
 }
 
 func dbSetHook(ls LuaState) int {
@@ -210,9 +228,9 @@ func dbGetUserValue(ls LuaState) int {
 ** guarantees about its stack space; any push in L1 must be
 ** checked.
  */
-func _checkStack(ls, ls1 LuaState, n int) {
-	if ls != ls1 && !ls1.CheckStack(n) {
-		ls.Error2("stack overflow")
+func checkstack(L, L1 LuaState, n int) {
+	if L != L1 && !lua_checkstack(L1, n) {
+		luaL_error(L, "stack overflow")
 	}
 }
 
@@ -222,11 +240,14 @@ func _checkStack(ls, ls1 LuaState, n int) {
 ** 1 if this argument is present (so that functions can skip it to
 ** access their other arguments)
  */
-func _getThread(ls LuaState) (arg int, ls1 LuaState) {
-	if ls.IsThread(1) {
-		return 1, ls.ToThread(1)
+func getthread(L LuaState, arg *int) LuaState {
+	if lua_isthread(L, 1) {
+		*arg = 1
+		return lua_tothread(L, 1)
+	} else {
+		*arg = 0
+		return L /* function will operate over current thread */
 	}
-	return 0, ls /* function will operate over current thread */
 }
 
 /*
@@ -234,19 +255,19 @@ func _getThread(ls LuaState) (arg int, ls1 LuaState) {
 ** from 'lua_getinfo' into result table. Key is always a string;
 ** value can be a string, an int, or a boolean.
  */
-func _setTabSS(ls LuaState, k string, v string) {
-	ls.PushString(v)
-	ls.SetField(-2, k)
+func settabss(L LuaState, k string, v string) {
+	lua_pushstring(L, v)
+	lua_setfield(L, -2, k)
 }
 
-func _setTabSI(ls LuaState, k string, v int) {
-	ls.PushInteger(int64(v))
-	ls.SetField(-2, k)
+func settabsi(L LuaState, k string, v int) {
+	lua_pushinteger(L, int64(v))
+	lua_setfield(L, -2, k)
 }
 
-func _setTabSB(ls LuaState, k string, v bool) {
-	ls.PushBoolean(v)
-	ls.SetField(-2, k)
+func settabsb(L LuaState, k string, v bool) {
+	lua_pushboolean(L, v)
+	lua_setfield(L, -2, k)
 }
 
 /*
@@ -256,11 +277,36 @@ func _setTabSB(ls LuaState, k string, v bool) {
 ** 'lua_getinfo' on top of the result table so that it can call
 ** 'lua_setfield'.
  */
-func _treatStackOption(ls, ls1 LuaState, fname string) {
-	if ls == ls1 {
-		ls.Rotate(-2, 1) /* exchange object and table */
+func treatstackoption(L, L1 LuaState, fname string) {
+	if L == L1 {
+		lua_rotate(L, -2, 1) /* exchange object and table */
 	} else {
-		ls1.XMove(ls, 1) /* move object to the "main" stack */
+		lua_xmove(L1, L, 1) /* move object to the "main" stack */
 	}
-	ls.SetField(-2, fname) /* put object into table */
+	lua_setfield(L, -2, fname) /* put object into table */
+}
+
+/*
+** Convert a bit mask (for 'gethook') into a string mask
+ */
+func unmakemask(mask int) string {
+	smask := ""
+	if mask&LUA_MASKCALL != 0 {
+		smask += "c"
+	}
+	if mask&LUA_MASKRET != 0 {
+		smask += "r"
+	}
+	if mask&LUA_MASKLINE != 0 {
+		smask += "l"
+	}
+	return smask
+}
+
+func strchr(s string, b byte) bool {
+	return strings.IndexByte(s, b) >= 0
+}
+
+func hookf(ls LuaState, ar *LuaDebug) {
+	panic("todo!")
 }

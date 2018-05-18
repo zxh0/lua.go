@@ -60,17 +60,17 @@ type BasicAPI interface {
 	ToPointer(idx int) interface{}     // r[idx] as interface{}
 	RawLen(idx int) uint               // len(r[idx])
 	/* push functions (C -> stack) */
-	PushNil()                                 // push(nil)
-	PushBoolean(b bool)                       // push(b)
-	PushInteger(n int64)                      // push(n)
-	PushNumber(n float64)                     // push(n)
-	PushString(s string)                      // push(s)
-	PushFString(fmt string, a ...interface{}) // push(fmt*a)
-	PushGoFunction(f GoFunction)              // push(f)
-	PushGoClosure(f GoFunction, n int)        // push(f)
-	PushLightUserData(d UserData)             // push(d)
-	PushGlobalTable()                         // push(global)
-	PushThread() bool                         // push(thread)
+	PushNil()                                        // push(nil)
+	PushBoolean(b bool)                              // push(b)
+	PushInteger(n int64)                             // push(n)
+	PushNumber(n float64)                            // push(n)
+	PushString(s string)                             // push(s)
+	PushFString(fmt string, a ...interface{}) string // push(fmt*a)
+	PushGoFunction(f GoFunction)                     // push(f)
+	PushGoClosure(f GoFunction, n int)               // push(f)
+	PushLightUserData(d UserData)                    // push(d)
+	PushGlobalTable()                                // push(global)
+	PushThread() bool                                // push(thread)
 	/* Comparison and arithmetic functions */
 	Arith(op ArithOp)                          // b=pop(); a=pop(); push(a op b)
 	Compare(idx1, idx2 int, op CompareOp) bool // r[idx1] op r[idx2]

@@ -35,9 +35,10 @@ func (self *luaState) PushString(s string) {
 
 // [-0, +1, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_pushfstring
-func (self *luaState) PushFString(fmtStr string, a ...interface{}) {
+func (self *luaState) PushFString(fmtStr string, a ...interface{}) string {
 	str := fmt.Sprintf(fmtStr, a...)
 	self.stack.push(str)
+	return str
 }
 
 // [-0, +1, –]

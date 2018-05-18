@@ -4,6 +4,8 @@ import . "luago/api"
 
 type luaState struct {
 	/* global state */
+	hook     LuaHook
+	hookMask int
 	panicf   GoFunction
 	registry *luaTable
 	/* stack */
