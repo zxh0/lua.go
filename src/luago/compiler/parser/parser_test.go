@@ -180,7 +180,7 @@ func TestError(t *testing.T) {
 }
 
 func testExp(t *testing.T, str string) {
-	exp := parseExp(lexer.NewLexer("", str))
+	exp := parseExp(newLexer("", str))
 	_str := expToString(exp)
 	if _str != str {
 		t.Errorf(_str)
@@ -188,7 +188,7 @@ func testExp(t *testing.T, str string) {
 }
 
 func testExp2(t *testing.T, str, str2 string) {
-	exp := parseExp(lexer.NewLexer("", str))
+	exp := parseExp(newLexer("", str))
 	_str := expToString(exp)
 	if _str != str2 {
 		t.Errorf(_str)
@@ -196,19 +196,19 @@ func testExp2(t *testing.T, str, str2 string) {
 }
 
 func testStat(t *testing.T, src string) {
-	stat := parseStat(lexer.NewLexer("", src))
+	stat := parseStat(newLexer("", src))
 	str := statToString(stat)
 	assert.Equal(t, str, src)
 }
 
 func testStat2(t *testing.T, src, src2 string) {
-	stat := parseStat(lexer.NewLexer("", src))
+	stat := parseStat(newLexer("", src))
 	str := statToString(stat)
 	assert.Equal(t, str, src2)
 }
 
 func testBlock(t *testing.T, str string) {
-	block := parseBlock(lexer.NewLexer("", str))
+	block := parseBlock(newLexer("", str))
 	_str := blockToString(block)
 	if _str != str {
 		t.Errorf(_str)
@@ -216,7 +216,7 @@ func testBlock(t *testing.T, str string) {
 }
 
 func testBlock2(t *testing.T, str, str2 string) {
-	block := parseBlock(lexer.NewLexer("", str))
+	block := parseBlock(newLexer("", str))
 	_str := blockToString(block)
 	if _str != str2 {
 		t.Errorf(_str)
@@ -235,6 +235,11 @@ func getError(str string) (err string) {
 			err = r.(string)
 		}
 	}()
-	parseBlock(lexer.NewLexer("str", str))
+	parseBlock(newLexer("str", str))
 	return
 }
+
+func newLexer(chunkName, chunk string) *lexer.Lexer {
+	return lexer.NewLexer(chunk, chunkName)
+}
+

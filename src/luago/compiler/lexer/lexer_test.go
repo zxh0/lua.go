@@ -4,7 +4,7 @@ import "testing"
 import "github.com/stretchr/testify/assert"
 
 func TestNextToken(t *testing.T) {
-	lexer := NewLexer("str", `;,()[]{}+-*^%%&|#`)
+	lexer := newLexer("str", `;,()[]{}+-*^%%&|#`)
 	assertNextTokenKind(t, lexer, TOKEN_SEP_SEMI)
 	assertNextTokenKind(t, lexer, TOKEN_SEP_COMMA)
 	assertNextTokenKind(t, lexer, TOKEN_SEP_LPAREN)
@@ -26,7 +26,7 @@ func TestNextToken(t *testing.T) {
 }
 
 func TestNextToken2(t *testing.T) {
-	lexer := NewLexer("str", `... .. . :: : // / ~= ~ == = << <= < >> >= >`)
+	lexer := newLexer("str", `... .. . :: : // / ~= ~ == = << <= < >> >= >`)
 	assertNextTokenKind(t, lexer, TOKEN_VARARG)
 	assertNextTokenKind(t, lexer, TOKEN_OP_CONCAT)
 	assertNextTokenKind(t, lexer, TOKEN_SEP_DOT)
@@ -54,7 +54,7 @@ func TestNextToken_keywords(t *testing.T) {
 	local     nil       not       or        repeat    return
 	then      true      until     while
     `
-	lexer := NewLexer("str", keywords)
+	lexer := newLexer("str", keywords)
 	assertNextTokenKind(t, lexer, TOKEN_OP_AND)
 	assertNextTokenKind(t, lexer, TOKEN_KW_BREAK)
 	assertNextTokenKind(t, lexer, TOKEN_KW_DO)
@@ -82,7 +82,7 @@ func TestNextToken_keywords(t *testing.T) {
 
 func TestNextToken_identifiers(t *testing.T) {
 	identifiers := `_ __ ___ a _HW_ hello_world HelloWorld HELLO_WORLD`
-	lexer := NewLexer("str", identifiers)
+	lexer := newLexer("str", identifiers)
 	assertNextIdentifier(t, lexer, "_")
 	assertNextIdentifier(t, lexer, "__")
 	assertNextIdentifier(t, lexer, "___")
@@ -101,7 +101,7 @@ func TestNextToken_numbers(t *testing.T) {
 	0x0.1E  0xA23p-4   0X1.921FB54442D18P+1
 	3.	.3	00001
 	`
-	lexer := NewLexer("str", numbers)
+	lexer := newLexer("str", numbers)
 	assertNextNumber(t, lexer, "3")
 	assertNextNumber(t, lexer, "345")
 	assertNextNumber(t, lexer, "0xff")
@@ -121,7 +121,7 @@ func TestNextToken_numbers(t *testing.T) {
 }
 
 func TestNextToken_comments(t *testing.T) {
-	lexer := NewLexer("str", `
+	lexer := newLexer("str", `
 	--
 	--[[]]
 	a -- short comment
@@ -153,7 +153,7 @@ long string]=]
 
 	bar'
 	`
-	lexer := NewLexer("str", strs)
+	lexer := newLexer("str", strs)
 	assertNextString(t, lexer, "")
 	assertNextString(t, lexer, " long string ")
 	assertNextString(t, lexer, "long string")
@@ -175,7 +175,7 @@ func TestNextToken_strings2(t *testing.T) {
 	strs := `'\\' --'foo' 
 	'\
 '`
-	lexer := NewLexer("str", strs)
+	lexer := newLexer("str", strs)
 	assertNextString(t, lexer, "\\")
 	assertNextString(t, lexer, "\n")
 	assertNextTokenKind(t, lexer, TOKEN_EOF)
@@ -183,14 +183,14 @@ func TestNextToken_strings2(t *testing.T) {
 
 func TestNextToken_whiteSpaces(t *testing.T) {
 	strs := "\r\n \r\n \n\r \n \r \n \t\v\f"
-	lexer := NewLexer("str", strs)
+	lexer := newLexer("str", strs)
 	assertNextTokenKind(t, lexer, TOKEN_EOF)
 	assert.Equal(t, lexer.line, 7)
 }
 
 func TestNextToken_hw(t *testing.T) {
 	src := `print("Hello, World!")`
-	lexer := NewLexer("str", src)
+	lexer := newLexer("str", src)
 
 	assertNextIdentifier(t, lexer, "print")
 	assertNextTokenKind(t, lexer, TOKEN_SEP_LPAREN)
@@ -201,7 +201,7 @@ func TestNextToken_hw(t *testing.T) {
 
 func TestLookAhead(t *testing.T) {
 	src := `print("Hello, World!")`
-	lexer := NewLexer("str", src)
+	lexer := newLexer("str", src)
 
 	assert.Equal(t, lexer.LookAhead(), TOKEN_IDENTIFIER)
 	lexer.NextToken()
@@ -226,8 +226,12 @@ func TestErrors(t *testing.T) {
 }
 
 func testError(t *testing.T, chunk, expectedErr string) {
-	err := safeNextToken(NewLexer("src", chunk))
+	err := safeNextToken(newLexer("src", chunk))
 	assert.Equal(t, err, expectedErr)
+}
+
+func newLexer(chunkName, chunk string) *Lexer {
+	return NewLexer(chunk, chunkName)
 }
 
 func assertNextTokenKind(t *testing.T, lexer *Lexer, expectedKind int) {

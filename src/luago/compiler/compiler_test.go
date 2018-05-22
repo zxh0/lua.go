@@ -643,7 +643,7 @@ func testDbg(t *testing.T, chunk, expected string) {
 }
 
 func compile(chunk string, dbgFlag bool) string {
-	proto := Compile("src", chunk)
+	proto := Compile(chunk, "src", )
 
 	s := fmt.Sprintf("[%d/%d] ", proto.MaxStackSize, len(proto.LocVars))
 	for i, inst := range proto.Code {
