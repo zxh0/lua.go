@@ -157,7 +157,7 @@ func (self *luaState) LoadFile(filename string) ThreadStatus {
 // http://www.lua.org/manual/5.3/manual.html#luaL_loadfilex
 func (self *luaState) LoadFileX(filename, mode string) ThreadStatus {
 	if data, err := ioutil.ReadFile(filename); err == nil {
-		return self.Load(data, filename, mode)
+		return self.Load(data, "@" + filename, mode)
 	}
 	return LUA_ERRFILE // todo
 }

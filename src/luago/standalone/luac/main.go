@@ -69,6 +69,6 @@ func loadOrCompile(filename string) *binchunk.Prototype {
 	if binchunk.IsBinaryChunk(data) {
 		return binchunk.Undump(data)
 	} else {
-		return compiler.Compile(filename, string(data))
+		return compiler.Compile(string(data), "@" + filename)
 	}
 }

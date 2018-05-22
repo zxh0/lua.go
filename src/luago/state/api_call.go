@@ -38,7 +38,7 @@ func (self *luaState) Load(chunk []byte, chunkName, mode string) (status ThreadS
 		if mode == "b" {
 			panic("attempt to load a text chunk (mode is '" + mode + "')")
 		}
-		proto = compiler.Compile(chunkName, string(chunk))
+		proto = compiler.Compile(string(chunk), chunkName)
 	}
 
 	c := newLuaClosure(proto)
