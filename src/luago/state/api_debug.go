@@ -60,8 +60,7 @@ func (self *luaState) GetInfo(what string, ar *LuaDebug) bool {
 				ar.NParams = 0      // todo
 				ar.IsVararg = false // todo
 			case 'f': // pushes onto the stack the function that is running at the given level;
-				//panic("todo: what->f")
-				self.PushNil()
+				self.stack.push(val)
 			case 'L': // pushes onto the stack a table whose indices are the numbers of the lines that are valid on the function.
 				//panic("todo: what->L")
 				self.PushNil()
@@ -99,10 +98,16 @@ func _loadFuncInfoS(ar *LuaDebug, c *closure) {
 			ar.What = "Lua"
 		}
 	}
-	ar.ShortSrc = ar.Source
-	if len(ar.ShortSrc) > 0 && ar.ShortSrc[0] == '=' {
-		ar.ShortSrc = ar.ShortSrc[1:]
+	ar.ShortSrc = _getShortSrc(ar.Source)
+}
+
+func _getShortSrc(src string) string {
+	if len(src) > 0 {	
+		if src[0] == '=' {
+			return src[1:]
+		}
 	}
+	return src
 }
 
 func (self *luaState) GetLocal(ar *LuaDebug, n int) string {
