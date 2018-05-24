@@ -1,5 +1,7 @@
 package state
 
+import "fmt"
+import "strings"
 import . "luago/api"
 
 // [-0, +0, –]
@@ -24,55 +26,68 @@ func (self *luaState) GetHookMask() int {
 	return self.hookMask
 }
 
+// [-0, +0, –]
+// http://www.lua.org/manual/5.3/manual.html#lua_getstack
 func (self *luaState) GetStack(level int, ar *LuaDebug) bool {
 	if level < 0 || level > self.callDepth {
 		return false
 	}
 	if self.callDepth > 1 {
+		if s := self.getLuaStack(level); s != nil {
+			ar.CallInfo = s.closure
+		}
+
 		return true
 	}
 	return false
 	// todo
 }
 
+// [-(0|1), +(0|1|2), e]
+// http://www.lua.org/manual/5.3/manual.html#lua_getinfo
 func (self *luaState) GetInfo(what string, ar *LuaDebug) bool {
 	if len(what) > 0 && what[0] == '>' {
 		what = what[1:]
 		val := self.stack.pop()
-		c, ok := val.(*closure)
-		if !ok {
-			panic("function expected")
+		if c, ok := val.(*closure); ok {
+			return self.loadInfo(ar, c, what)
 		}
+		panic("function expected")
+	}
 
-		for len(what) > 0 {
-			switch what[0] {
-			case 'n': // fills in the field name and namewhat;
-				// ar.Name = proto.Source
-				ar.NameWhat = "" // todo
-			case 'S': // fills in the fields source, short_src, linedefined, lastlinedefined, and what;
-				_loadFuncInfoS(ar, c)
-			case 'l': // fills in the field currentline;
-				ar.CurrentLine = 0 // todo
-			case 't': // fills in the field istailcall;
-				ar.IsTailCall = false // todo
-			case 'u': // fills in the fields nups, nparams, and isvararg;
-				ar.NUps = 0         // todo
-				ar.NParams = 0      // todo
-				ar.IsVararg = false // todo
-			case 'f': // pushes onto the stack the function that is running at the given level;
-				self.stack.push(val)
-			case 'L': // pushes onto the stack a table whose indices are the numbers of the lines that are valid on the function.
-				//panic("todo: what->L")
-				self.PushNil()
-			default:
-				return false
-			}
-			what = what[1:]
-		}
-
-		return true
+	if ci := ar.CallInfo; ci != nil {
+		return self.loadInfo(ar, ci.(*closure), what)
 	}
 	panic("todo: GetInfo! what=" + what)
+}
+
+func (self *luaState) loadInfo(ar *LuaDebug, c *closure, what string) bool {
+	for len(what) > 0 {
+		switch what[0] {
+		case 'n': // fills in the field name and namewhat;
+			ar.Name = "?" // todo
+			ar.NameWhat = "" // todo
+		case 'S': // fills in the fields source, short_src, linedefined, lastlinedefined, and what;
+			_loadFuncInfoS(ar, c)
+		case 'l': // fills in the field currentline;
+			ar.CurrentLine = 0 // todo
+		case 't': // fills in the field istailcall;
+			ar.IsTailCall = false // todo
+		case 'u': // fills in the fields nups, nparams, and isvararg;
+			ar.NUps = 0         // todo
+			ar.NParams = 0      // todo
+			ar.IsVararg = false // todo
+		case 'f': // pushes onto the stack the function that is running at the given level;
+			self.stack.push(c)
+		case 'L': // pushes onto the stack a table whose indices are the numbers of the lines that are valid on the function.
+			//panic("todo: what->L")
+			self.PushNil()
+		default:
+			return false
+		}
+		what = what[1:]
+	}
+	return true
 }
 
 // the string "Lua" if the function is a Lua function,
@@ -102,9 +117,26 @@ func _loadFuncInfoS(ar *LuaDebug, c *closure) {
 }
 
 func _getShortSrc(src string) string {
-	if len(src) > 0 {	
+	if len(src) > 0 { /* 'literal' source */
 		if src[0] == '=' {
-			return src[1:]
+			src = src[1:]
+			if strLen := len(src); strLen > LUA_IDSIZE {
+				src = src[:LUA_IDSIZE-1]
+			}
+		} else if src[0] == '@' { /* file name */
+			src = src[1:]
+			if strLen := len(src); strLen > LUA_IDSIZE {
+				src = "..." + src[strLen-LUA_IDSIZE+4:]
+			}
+		} else { /* string; format as [string "source"] */
+			if i := strings.IndexByte(src, '\n'); i >= 0 {
+				src = src[0:i] + "..."
+			}
+			maxSrcLen := LUA_IDSIZE - len(`[string " "]`)
+			if len(src) > maxSrcLen {
+				src = src[0:maxSrcLen-3] + "..."
+			}
+			src = fmt.Sprintf(`[string "%s"]`, src)
 		}
 	}
 	return src

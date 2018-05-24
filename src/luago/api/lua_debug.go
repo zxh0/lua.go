@@ -33,7 +33,7 @@ type LuaDebug struct {
 	IsTailCall      bool   /* (t) */
 	ShortSrc        string /* (S) */
 	/* private part */
-	// other fields
+	CallInfo interface{} /* active function */
 }
 
 type LuaHook func(ls LuaState, ar *LuaDebug)

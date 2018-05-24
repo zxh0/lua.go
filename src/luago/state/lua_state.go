@@ -46,6 +46,14 @@ func (self *luaState) popLuaStack() {
 	self.callDepth--
 }
 
+func (self *luaState) getLuaStack(level int) *luaStack {
+	stack := self.stack
+	for i := 0; i < level && stack != nil; i++ {
+		stack = stack.prev
+	}
+	return stack
+}
+
 // debug
 func (self *luaState) String() string {
 	return stackToString(self.stack)
