@@ -2,6 +2,7 @@
 set -ex
 
 go install luago/standalone/lua
+./bin/lua ./test/lua-5.3.4-tests/attrib.lua     | grep -q OK
 ./bin/lua ./test/lua-5.3.4-tests/bitwise.lua    | grep -q OK
 ./bin/lua ./test/lua-5.3.4-tests/calls.lua      | grep -q OK
 ./bin/lua ./test/lua-5.3.4-tests/closure.lua    | grep -q OK

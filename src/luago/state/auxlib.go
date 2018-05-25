@@ -21,9 +21,18 @@ func (self *luaState) ArgError(arg int, extraMsg string) int {
 
 // [-0, +1, m]
 // http://www.lua.org/manual/5.3/manual.html#luaL_where
-func (self *luaState) Where(lvl int) {
+// lua-5.3.4/src/lauxlib.c#luaL_where()
+func (self *luaState) Where(level int) {
 	// chunkname:currentline:
-	panic("todo: Where!")
+	ar := LuaDebug{}
+	if self.GetStack(level, &ar) { /* check function at level */
+		self.GetInfo("Sl", &ar) /* get info about it */
+		if ar.CurrentLine > 0 { /* is there info? */
+			self.PushFString("%s:%d: ", ar.ShortSrc, ar.CurrentLine)
+			return
+		}
+	}
+	self.PushFString("") /* else, no information available... */
 }
 
 // [-0, +0, v]

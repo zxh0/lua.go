@@ -52,7 +52,7 @@ print('+')
 
 -- The next tests for 'require' assume some specific directories and
 -- libraries.
-
+--[===[
 if not _port then --[
 
 local dirsep = string.match(package.config, "^([^\n]+)\n")
@@ -305,7 +305,7 @@ end
 print('+')
 
 end  --]
-
+]===]
 print("testing assignments, logical operators, and constructors")
 
 local res, res2 = 27

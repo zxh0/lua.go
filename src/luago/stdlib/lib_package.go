@@ -16,13 +16,11 @@ const LUA_PRELOAD_TABLE = "_PRELOAD"
 
 // var _GOLIBS = "golibs"
 
-const (
-	LUA_DIRSEP    = string(os.PathSeparator)
-	LUA_PATH_SEP  = ";"
-	LUA_PATH_MARK = "?"
-	LUA_EXEC_DIR  = "!"
-	LUA_IGMARK    = "-"
-)
+/*
+** LUA_IGMARK is a mark to ignore all before it when building the
+** luaopen_ function name.
+ */
+const LUA_IGMARK = "-"
 
 var pkgFuncs = map[string]GoFunction{
 	"loadlib":    pkgLoadLib,
@@ -44,11 +42,13 @@ func OpenPackageLib(ls LuaState) int {
 	ls.NewLib(pkgFuncs) /* create 'package' table */
 	createSearchersTable(ls)
 	/* set field 'path' */
+	// setPath(ls, "path", LUA_PATHVARVERSION, LUA_PATH_VAR, LUA_PATH_DEFAULT)
 	ls.PushString("./?.lua;./?/init.lua")
 	ls.SetField(-2, "path")
-	// setPath(ls, "path", LUA_PATHVARVERSION, LUA_PATH_VAR, LUA_PATH_DEFAULT)
 	/* set field 'cpath' */
 	// setpath(L, "cpath", LUA_CPATHVARVERSION, LUA_CPATH_VAR, LUA_CPATH_DEFAULT);
+	ls.PushString("")
+	ls.SetField(-2, "cpath")
 	/* store config information */
 	ls.PushString(LUA_DIRSEP + "\n" + LUA_PATH_SEP + "\n" +
 		LUA_PATH_MARK + "\n" + LUA_EXEC_DIR + "\n" + LUA_IGMARK + "\n")
@@ -211,7 +211,7 @@ func _searchPath(name, path, sep, dirSep string) (filename, errMsg string) {
 
 	for _, filename := range strings.Split(path, LUA_PATH_SEP) {
 		filename = strings.Replace(filename, LUA_PATH_MARK, name, -1)
-		if _, err := os.Stat(filename); !os.IsNotExist(err) {
+		if _, err := os.Stat(filename); err == nil {
 			return filename, ""
 		}
 		errMsg += "\n\tno file '" + filename + "'"

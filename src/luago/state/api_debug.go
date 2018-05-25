@@ -33,14 +33,10 @@ func (self *luaState) GetStack(level int, ar *LuaDebug) bool {
 		return false
 	}
 	if self.callDepth > 1 {
-		if s := self.getLuaStack(level); s != nil {
-			ar.CallInfo = s.closure
-		}
-
+		ar.CallInfo = self.getLuaStack(level)
 		return true
 	}
 	return false
-	// todo
 }
 
 // [-(0|1), +(0|1|2), e]
@@ -56,21 +52,23 @@ func (self *luaState) GetInfo(what string, ar *LuaDebug) bool {
 	}
 
 	if ci := ar.CallInfo; ci != nil {
-		return self.loadInfo(ar, ci.(*closure), what)
+		c := ci.(*luaStack).closure
+		return self.loadInfo(ar, c, what)
 	}
-	panic("todo: GetInfo! what=" + what)
+
+	return false
 }
 
 func (self *luaState) loadInfo(ar *LuaDebug, c *closure, what string) bool {
 	for len(what) > 0 {
 		switch what[0] {
 		case 'n': // fills in the field name and namewhat;
-			ar.Name = "?" // todo
+			ar.Name = "?"    // todo
 			ar.NameWhat = "" // todo
 		case 'S': // fills in the fields source, short_src, linedefined, lastlinedefined, and what;
-			_loadFuncInfoS(ar, c)
+			_setFuncInfoS(ar, c)
 		case 'l': // fills in the field currentline;
-			ar.CurrentLine = 0 // todo
+			_setCurrentLine(ar, c)
 		case 't': // fills in the field istailcall;
 			ar.IsTailCall = false // todo
 		case 'u': // fills in the fields nups, nparams, and isvararg;
@@ -92,7 +90,7 @@ func (self *luaState) loadInfo(ar *LuaDebug, c *closure, what string) bool {
 
 // the string "Lua" if the function is a Lua function,
 // "C" if it is a C function, "main" if it is the main part of a chunk.
-func _loadFuncInfoS(ar *LuaDebug, c *closure) {
+func _setFuncInfoS(ar *LuaDebug, c *closure) {
 	if c.proto == nil {
 		ar.Source = "=[C]"
 		ar.LineDefined = -1
@@ -140,6 +138,18 @@ func _getShortSrc(src string) string {
 		}
 	}
 	return src
+}
+
+func _setCurrentLine(ar *LuaDebug, c *closure) {
+	if ci := ar.CallInfo; ci != nil {
+		c := ci.(*luaStack).closure
+		pc := ci.(*luaStack).pc
+		if c.proto == nil || pc < 1 || pc > len(c.proto.LineInfo) {
+			ar.CurrentLine = -1
+		} else {
+			ar.CurrentLine = int(c.proto.LineInfo[pc-1])
+		}
+	}
 }
 
 func (self *luaState) GetLocal(ar *LuaDebug, n int) string {
