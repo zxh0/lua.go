@@ -14,19 +14,23 @@ package api
 // LUA_USE_APICHECK
 // LUAL_BUFFERSIZE
 
+const (
+	LUA_VERSION_MAJOR   = "5"
+	LUA_VERSION_MINOR   = "3"
+	LUA_VERSION_NUM     = 503
+	LUA_VERSION_RELEASE = "4"
+
+	LUA_VERSION = "Lua " + LUA_VERSION_MAJOR + "." + LUA_VERSION_MINOR
+	LUA_RELEASE = LUA_VERSION + "." + LUA_VERSION_RELEASE
+	//LUA_COPYRIGHT	LUA_RELEASE "  Copyright (C) 1994-2016 Lua.org, PUC-Rio"
+	//LUA_AUTHORS	"R. Ierusalimschy, L. H. de Figueiredo, W. Celes"
+)
+
 /* option for multiple returns in 'lua_pcall' and 'lua_call' */
 const LUA_MULTRET = -1
 
 /* minimum Lua stack available to a C function */
 const LUA_MINSTACK = 20
-
-/*
-@@ LUAI_MAXSTACK limits the size of the Lua stack.
-** CHANGE it if you need a different limit. This limit is arbitrary;
-** its only purpose is to stop Lua from consuming unlimited stack
-** space (and to reserve some numbers for pseudo-indices).
-*/
-const LUAI_MAXSTACK = 1000000
 
 /*
 ** Pseudo-indices
@@ -40,12 +44,10 @@ const LUA_RIDX_MAINTHREAD int64 = 1
 const LUA_RIDX_GLOBALS int64 = 2
 const LUA_RIDX_LAST = LUA_RIDX_GLOBALS
 
-const (
-	LUA_MAXINTEGER = 1<<63 - 1
-	LUA_MININTEGER = -1 << 63
-)
+// lua-5.3.4/src/lvm.c
+/* limit for table tag-method chains (to avoid loops) */
+const MAXTAGLOOP = 2000
 
-// lua-5.3.4/src/lua.h
 /* basic types */
 const (
 	LUA_TNONE = iota - 1 // -1
@@ -72,7 +74,6 @@ const (
 	LUA_TGCL    = LUA_TFUNCTION | (2 << 4) // Go closure
 )
 
-// lua-5.3.4/src/lua.h
 /* arithmetic functions */
 const (
 	LUA_OPADD  = iota // +
@@ -91,7 +92,6 @@ const (
 	LUA_OPBNOT        // ~
 )
 
-// lua-5.3.4/src/lua.h
 /* comparison functions */
 const (
 	LUA_OPEQ = iota // ==
@@ -99,7 +99,6 @@ const (
 	LUA_OPLE        // <=
 )
 
-// lua-5.3.4/src/lua.h
 /* thread status */
 const (
 	LUA_OK = iota
@@ -111,3 +110,8 @@ const (
 	LUA_ERRERR
 	LUA_ERRFILE
 )
+
+// todo
+func LuaUpvalueIndex(i int) int {
+	return LUA_REGISTRYINDEX - i
+}

@@ -100,7 +100,7 @@ func lua_callk(ls LuaState)                                      { ls.CallK() }
 func lua_call(ls LuaState, nArgs, nResults int)                  { ls.Call(nArgs, nResults) }
 func lua_pcallk(ls LuaState)                                     { ls.PCallK() }
 func lua_pcall(ls LuaState, nArgs, nRets, msgh int) ThreadStatus { return ls.PCall(nArgs, nRets, msgh) }
-func lua_load(ls LuaState, c []byte, n, m string) ThreadStatus   { return ls.Load(c, n, m) }
+func lua_load(ls LuaState, c []byte, cn, m string) ThreadStatus  { return ls.Load(c, cn, m) }
 func lua_dump(ls LuaState, strip bool) []byte                    { return ls.Dump(strip) }
 
 /* coroutine functions */
