@@ -1,7 +1,9 @@
 package main
 
+import "bufio"
 import "fmt"
 import "os"
+import "strings"
 import . "luago/api"
 
 /* bits of various argument indicators in 'args' */
@@ -13,6 +15,13 @@ const has_E = 16    /* -E */
 
 const LUA_INIT_VAR = "LUA_INIT"
 const LUA_INITVARVERSION = LUA_INIT_VAR + "_5_3"
+
+const LUA_PROMPT = "> "
+const LUA_PROMPT2 = ">> "
+
+/* mark in error messages for incomplete statements */
+// const EOFMARK = "<eof>"
+const EOFMARK = "'EOF'"
 
 var progname = "lua"
 
@@ -73,12 +82,11 @@ func pmain(L LuaState) int {
 		return 0
 	}
 	if args&has_i != 0 { /* -i option? */
-		//   doREPL(L);  /* do read-eval-print loop */
+		doREPL(L) /* do read-eval-print loop */
 	} else if script == argc && args&(has_e|has_v) == 0 { /* no arguments? */
 		if lua_stdin_is_tty() { /* running in interactive mode? */
 			print_version()
-			//     doREPL(L);  /* do read-eval-print loop */
-			println("doREPL...")
+			doREPL(L) /* do read-eval-print loop */
 		} else {
 			dofile(L, "")
 		} /* executes stdin as a file */
@@ -214,14 +222,14 @@ func handle_luainit(L LuaState) int {
 func runargs(L LuaState, argv []string, n int) bool {
 	for i := 1; i < n; i++ {
 		option := argv[i][1]
-		//lua_assert(argv[i][0] == '-');  /* already checked */
+		lua_assert(argv[i][0] == '-') /* already checked */
 		if option == 'e' || option == 'l' {
 			extra := argv[i][2:] /* both options need an argument */
 			if extra == "" {
 				i += 1
 				extra = argv[i]
 			}
-			//lua_assert(extra != NULL);
+			lua_assert(extra != "")
 			status := 0
 			if option == 'e' {
 				status = dostring(L, extra, "=(command line)")
@@ -326,6 +334,183 @@ func report(L LuaState, status int) int {
 }
 
 /*
+** Do the REPL: repeatedly read (load) a line, evaluate (call) it, and
+** print any results.
+ */
+func doREPL(L LuaState) {
+	var status int
+	oldprogname := progname
+	progname = "" /* no 'progname' on errors in interactive mode */
+	for {
+		status = loadline(L)
+		if status == -1 {
+			break
+		}
+		if status == LUA_OK {
+			status = docall(L, 0, LUA_MULTRET)
+		}
+		if status == LUA_OK {
+			l_print(L)
+		} else {
+			report(L, status)
+		}
+	}
+	lua_settop(L, 0) /* clear stack */
+	lua_writeline()
+	progname = oldprogname
+}
+
+/*
+** Read a line and try to load (compile) it first as an expression (by
+** adding "return " in front of it) and second as a statement. Return
+** the final status of load/call with the resulting function (if any)
+** in the top of the stack.
+ */
+func loadline(L LuaState) int {
+	lua_settop(L, 0)
+	if !pushline(L, true) {
+		return -1 /* no input */
+	}
+	var status int
+	if status = addreturn(L); status != LUA_OK { /* 'return ...' did not work? */
+		status = multiline(L) /* try as command, maybe with continuation lines */
+	}
+	lua_remove(L, 1) /* remove line from the stack */
+	lua_assert(lua_gettop(L) == 1)
+	return status
+}
+
+/*
+** Prompt the user, read a line, and push it into the Lua stack.
+ */
+func pushline(L LuaState, firstline bool) bool {
+	prmt := get_prompt(L, firstline)
+	b, readstatus := lua_readline(L, prmt)
+	if !readstatus {
+		return false /* no input (prompt will be popped by caller) */
+	}
+	lua_pop(L, 1)                             /* remove prompt */
+	if l := len(b); l > 0 && b[l-1] == '\n' { /* line ends with newline? */
+		b = b[:l-1] /* remove it */
+	}
+	if firstline && b[0] == '=' { /* for compatibility with 5.2, ... */
+		lua_pushfstring(L, "return %s", b[1:]) /* change '=' to 'return' */
+	} else {
+		lua_pushstring(L, b)
+	}
+	lua_freeline(L, b)
+	return true
+}
+
+/*
+** Returns the string to be used as a prompt by the interpreter.
+ */
+func get_prompt(L LuaState, firstline bool) string {
+	if firstline {
+		lua_getglobal(L, "_PROMPT")
+	} else {
+		lua_getglobal(L, "_PROMPT2")
+	}
+
+	p, _ := lua_tostring(L, -1)
+	if p == "" {
+		if firstline {
+			p = LUA_PROMPT
+		} else {
+			p = LUA_PROMPT2
+		}
+	}
+	return p
+}
+
+/*
+** Try to compile line on the stack as 'return <line>;'; on return, stack
+** has either compiled chunk or original line (if compilation failed).
+ */
+func addreturn(L LuaState) int {
+	line, _ := lua_tostring(L, -1) /* original line */
+	retline := lua_pushfstring(L, "return %s;", line)
+	status := lua_load(L, []byte(retline), "=stdin", "t")
+	if status == LUA_OK {
+		lua_remove(L, -2) /* remove modified line */
+		if line != "" {   /* non empty? */
+			lua_saveline(L, line) /* keep history */
+		}
+	} else {
+		lua_pop(L, 2) /* pop result from 'luaL_loadbuffer' and modified line */
+	}
+	return status
+}
+
+/*
+** Read multiple lines until a complete Lua statement
+ */
+func multiline(L LuaState) int {
+	for { /* repeat until gets a complete statement */
+		line, _ := lua_tostring(L, 1)                      /* get what it has */
+		status := lua_load(L, []byte(line), "=stdin", "t") /* try it */
+		if !incomplete(L, status) || !pushline(L, false) {
+			lua_saveline(L, line) /* keep history */
+			return status         /* cannot or should not try to add continuation line */
+		}
+		lua_pushliteral(L, "\n") /* add newline... */
+		lua_insert(L, -2)        /* ...between the two lines */
+		lua_concat(L, 3)         /* join them */
+	}
+}
+
+/*
+** Check whether 'status' signals a syntax error and the error
+** message at the top of the stack ends with the above mark for
+** incomplete statements.
+ */
+func incomplete(L LuaState, status int) bool {
+	if status == LUA_ERRSYNTAX {
+		msg, _ := lua_tostring(L, -1)
+		if strings.HasSuffix(msg, EOFMARK) {
+			lua_pop(L, 1)
+			return true
+		}
+	}
+	return false /* else... */
+}
+
+/*
+** Prints (calling the Lua 'print' function) any values on the stack
+ */
+func l_print(L LuaState) {
+	n := lua_gettop(L)
+	if n > 0 { /* any result to be printed? */
+		luaL_checkstack(L, LUA_MINSTACK, "too many results to print")
+		lua_getglobal(L, "print")
+		lua_insert(L, 1)
+		if lua_pcall(L, n, 0, 0) != LUA_OK {
+			l_message(progname, lua_pushfstring(L, "error calling 'print' (%s)",
+				lua_tostring2(L, -1)))
+		}
+	}
+}
+
+func lua_writeline() {
+	fmt.Println()
+}
+
+func lua_readline(L LuaState, prmt string) (string, bool) {
+	fmt.Print(prmt)
+	reader := bufio.NewReader(os.Stdin)
+	text, err := reader.ReadString('\n')
+	return text, err == nil
+}
+
+func lua_saveline(L LuaState, line string) {
+	// todo
+}
+
+func lua_freeline(L LuaState, line string) {
+	// todo
+}
+
+/*
 ** Prints an error message, adding the program name in front of it
 ** (if present)
  */
@@ -346,6 +531,10 @@ func getenv(name string) string {
 
 func lua_stdin_is_tty() bool {
 	return true // todo
+}
+
+func lua_assert(c bool) {
+	// todo
 }
 
 /*
