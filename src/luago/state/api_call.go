@@ -158,16 +158,22 @@ func (self *luaState) PCall(nArgs, nResults, msgh int) (status ThreadStatus) {
 	// catch error
 	defer func() {
 		if r := recover(); r != nil { // todo
-			if msgh < 0 {
-				panic(_getErrObj(r))
-			} else if msgh > 0 {
-				panic("todo: msgh > 0")
-			} else {
-				for self.stack != caller {
-					self.popLuaStack()
-				}
-				self.stack.push(_getErrObj(r))
+			err := _getErrObj(r)
+			for self.stack != caller {
+				self.popLuaStack()
 			}
+			if msgh != 0 {
+				h := self.stack.get(msgh)
+				if h == nil {
+					panic(err) // todo
+				}
+
+				self.stack.push(h)
+				self.stack.push(err)
+				self.PCall(1, 1, 0)
+				err = self.stack.pop()
+			}
+			self.stack.push(err)
 		}
 	}()
 

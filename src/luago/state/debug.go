@@ -41,8 +41,8 @@ func valToString(val luaValue) string {
 			return goFuncToString(x.goFunc) + "!"
 		}
 	default:
-		fmt.Printf("%T\n", val)
-		panic("todo!")
+		return fmt.Sprintf("%T", val)
+		//panic("todo!")
 	}
 }
 

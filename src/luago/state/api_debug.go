@@ -33,8 +33,10 @@ func (self *luaState) GetStack(level int, ar *LuaDebug) bool {
 		return false
 	}
 	if self.callDepth > 1 {
-		ar.CallInfo = self.getLuaStack(level)
-		return true
+		if s := self.getLuaStack(level); s != nil {
+			ar.CallInfo = s
+			return true
+		}
 	}
 	return false
 }
@@ -52,8 +54,9 @@ func (self *luaState) GetInfo(what string, ar *LuaDebug) bool {
 	}
 
 	if ci := ar.CallInfo; ci != nil {
-		c := ci.(*luaStack).closure
-		return self.loadInfo(ar, c, what)
+		if c := ci.(*luaStack).closure; c != nil {
+			return self.loadInfo(ar, c, what)
+		}
 	}
 
 	return false

@@ -159,6 +159,7 @@ func luaL_loadstring(ls LuaState, s string) ThreadStatus             { return ls
 func luaL_len(ls LuaState, idx int) int64                            { return ls.Len2(idx) }
 func luaL_setfuncs(ls LuaState, l FuncReg, nup int)                  { ls.SetFuncs(l, nup) }
 func luaL_getsubtable(ls LuaState, idx int, fname string) bool       { return ls.GetSubTable(idx, fname) }
+func luaL_traceback(ls, ls1 LuaState, msg string, level int)         { ls.Traceback(ls1, msg, level) }
 func luaL_requiref(ls LuaState, n string, f GoFunction, glb bool)    { ls.RequireF(n, f, glb) }
 func luaL_newlibtable(ls LuaState, l FuncReg)                        { ls.NewLibTable(l) }
 func luaL_newlib(ls LuaState, l FuncReg)                             { ls.NewLib(l) }

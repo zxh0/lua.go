@@ -2,8 +2,15 @@ package state
 
 import "fmt"
 import "io/ioutil"
+import "strings"
 import . "luago/api"
 import "luago/stdlib"
+
+/* key, in the registry, for table of loaded modules */
+const LUA_LOADED_TABLE = "_LOADED"
+
+const LEVELS1 = 10 /* size of the first part of the stack */
+const LEVELS2 = 11 /* size of the second part of the stack */
 
 // [-0, +0, v]
 // http://www.lua.org/manual/5.3/manual.html#luaL_error
@@ -321,17 +328,17 @@ func (self *luaState) OpenLibs() {
 // http://www.lua.org/manual/5.3/manual.html#luaL_requiref
 // lua-5.3.4/src/lauxlib.c#luaL_requiref()
 func (self *luaState) RequireF(modname string, openf GoFunction, glb bool) {
-	self.GetSubTable(LUA_REGISTRYINDEX, "_LOADED") // ~/_LOADED
-	self.GetField(-1, modname)                     // ~/_LOADED/_LOADED[modname]
-	if !self.ToBoolean(-1) {                       /* package not already loaded? */
-		self.Pop(1)                // ~/_LOADED               /* remove field */
-		self.PushGoFunction(openf) // ~/_LOADED/openf
-		self.PushString(modname)   // ~/_LOADED/openf/modname /* argument to open function */
-		self.Call(1, 1)            // ~/_LOADED/module        /* call 'openf' to open module */
-		self.PushValue(-1)         // ~/_LOADED/module/module /* make copy of module (call result) */
-		self.SetField(-3, modname) // ~/_LOADED/module        /* _LOADED[modname] = module */
+	self.GetSubTable(LUA_REGISTRYINDEX, "_LOADED")
+	self.GetField(-1, modname)
+	if !self.ToBoolean(-1) { /* package not already loaded? */
+		self.Pop(1) /* remove field */
+		self.PushGoFunction(openf)
+		self.PushString(modname)   /* argument to open function */
+		self.Call(1, 1)            /* call 'openf' to open module */
+		self.PushValue(-1)         /* make copy of module (call result) */
+		self.SetField(-3, modname) /* _LOADED[modname] = module */
 	}
-	self.Remove(-2) // ~/module /* remove _LOADED table */
+	self.Remove(-2) /* remove _LOADED table */
 	if glb {
 		self.PushValue(-1)      /* copy of module */
 		self.SetGlobal(modname) /* _G[modname] = module */
@@ -393,6 +400,127 @@ func (self *luaState) typeError(arg int, tname string) int {
 	msg := tname + " expected, got " + typeArg
 	self.PushString(msg)
 	return self.ArgError(arg, msg)
+}
+
+func (ls *luaState) Traceback(ls1 LuaState, msg string, level int) {
+	ar := LuaDebug{}
+	top := ls.GetTop()
+	last := lastlevel(ls1)
+	n1 := -1
+	if last-level > LEVELS1+LEVELS2 {
+		n1 = LEVELS1
+	}
+	if msg != "" {
+		ls.PushFString("%s\n", msg)
+	}
+	ls.CheckStack2(10, "")
+	ls.PushString("stack traceback:")
+	for ls1.GetStack(level, &ar) {
+		level++
+		if n1--; n1 == 0 { /* too many levels? */
+			ls.PushString("\n\t...")   /* add a '...' */
+			level = last - LEVELS2 + 1 /* and skip to last ones */
+		} else {
+			ls1.GetInfo("Slnt", &ar)
+			ls.PushFString("\n\t%s:", ar.ShortSrc)
+			if ar.CurrentLine > 0 {
+				ls.PushFString("%d:", ar.CurrentLine)
+			}
+			ls.PushString(" in ")
+			pushfuncname(ls, &ar)
+			if ar.IsTailCall {
+				ls.PushString("\n\t(...tail calls...)")
+			}
+			ls.Concat(ls.GetTop() - top)
+		}
+	}
+	ls.Concat(ls.GetTop() - top)
+}
+
+func lastlevel(ls LuaState) int {
+	ar := LuaDebug{}
+	li := 1
+	le := 1
+	/* find an upper bound */
+	for ls.GetStack(le, &ar) {
+		li = le
+		le *= 2
+	}
+	/* do a binary search */
+	for li < le {
+		m := (li + le) / 2
+		if ls.GetStack(m, &ar) {
+			li = m + 1
+		} else {
+			le = m
+		}
+	}
+	return le - 1
+}
+
+func pushfuncname(ls LuaState, ar *LuaDebug) {
+	if pushglobalfuncname(ls, ar) { /* try first a global name */
+		s, _ := ls.ToString(-1)
+		ls.PushFString("function '%s'", s)
+		ls.Remove(-2) /* remove name */
+	} else if ar.NameWhat != "" { /* is there a name from code? */
+		ls.PushFString("%s '%s'", ar.NameWhat, ar.Name) /* use it */
+	} else if ar.What == "m" { /* main? */
+		ls.PushString("main chunk")
+	} else if ar.What != "C" { /* for Lua functions, use <file:line> */
+		ls.PushFString("function <%s:%d>", ar.ShortSrc, ar.LineDefined)
+	} else { /* nothing left... */
+		ls.PushString("?")
+	}
+}
+
+/*
+** Search for a name for a function in all loaded modules
+ */
+func pushglobalfuncname(ls LuaState, ar *LuaDebug) bool {
+	top := ls.GetTop()
+	ls.GetInfo("f", ar) /* push function */
+	ls.GetField(LUA_REGISTRYINDEX, LUA_LOADED_TABLE)
+	if findfield(ls, top+1, 2) {
+		name, _ := ls.ToString(-1)
+		if strings.HasPrefix(name, "_G.") { /* name start with '_G.'? */
+			ls.PushString(name[3:]) /* push name without prefix */
+			ls.Remove(-2)           /* remove original name */
+		}
+		ls.Copy(-1, top+1) /* move name to proper place */
+		ls.Pop(2)          /* remove pushed values */
+		return true
+	} else {
+		ls.SetTop(top) /* remove function and global table */
+		return false
+	}
+}
+
+/*
+** search for 'objidx' in table at index -1.
+** return 1 + string at top if find a good name.
+ */
+func findfield(ls LuaState, objidx, level int) bool {
+	if level == 0 || !ls.IsTable(-1) {
+		return false /* not found */
+	}
+	ls.PushNil()      /* start 'next' loop */
+	for ls.Next(-2) { /* for each pair in table */
+		if ls.Type(-2) == LUA_TSTRING { /* ignore non-string keys */
+			if ls.RawEqual(objidx, -1) { /* found object? */
+				ls.Pop(1) /* remove value (but keep name) */
+				return true
+			} else if findfield(ls, objidx, level-1) { /* try recursively */
+				ls.Remove(-2) /* remove table (but keep name) */
+				ls.PushString(".")
+				ls.Insert(-2) /* place '.' between the two names */
+				ls.Concat(3)
+				return true
+			}
+		}
+		ls.Pop(1) /* remove value */
+	}
+	return false /* not found */
 }
 
 // [-0, +1, m]

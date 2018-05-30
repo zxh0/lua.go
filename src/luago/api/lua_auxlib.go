@@ -38,6 +38,7 @@ type AuxLib interface {
 	NewLib(l FuncReg)                                    //
 	NewLibTable(l FuncReg)                               //
 	SetFuncs(l FuncReg, nup int)                         // l.each{name,func => r[-1][name]=func}
+	Traceback(ls1 LuaState, msg string, level int)
 }
 
 // luaL_fileresult
