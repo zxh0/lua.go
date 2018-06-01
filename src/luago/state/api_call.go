@@ -154,24 +154,24 @@ func (self *luaState) runLuaClosure() {
 func (self *luaState) PCall(nArgs, nResults, msgh int) (status ThreadStatus) {
 	status = LUA_ERRRUN
 	caller := self.stack
+	handler := self.stack.get(msgh)
 
 	// catch error
 	defer func() {
 		if r := recover(); r != nil { // todo
 			err := _getErrObj(r)
-			for self.stack != caller {
-				self.popLuaStack()
-			}
 			if msgh != 0 {
-				h := self.stack.get(msgh)
-				if h == nil {
+				if handler == nil {
 					panic(err) // todo
 				}
 
-				self.stack.push(h)
+				self.stack.push(handler)
 				self.stack.push(err)
 				self.PCall(1, 1, 0)
 				err = self.stack.pop()
+			}
+			for self.stack != caller {
+				self.popLuaStack()
 			}
 			self.stack.push(err)
 		}
