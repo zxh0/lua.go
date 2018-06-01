@@ -1,6 +1,8 @@
 package state
 
 import "fmt"
+import "reflect"
+import "runtime"
 import "strings"
 import . "luago/api"
 
@@ -29,7 +31,7 @@ func (self *luaState) GetHookMask() int {
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_getstack
 func (self *luaState) GetStack(level int, ar *LuaDebug) bool {
-	if level < 0 || level > self.callDepth {
+	if level < 0 || level >= self.callDepth-1 {
 		return false
 	}
 	if self.callDepth > 1 {
@@ -66,7 +68,7 @@ func (self *luaState) loadInfo(ar *LuaDebug, c *closure, what string) bool {
 	for len(what) > 0 {
 		switch what[0] {
 		case 'n': // fills in the field name and namewhat;
-			ar.Name = "?"    // todo
+			ar.Name = _getFuncName(c)
 			ar.NameWhat = "" // todo
 		case 'S': // fills in the fields source, short_src, linedefined, lastlinedefined, and what;
 			_setFuncInfoS(ar, c)
@@ -89,6 +91,23 @@ func (self *luaState) loadInfo(ar *LuaDebug, c *closure, what string) bool {
 		what = what[1:]
 	}
 	return true
+}
+
+func _getFuncName(c *closure) string {
+	if gof := c.goFunc; gof != nil {
+		pc := reflect.ValueOf(gof).Pointer()
+		if f := runtime.FuncForPC(pc); f != nil {
+			name := f.Name()
+			if strings.HasPrefix(name, "luago/stdlib.") {
+				name = name[13:]                                        // remove "luago/stdlib."
+				for len(name) > 0 && name[0] >= 'a' && name[0] <= 'z' { // remove prefix
+					name = name[1:]
+				}
+				return strings.ToLower(name)
+			}
+		}
+	}
+	return "?"
 }
 
 // the string "Lua" if the function is a Lua function,
