@@ -465,7 +465,7 @@ func pushfuncname(ls LuaState, ar *LuaDebug) {
 		ls.Remove(-2) /* remove name */
 	} else if ar.NameWhat != "" { /* is there a name from code? */
 		ls.PushFString("%s '%s'", ar.NameWhat, ar.Name) /* use it */
-	} else if ar.What == "m" { /* main? */
+	} else if ar.What == "main" { /* main? */
 		ls.PushString("main chunk")
 	} else if ar.What != "C" { /* for Lua functions, use <file:line> */
 		ls.PushFString("function <%s:%d>", ar.ShortSrc, ar.LineDefined)

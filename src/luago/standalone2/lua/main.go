@@ -393,7 +393,7 @@ func pushline(L LuaState, firstline bool) bool {
 	if l := len(b); l > 0 && b[l-1] == '\n' { /* line ends with newline? */
 		b = b[:l-1] /* remove it */
 	}
-	if firstline && b[0] == '=' { /* for compatibility with 5.2, ... */
+	if firstline && len(b) > 0 && b[0] == '=' { /* for compatibility with 5.2, ... */
 		lua_pushfstring(L, "return %s", b[1:]) /* change '=' to 'return' */
 	} else {
 		lua_pushstring(L, b)
