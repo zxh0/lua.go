@@ -57,7 +57,7 @@ func basePrint(ls LuaState) int {
 		ls.PushValue(-1) /* function to be called */
 		ls.PushValue(i)  /* value to print */
 		ls.Call(1, 1)
-		s, ok := ls.ToString(-1) /* get result */
+		s, ok := ls.ToStringX(-1) /* get result */
 		if !ok {
 			return ls.Error2("'tostring' must return a string to 'print'")
 		}
@@ -177,7 +177,7 @@ func baseNext(ls LuaState) int {
 func baseLoad(ls LuaState) int {
 	var status int
 	var chunkname string
-	chunk, isStr := ls.ToString(1)
+	chunk, isStr := ls.ToStringX(1)
 	mode := ls.OptString(3, "bt")
 	env := 0 /* 'env' index or 0 if no 'env' */
 	if !ls.IsNone(4) {
@@ -198,7 +198,7 @@ func baseLoad(ls LuaState) int {
 				break
 			}
 
-			s, isStr := ls.ToString(-1)
+			s, isStr := ls.ToStringX(-1)
 			ls.Pop(1)
 			if !isStr {
 				ls.PushNil()
@@ -379,7 +379,7 @@ func baseToNumber(ls LuaState) int {
 			ls.SetTop(1) /* yes; return it */
 			return 1
 		} else {
-			if s, ok := ls.ToString(1); ok {
+			if s, ok := ls.ToStringX(1); ok {
 				if ok && ls.StringToNumber(s) {
 					return 1 /* successful conversion to number */
 				} /* else not a number */
@@ -387,8 +387,7 @@ func baseToNumber(ls LuaState) int {
 		}
 	} else {
 		ls.CheckType(1, LUA_TSTRING) /* no numbers as strings */
-		s, _ := ls.ToString(1)
-		s = strings.TrimSpace(s)
+		s := strings.TrimSpace(ls.ToString(1))
 		base := int(ls.CheckInteger(2))
 		ls.ArgCheck(2 <= base && base <= 36, 2, "base out of range")
 		if n, err := strconv.ParseInt(s, base, 64); err == nil {

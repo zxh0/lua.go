@@ -109,7 +109,7 @@ func (self *luaState) CheckNumber(arg int) float64 {
 // http://www.lua.org/manual/5.3/manual.html#luaL_checklstring
 // lua-5.3.4/src/lauxlib.c#luaL_checklstring()
 func (self *luaState) CheckString(arg int) string {
-	s, ok := self.ToString(arg)
+	s, ok := self.ToStringX(arg)
 	if !ok {
 		self.tagError(arg, LUA_TSTRING)
 	}
@@ -391,7 +391,7 @@ func (self *luaState) tagError(arg int, tag LuaType) {
 func (self *luaState) typeError(arg int, tname string) int {
 	var typeArg string /* name for the type of the actual argument */
 	if self.GetMetafield(arg, "__name") == LUA_TSTRING {
-		typeArg, _ = self.ToString(-1) /* use the given type name */
+		typeArg = self.ToString(-1) /* use the given type name */
 	} else if self.Type(arg) == LUA_TLIGHTUSERDATA {
 		typeArg = "light userdata" /* special name for messages */
 	} else {
@@ -460,8 +460,7 @@ func lastlevel(ls LuaState) int {
 
 func pushfuncname(ls LuaState, ar *LuaDebug) {
 	if pushglobalfuncname(ls, ar) { /* try first a global name */
-		s, _ := ls.ToString(-1)
-		ls.PushFString("function '%s'", s)
+		ls.PushFString("function '%s'", ls.ToString(-1))
 		ls.Remove(-2) /* remove name */
 	} else if ar.NameWhat != "" { /* is there a name from code? */
 		ls.PushFString("%s '%s'", ar.NameWhat, ar.Name) /* use it */
@@ -482,7 +481,7 @@ func pushglobalfuncname(ls LuaState, ar *LuaDebug) bool {
 	ls.GetInfo("f", ar) /* push function */
 	ls.GetField(LUA_REGISTRYINDEX, LUA_LOADED_TABLE)
 	if findfield(ls, top+1, 2) {
-		name, _ := ls.ToString(-1)
+		name := ls.ToString(-1)
 		if strings.HasPrefix(name, "_G.") { /* name start with '_G.'? */
 			ls.PushString(name[3:]) /* push name without prefix */
 			ls.Remove(-2)           /* remove original name */

@@ -327,7 +327,7 @@ func dolibrary(L LuaState, name string) int {
  */
 func report(L LuaState, status int) int {
 	if status != LUA_OK {
-		msg, _ := lua_tostring(L, -1)
+		msg := lua_tostring(L, -1)
 		l_message(progname, msg)
 		lua_pop(L, 1) /* remove message */
 	}
@@ -413,7 +413,7 @@ func get_prompt(L LuaState, firstline bool) string {
 		lua_getglobal(L, "_PROMPT2")
 	}
 
-	p, _ := lua_tostring(L, -1)
+	p := lua_tostring(L, -1)
 	if p == "" {
 		if firstline {
 			p = LUA_PROMPT
@@ -429,7 +429,7 @@ func get_prompt(L LuaState, firstline bool) string {
 ** has either compiled chunk or original line (if compilation failed).
  */
 func addreturn(L LuaState) int {
-	line, _ := lua_tostring(L, -1) /* original line */
+	line := lua_tostring(L, -1) /* original line */
 	retline := lua_pushfstring(L, "return %s;", line)
 	status := lua_load(L, []byte(retline), "=stdin", "t")
 	if status == LUA_OK {
@@ -448,7 +448,7 @@ func addreturn(L LuaState) int {
  */
 func multiline(L LuaState) int {
 	for { /* repeat until gets a complete statement */
-		line, _ := lua_tostring(L, 1)                      /* get what it has */
+		line := lua_tostring(L, 1)                         /* get what it has */
 		status := lua_load(L, []byte(line), "=stdin", "t") /* try it */
 		if !incomplete(L, status) || !pushline(L, false) {
 			lua_saveline(L, line) /* keep history */
@@ -467,7 +467,7 @@ func multiline(L LuaState) int {
  */
 func incomplete(L LuaState, status int) bool {
 	if status == LUA_ERRSYNTAX {
-		msg, _ := lua_tostring(L, -1)
+		msg := lua_tostring(L, -1)
 		if strings.HasSuffix(msg, EOFMARK) {
 			lua_pop(L, 1)
 			return true
@@ -487,7 +487,7 @@ func l_print(L LuaState) {
 		lua_insert(L, 1)
 		if lua_pcall(L, n, 0, 0) != LUA_OK {
 			l_message(progname, lua_pushfstring(L, "error calling 'print' (%s)",
-				lua_tostring2(L, -1)))
+				lua_tostring(L, -1)))
 		}
 	}
 }
@@ -542,7 +542,7 @@ func lua_assert(c bool) {
 ** Message handler used to run all chunks
  */
 func msghandler(L LuaState) int {
-	msg, isStr := lua_tostring(L, 1)
+	msg, isStr := lua_tostringx(L, 1)
 	if !isStr { /* is error object not a string? */
 		if luaL_callmeta(L, 1, "__tostring") && /* does it have a metamethod */
 			lua_type(L, -1) == LUA_TSTRING { /* that produces a string? */

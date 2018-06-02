@@ -36,8 +36,8 @@ func lua_typename(ls LuaState, tp LuaType) string        { return ls.TypeName(tp
 func lua_tonumberx(ls LuaState, idx int) (float64, bool) { return ls.ToNumberX(idx) }
 func lua_tointegerx(ls LuaState, idx int) (int64, bool)  { return ls.ToIntegerX(idx) }
 func lua_toboolean(ls LuaState, idx int) bool            { return ls.ToBoolean(idx) }
-func lua_tostring(ls LuaState, idx int) (string, bool)   { return ls.ToString(idx) }
-func lua_tostring2(ls LuaState, idx int) string          { s, _ := ls.ToString(idx); return s }
+func lua_tostringx(ls LuaState, idx int) (string, bool)  { return ls.ToStringX(idx) }
+func lua_tostring(ls LuaState, idx int) string           { return ls.ToString(idx) }
 func lua_rawlen(ls LuaState, idx int) uint               { return ls.RawLen(idx) }
 func lua_togofunction(ls LuaState, idx int) GoFunction   { return ls.ToGoFunction(idx) }
 func lua_touserdata(ls LuaState, idx int) UserData       { return ls.ToUserData(idx) }

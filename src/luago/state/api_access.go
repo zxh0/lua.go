@@ -190,7 +190,12 @@ func (self *luaState) ToNumberX(idx int) (float64, bool) {
 // http://www.lua.org/manual/5.3/manual.html#lua_tolstring
 // lua-5.3.4/src/lua.h#lua_tostring()
 // lua-5.3.4/src/lapi.c#lua_tolstring()
-func (self *luaState) ToString(idx int) (string, bool) {
+func (self *luaState) ToString(idx int) string {
+	s, _ := self.ToStringX(idx)
+	return s
+}
+
+func (self *luaState) ToStringX(idx int) (string, bool) {
 	val := self.stack.get(idx)
 
 	switch x := val.(type) {

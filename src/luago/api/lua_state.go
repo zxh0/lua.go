@@ -53,7 +53,8 @@ type BasicAPI interface {
 	ToIntegerX(idx int) (int64, bool)  // r[idx] as LuaInteger
 	ToNumber(idx int) float64          // r[idx] as LuaNumber
 	ToNumberX(idx int) (float64, bool) // r[idx] as LuaNumber
-	ToString(idx int) (string, bool)   // r[idx] as string
+	ToString(idx int) string           // r[idx] as string
+	ToStringX(idx int) (string, bool)  // r[idx] as string
 	ToGoFunction(idx int) GoFunction   // r[idx] as GoFunction
 	ToThread(idx int) LuaState         // r[idx] as LuaThread
 	ToUserData(idx int) UserData       // r[idx] as UserData
