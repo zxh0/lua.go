@@ -122,6 +122,7 @@ func coYieldable(L LuaState) int {
 
 // coroutine.running ()
 // http://www.lua.org/manual/5.3/manual.html#pdf-coroutine.running
+// lua-5.3.4/src/lcorolib.c#luaB_corunning()
 func coRunning(L LuaState) int {
 	ismain := lua_pushthread(L)
 	lua_pushboolean(L, ismain)
@@ -130,6 +131,23 @@ func coRunning(L LuaState) int {
 
 // coroutine.wrap (f)
 // http://www.lua.org/manual/5.3/manual.html#pdf-coroutine.wrap
-func coWrap(ls LuaState) int {
-	panic("todo: coWrap!")
+// lua-5.3.4/src/lcorolib.c#luaB_cowrap()
+func coWrap(L LuaState) int {
+	coCreate(L)
+	lua_pushgoclosure(L, luaB_auxwrap, 1)
+	return 1
+}
+
+func luaB_auxwrap(L LuaState) int {
+	co := lua_tothread(L, lua_upvalueindex(1))
+	r := auxresume(L, co, lua_gettop(L))
+	if r < 0 {
+		if lua_type(L, -1) == LUA_TSTRING { /* error object is a string? */
+			luaL_where(L, 1) /* add extra info */
+			lua_insert(L, -2)
+			lua_concat(L, 2)
+		}
+		return lua_error(L) /* propagate error */
+	}
+	return r
 }
