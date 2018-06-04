@@ -273,7 +273,21 @@ func basePCall(ls LuaState) int {
 // xpcall (f, msgh [, arg1, ···])
 // http://www.lua.org/manual/5.3/manual.html#pdf-xpcall
 func baseXPCall(ls LuaState) int {
-	panic("todo! baseXPCall")
+	/* check error function */
+	ls.CheckType(2, LUA_TFUNCTION)
+
+	// swap f & msgh
+	ls.PushValue(1)
+	ls.PushValue(2)
+	ls.Replace(1)
+	ls.Replace(2)
+
+	nArgs := ls.GetTop() - 2
+	status := ls.PCall(nArgs, -1, 1)
+
+	ls.PushBoolean(status == LUA_OK)
+	ls.Replace(1)
+	return ls.GetTop()
 }
 
 // getmetatable (object)
