@@ -620,7 +620,7 @@ local a=1
 ::L1::
 local b=2
 goto L1`,
-`[2/2]
+		`[2/2]
 [ 2]loadk(0,-1);
 [ 4]loadk(1,-2);
 [ 5]jmp(2,-2);
@@ -643,7 +643,7 @@ func testDbg(t *testing.T, chunk, expected string) {
 }
 
 func compile(chunk string, dbgFlag bool) string {
-	proto := Compile(chunk, "src", )
+	proto := Compile(chunk, "src")
 
 	s := fmt.Sprintf("[%d/%d] ", proto.MaxStackSize, len(proto.LocVars))
 	for i, inst := range proto.Code {
@@ -662,8 +662,6 @@ func compile(chunk string, dbgFlag bool) string {
 
 	return strings.TrimSpace(s)
 }
-
-
 
 func instToStr(_i uint32) string {
 	i := Instruction(_i)

@@ -242,4 +242,3 @@ func getError(str string) (err string) {
 func newLexer(chunkName, chunk string) *lexer.Lexer {
 	return lexer.NewLexer(chunk, chunkName)
 }
-
