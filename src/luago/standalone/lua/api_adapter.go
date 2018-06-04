@@ -36,8 +36,8 @@ func lua_typename(ls LuaState, tp LuaType) string        { return ls.TypeName(tp
 func lua_tonumberx(ls LuaState, idx int) (float64, bool) { return ls.ToNumberX(idx) }
 func lua_tointegerx(ls LuaState, idx int) (int64, bool)  { return ls.ToIntegerX(idx) }
 func lua_toboolean(ls LuaState, idx int) bool            { return ls.ToBoolean(idx) }
-func lua_tostringx(ls LuaState, idx int) (string, bool)  { return ls.ToStringX(idx) }
 func lua_tostring(ls LuaState, idx int) string           { return ls.ToString(idx) }
+func lua_tostringx(ls LuaState, idx int) (string, bool)  { return ls.ToStringX(idx) }
 func lua_rawlen(ls LuaState, idx int) uint               { return ls.RawLen(idx) }
 func lua_togofunction(ls LuaState, idx int) GoFunction   { return ls.ToGoFunction(idx) }
 func lua_touserdata(ls LuaState, idx int) UserData       { return ls.ToUserData(idx) }
@@ -63,7 +63,7 @@ func lua_pushgoclosure(ls LuaState, f GoFunction, n int)       { ls.PushGoClosur
 func lua_pushboolean(ls LuaState, b bool)                      { ls.PushBoolean(b) }
 func lua_pushlightuserdata(ls LuaState, d UserData)            { ls.PushLightUserData(d) }
 func lua_pushthread(ls LuaState) bool                          { return ls.PushThread() }
-func lua_pushcfunction(ls LuaState, f GoFunction)              { ls.PushGoFunction(f) }
+func lua_pushgofunction(ls LuaState, f GoFunction)             { ls.PushGoFunction(f) }
 func lua_pushliteral(ls LuaState, s string)                    { ls.PushString(s) }
 func lua_pushglobaltable(ls LuaState)                          { ls.PushGlobalTable() }
 

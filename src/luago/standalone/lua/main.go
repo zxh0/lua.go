@@ -31,7 +31,7 @@ func main() {
 	argv := os.Args
 
 	L := luaL_newstate()            /* create state */
-	lua_pushcfunction(L, pmain)     /* to call 'pmain' in protected mode */
+	lua_pushgofunction(L, pmain)    /* to call 'pmain' in protected mode */
 	lua_pushinteger(L, argc)        /* 1st argument */
 	lua_pushlightuserdata(L, argv)  /* 2nd argument */
 	status := lua_pcall(L, 2, 1, 0) /* do the call */
@@ -295,9 +295,9 @@ func dochunk(L LuaState, status int) int {
 ** and C-signal handler. Used to run all chunks.
  */
 func docall(L LuaState, narg, nres int) int {
-	base := lua_gettop(L) - narg     /* function index */
-	lua_pushcfunction(L, msghandler) /* push message handler */
-	lua_insert(L, base)              /* put it under function and args */
+	base := lua_gettop(L) - narg      /* function index */
+	lua_pushgofunction(L, msghandler) /* push message handler */
+	lua_insert(L, base)               /* put it under function and args */
 	// globalL = L;  /* to be available to 'laction' */
 	// signal(SIGINT, laction);  /* set C-signal handler */
 	status := lua_pcall(L, narg, nres, base)
