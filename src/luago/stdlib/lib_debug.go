@@ -22,8 +22,8 @@ var dbLib = map[string]GoFunction{
 	"setuservalue": dbSetUserValue,
 }
 
-func OpenDebugLib(ls LuaState) int {
-	ls.NewLib(dbLib)
+func OpenDebugLib(L LuaState) int {
+	luaL_newlib(L, dbLib)
 	return 1
 }
 
@@ -88,8 +88,8 @@ func dbGetInfo(L LuaState) int {
 // debug.getregistry ()
 // http://www.lua.org/manual/5.3/manual.html#pdf-debug.getregistry
 // lua-5.3.4/src/ldblib.c#db_getregistry()
-func dbGetRegistry(ls LuaState) int {
-	ls.PushValue(LUA_REGISTRYINDEX)
+func dbGetRegistry(L LuaState) int {
+	lua_pushvalue(L, LUA_REGISTRYINDEX)
 	return 1
 }
 
@@ -134,10 +134,10 @@ func dbSetLocal(ls LuaState) int {
 // debug.getmetatable (value)
 // http://www.lua.org/manual/5.3/manual.html#pdf-debug.getmetatable
 // lua-5.3.4/src/ldblib.c#db_getmetatable()
-func dbGetMetatable(ls LuaState) int {
-	ls.CheckAny(1)
-	if !ls.GetMetatable(1) {
-		ls.PushNil() /* no metatable */
+func dbGetMetatable(L LuaState) int {
+	luaL_checkany(L, 1)
+	if !lua_getmetatable(L, 1) {
+		lua_pushnil(L) /* no metatable */
 	}
 	return 1
 }
@@ -145,63 +145,63 @@ func dbGetMetatable(ls LuaState) int {
 // debug.setmetatable (value, table)
 // http://www.lua.org/manual/5.3/manual.html#pdf-debug.setmetatable
 // lua-5.3.4/src/ldblib.c#db_setmetatable()
-func dbSetMetatable(ls LuaState) int {
-	t := ls.Type(2)
-	ls.ArgCheck(t == LUA_TNIL || t == LUA_TTABLE, 2,
+func dbSetMetatable(L LuaState) int {
+	t := lua_type(L, 2)
+	luaL_argcheck(L, t == LUA_TNIL || t == LUA_TTABLE, 2,
 		"nil or table expected")
-	ls.SetTop(2)
-	ls.SetMetatable(1)
+	lua_settop(L, 2)
+	lua_setmetatable(L, 1)
 	return 1 /* return 1st argument */
 }
 
 // debug.getupvalue (f, up)
 // http://www.lua.org/manual/5.3/manual.html#pdf-debug.getupvalue
 // lua-5.3.4/src/ldblib.c#db_getupvalue()
-func dbGetUpvalue(ls LuaState) int {
-	return _auxUpvalue(ls, 1)
+func dbGetUpvalue(L LuaState) int {
+	return auxupvalue(L, 1)
 }
 
 // debug.setupvalue (f, up, value)
 // http://www.lua.org/manual/5.3/manual.html#pdf-debug.setupvalue
 // lua-5.3.4/src/ldblib.c#db_setupvalue()
-func dbSetUpvalue(ls LuaState) int {
-	ls.CheckAny(3)
-	return _auxUpvalue(ls, 0)
+func dbSetUpvalue(L LuaState) int {
+	luaL_checkany(L, 3)
+	return auxupvalue(L, 0)
 }
 
-func _auxUpvalue(ls LuaState, get int) int {
-	n := int(ls.CheckInteger(2))   /* upvalue index */
-	ls.CheckType(1, LUA_TFUNCTION) /* closure */
+func auxupvalue(L LuaState, get int) int {
+	n := int(luaL_checkinteger(L, 2))   /* upvalue index */
+	luaL_checktype(L, 1, LUA_TFUNCTION) /* closure */
 	var name string
 	if get > 0 {
-		name = ls.GetUpvalue(1, n)
+		name = lua_getupvalue(L, 1, n)
 	} else {
-		name = ls.SetUpvalue(1, n)
+		name = lua_setupvalue(L, 1, n)
 	}
 	if name == "" {
 		return 0
 	}
-	ls.PushString(name)
-	ls.Insert(-(get + 1)) /* no-op if get is false */
+	lua_pushstring(L, name)
+	lua_insert(L, -(get + 1)) /* no-op if get is false */
 	return get + 1
 }
 
 // debug.upvaluejoin (f1, n1, f2, n2)
 // http://www.lua.org/manual/5.3/manual.html#pdf-debug.upvaluejoin
 // lua-5.3.4/src/ldblib.c#db_upvaluejoin()
-func dbUpvalueJoin(ls LuaState) int {
-	n1 := _checkUpval(ls, 1, 2)
-	n2 := _checkUpval(ls, 3, 4)
-	ls.ArgCheck(!ls.IsGoFunction(1), 1, "Lua function expected")
-	ls.ArgCheck(!ls.IsGoFunction(3), 3, "Lua function expected")
-	ls.UpvalueJoin(1, n1, 3, n2)
+func dbUpvalueJoin(L LuaState) int {
+	n1 := checkupval(L, 1, 2)
+	n2 := checkupval(L, 3, 4)
+	luaL_argcheck(L, !lua_isgofunction(L, 1), 1, "Lua function expected")
+	luaL_argcheck(L, !lua_isgofunction(L, 3), 3, "Lua function expected")
+	lua_upvaluejoin(L, 1, n1, 3, n2)
 	return 0
 }
 
-func _checkUpval(ls LuaState, argf, argnup int) int {
-	nup := int(ls.CheckInteger(argnup)) /* upvalue index */
-	ls.CheckType(argf, LUA_TFUNCTION)   /* closure */
-	ls.ArgCheck((ls.GetUpvalue(argf, nup) != ""), argnup,
+func checkupval(L LuaState, argf, argnup int) int {
+	nup := int(luaL_checkinteger(L, argnup)) /* upvalue index */
+	luaL_checktype(L, argf, LUA_TFUNCTION)   /* closure */
+	luaL_argcheck(L, (lua_getupvalue(L, argf, nup) != ""), argnup,
 		"invalid upvalue index")
 	return nup
 }
@@ -209,9 +209,9 @@ func _checkUpval(ls LuaState, argf, argnup int) int {
 // debug.upvalueid (f, n)
 // http://www.lua.org/manual/5.3/manual.html#pdf-debug.upvalueid
 // lua-5.3.4/src/ldblib.c#db_upvalueid()
-func dbUpvalueId(ls LuaState) int {
-	n := _checkUpval(ls, 1, 2)
-	ls.PushLightUserData(ls.UpvalueId(1, n))
+func dbUpvalueId(L LuaState) int {
+	n := checkupval(L, 1, 2)
+	lua_pushlightuserdata(L, lua_upvalueid(L, 1, n))
 	return 1
 }
 

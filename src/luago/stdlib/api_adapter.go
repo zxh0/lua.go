@@ -6,7 +6,7 @@ type any = interface{}
 
 /* state manipulation */
 func lua_close(ls LuaState)                            { ls.Close() }
-func lua_newthread(ls LuaState)                        { ls.NewThread() }
+func lua_newthread(ls LuaState) LuaState               { return ls.NewThread() }
 func lua_version(ls LuaState) float64                  { return ls.Version() }
 func lua_atpanic(ls LuaState, f GoFunction) GoFunction { return ls.AtPanic(f) }
 

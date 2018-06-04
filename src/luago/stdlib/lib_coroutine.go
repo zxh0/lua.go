@@ -12,114 +12,119 @@ var coFuncs = map[string]GoFunction{
 	"wrap":        coWrap,
 }
 
-func OpenCoroutineLib(ls LuaState) int {
-	ls.NewLib(coFuncs)
+func OpenCoroutineLib(L LuaState) int {
+	luaL_newlib(L, coFuncs)
 	return 1
 }
 
 // coroutine.create (f)
 // http://www.lua.org/manual/5.3/manual.html#pdf-coroutine.create
 // lua-5.3.4/src/lcorolib.c#luaB_cocreate()
-func coCreate(ls LuaState) int {
-	ls.CheckType(1, LUA_TFUNCTION)
-	ls2 := ls.NewThread()
-	ls.PushValue(1)  /* move function to top */
-	ls.XMove(ls2, 1) /* move function from ls to ls2 */
+func coCreate(L LuaState) int {
+	luaL_checktype(L, 1, LUA_TFUNCTION)
+	NL := lua_newthread(L)
+	lua_pushvalue(L, 1) /* move function to top */
+	lua_xmove(L, NL, 1) /* move function from L to NL */
 	return 1
 }
 
 // coroutine.resume (co [, val1, ···])
 // http://www.lua.org/manual/5.3/manual.html#pdf-coroutine.resume
 // lua-5.3.4/src/lcorolib.c#luaB_coresume()
-func coResume(ls LuaState) int {
-	co := ls.ToThread(1)
-	ls.ArgCheck(co != nil, 1, "thread expected")
-
-	if r := _auxResume(ls, co, ls.GetTop()-1); r < 0 {
-		ls.PushBoolean(false)
-		ls.Insert(-2)
+func coResume(L LuaState) int {
+	co := getco(L)
+	r := auxresume(L, co, lua_gettop(L)-1)
+	if r < 0 {
+		lua_pushboolean(L, false)
+		lua_insert(L, -2)
 		return 2 /* return false + error message */
 	} else {
-		ls.PushBoolean(true)
-		ls.Insert(-(r + 1))
+		lua_pushboolean(L, true)
+		lua_insert(L, -(r + 1))
 		return r + 1 /* return true + 'resume' returns */
 	}
 }
 
-func _auxResume(ls, co LuaState, narg int) int {
-	if !ls.CheckStack(narg) {
-		ls.PushString("too many arguments to resume")
+func getco(L LuaState) LuaState {
+	co := lua_tothread(L, 1)
+	luaL_argcheck(L, co != nil, 1, "thread expected")
+	return co
+}
+
+func auxresume(L, co LuaState, narg int) int {
+	if !lua_checkstack(co, narg) {
+		lua_pushliteral(L, "too many arguments to resume")
 		return -1 /* error flag */
 	}
-	if co.Status() == LUA_OK && co.GetTop() == 0 {
-		ls.PushString("cannot resume dead coroutine")
+	if lua_status(co) == LUA_OK && lua_gettop(co) == 0 {
+		lua_pushliteral(L, "cannot resume dead coroutine")
 		return -1 /* error flag */
 	}
-	ls.XMove(co, narg)
-	status := co.Resume(ls, narg)
+	lua_xmove(L, co, narg)
+	status := lua_resume(co, L, narg)
 	if status == LUA_OK || status == LUA_YIELD {
-		nres := co.GetTop()
-		if !ls.CheckStack(nres + 1) {
-			co.Pop(nres) /* remove results anyway */
-			ls.PushString("too many results to resume")
+		nres := lua_gettop(co)
+		if !lua_checkstack(L, nres+1) {
+			lua_pop(co, nres) /* remove results anyway */
+			lua_pushliteral(L, "too many results to resume")
 			return -1 /* error flag */
 		}
-		co.XMove(ls, nres) /* move yielded values */
+		lua_xmove(co, L, nres) /* move yielded values */
 		return nres
 	} else {
-		co.XMove(ls, 1) /* move error message */
-		return -1       /* error flag */
+		lua_xmove(co, L, 1) /* move error message */
+		return -1           /* error flag */
 	}
 }
 
 // coroutine.yield (···)
 // http://www.lua.org/manual/5.3/manual.html#pdf-coroutine.yield
 // lua-5.3.4/src/lcorolib.c#luaB_yield()
-func coYield(ls LuaState) int {
-	return ls.Yield(ls.GetTop())
+func coYield(L LuaState) int {
+	return lua_yield(L, lua_gettop(L))
 }
 
 // coroutine.status (co)
 // http://www.lua.org/manual/5.3/manual.html#pdf-coroutine.status
 // lua-5.3.4/src/lcorolib.c#luaB_costatus()
-func coStatus(ls LuaState) int {
-	co := ls.ToThread(1)
-	ls.ArgCheck(co != nil, 1, "thread expected")
-	if ls == co {
-		ls.PushString("running")
+func coStatus(L LuaState) int {
+	co := getco(L)
+	if L == co {
+		lua_pushliteral(L, "running")
 	} else {
-		switch co.Status() {
+		switch lua_status(co) {
 		case LUA_YIELD:
-			ls.PushString("suspended")
+			lua_pushliteral(L, "suspended")
 		case LUA_OK:
-			if co.GetStack(0, &LuaDebug{}) { /* does it have frames? */
-				ls.PushString("normal") /* it is running */
-			} else if co.GetTop() == 0 {
-				ls.PushString("dead")
+			ar := LuaDebug{}
+			if lua_getstack(co, 0, &ar) { /* does it have frames? */
+				lua_pushliteral(L, "normal") /* it is running */
+			} else if lua_gettop(co) == 0 {
+				lua_pushliteral(L, "dead")
 			} else {
-				ls.PushString("suspended")
+				lua_pushliteral(L, "suspended") /* initial state */
 			}
 		default: /* some error occurred */
-			ls.PushString("dead")
+			lua_pushliteral(L, "dead")
+			break
 		}
 	}
-
 	return 1
 }
 
 // coroutine.isyieldable ()
 // http://www.lua.org/manual/5.3/manual.html#pdf-coroutine.isyieldable
 // lua-5.3.4/src/lcorolib.c#luaB_yieldable()
-func coYieldable(ls LuaState) int {
-	ls.PushBoolean(ls.IsYieldable())
+func coYieldable(L LuaState) int {
+	lua_pushboolean(L, lua_isyieldable(L))
 	return 1
 }
 
 // coroutine.running ()
 // http://www.lua.org/manual/5.3/manual.html#pdf-coroutine.running
-func coRunning(ls LuaState) int {
-	isMain := ls.PushThread()
-	ls.PushBoolean(isMain)
+func coRunning(L LuaState) int {
+	ismain := lua_pushthread(L)
+	lua_pushboolean(L, ismain)
 	return 2
 }
 
