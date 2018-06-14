@@ -134,7 +134,7 @@ func (self *luaStack) set(idx int, val luaValue) {
 		self.slots[absIdx-1] = val
 		return
 	}
-	panic("todo!")
+	panic("invalid index!")
 }
 
 func (self *luaStack) reverse(from, to int) {

@@ -87,7 +87,7 @@ func _arith(a, b luaValue, op operator) luaValue {
 			}
 		}
 	} else { // arith
-		if op.integerFunc != nil {
+		if op.integerFunc != nil { // add,sub,mul,mod,idiv,unm
 			if x, ok := a.(int64); ok {
 				if y, ok := b.(int64); ok {
 					return op.integerFunc(x, y)
