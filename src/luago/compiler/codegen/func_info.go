@@ -381,8 +381,8 @@ func (self *funcInfo) emitABx(line, opcode, a, bx int) {
 	self.lineNums = append(self.lineNums, uint32(line))
 }
 
-func (self *funcInfo) emitAsBx(line, opcode, a, b, c int) {
-	i := (b+MAXARG_sBx)<<14 | a<<6 | opcode
+func (self *funcInfo) emitAsBx(line, opcode, a, sBx int) {
+	i := (sBx+MAXARG_sBx)<<14 | a<<6 | opcode
 	self.insts = append(self.insts, uint32(i))
 	self.lineNums = append(self.lineNums, uint32(line))
 }
@@ -492,7 +492,7 @@ func (self *funcInfo) emitSelf(line, a, b, c int) {
 
 // pc+=sBx; if (a) close all upvalues >= r[a - 1]
 func (self *funcInfo) emitJmp(line, a, sBx int) int {
-	self.emitAsBx(line, OP_JMP, a, sBx, 0)
+	self.emitAsBx(line, OP_JMP, a, sBx)
 	return len(self.insts) - 1
 }
 
@@ -507,12 +507,12 @@ func (self *funcInfo) emitTestSet(line, a, b, c int) {
 }
 
 func (self *funcInfo) emitForPrep(line, a, sBx int) int {
-	self.emitAsBx(line, OP_FORPREP, a, sBx, 0)
+	self.emitAsBx(line, OP_FORPREP, a, sBx)
 	return len(self.insts) - 1
 }
 
 func (self *funcInfo) emitForLoop(line, a, sBx int) int {
-	self.emitAsBx(line, OP_FORLOOP, a, sBx, 0)
+	self.emitAsBx(line, OP_FORLOOP, a, sBx)
 	return len(self.insts) - 1
 }
 
@@ -521,7 +521,7 @@ func (self *funcInfo) emitTForCall(line, a, c int) {
 }
 
 func (self *funcInfo) emitTForLoop(line, a, sBx int) {
-	self.emitAsBx(line, OP_TFORLOOP, a, sBx, 0)
+	self.emitAsBx(line, OP_TFORLOOP, a, sBx)
 }
 
 // r[a] = op r[b]
