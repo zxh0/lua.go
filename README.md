@@ -1,7 +1,7 @@
 # lua.go
 A TOY Lua 5.3 implementation written in Go (WORK IN PROGRESS).
 
-![lua.go Logo](https://github.com/zxh0/lua.go/blob/master/logo.png?raw=true)
+![lua.go Logo](logo.png?raw=true)
 
 # Build & Test
 
