@@ -110,8 +110,3 @@ const (
 	LUA_ERRERR
 	LUA_ERRFILE
 )
-
-// todo
-func LuaUpvalueIndex(i int) int {
-	return LUA_REGISTRYINDEX - i
-}

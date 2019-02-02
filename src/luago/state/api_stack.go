@@ -17,6 +17,12 @@ func (self *luaState) AbsIndex(idx int) int {
 }
 
 // [-0, +0, –]
+// http://www.lua.org/manual/5.3/manual.html#lua_upvalueindex
+func (self *luaState) UpvalueIndex(idx int) int {
+	return LUA_REGISTRYINDEX - idx
+}
+
+// [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_checkstack
 // lua-5.3.4/src/lapi.c#lua_checkstack()
 func (self *luaState) CheckStack(n int) bool {

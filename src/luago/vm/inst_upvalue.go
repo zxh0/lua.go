@@ -8,7 +8,7 @@ func getUpval(i Instruction, vm LuaVM) {
 	a += 1
 	b += 1
 
-	vm.Copy(LuaUpvalueIndex(b), a)
+	vm.Copy(vm.UpvalueIndex(b), a)
 }
 
 // UpValue[B] := R(A)
@@ -17,7 +17,7 @@ func setUpval(i Instruction, vm LuaVM) {
 	a += 1
 	b += 1
 
-	vm.Copy(a, LuaUpvalueIndex(b))
+	vm.Copy(a, vm.UpvalueIndex(b))
 }
 
 // R(A) := UpValue[B][RK(C)]
@@ -28,7 +28,7 @@ func getTabUp(i Instruction, vm LuaVM) {
 
 	//vm.CheckStack(1)
 	vm.GetRK(c)                     // ~/rk[c]
-	vm.GetTable(LuaUpvalueIndex(b)) // ~/uv[b][rk[c]]
+	vm.GetTable(vm.UpvalueIndex(b)) // ~/uv[b][rk[c]]
 	vm.Replace(a)                   // ~/
 }
 
@@ -40,5 +40,5 @@ func setTabUp(i Instruction, vm LuaVM) {
 	//vm.CheckStack(2)
 	vm.GetRK(b)                     // ~/rk[b]
 	vm.GetRK(c)                     // ~/rk[b]/rk[c]
-	vm.SetTable(LuaUpvalueIndex(a)) // ~/
+	vm.SetTable(vm.UpvalueIndex(a)) // ~/
 }

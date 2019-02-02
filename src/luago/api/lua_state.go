@@ -23,6 +23,7 @@ type BasicAPI interface {
 	/* basic stack manipulation */
 	GetTop() int              // stack.top
 	AbsIndex(idx int) int     // abs(idx)
+	UpvalueIndex(idx int) int // 
 	CheckStack(n int) bool    //
 	Pop(n int)                // pop(n)
 	Copy(fromIdx, toIdx int)  // r[toIdx] = r[fromidx]
