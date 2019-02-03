@@ -79,7 +79,7 @@ func (self *writer) writeHeader() {
 	self.writeByte(LUAC_FORMAT)
 	self.writeBytes([]byte(LUAC_DATA))
 	self.writeByte(CINT_SIZE)
-	self.writeByte(CSZIET_SIZE)
+	self.writeByte(CSIZET_SIZE)
 	self.writeByte(INSTRUCTION_SIZE)
 	self.writeByte(LUA_INTEGER_SIZE)
 	self.writeByte(LUA_NUMBER_SIZE)
