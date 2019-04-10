@@ -12,7 +12,16 @@ type LuaState interface {
 	BasicAPI
 	DebugAPI
 	AuxLib
-	String() string // debug
+	/* coroutine functions */
+	ToThread(idx int) LuaState
+	NewThread() LuaState
+	Resume(from LuaState, nArgs int) ThreadStatus
+	Yield(nResults int) int
+	YieldK()
+	Status() ThreadStatus
+	IsYieldable() bool
+	/* debug */
+	String() string
 }
 
 type BasicAPI interface {
@@ -23,7 +32,7 @@ type BasicAPI interface {
 	/* basic stack manipulation */
 	GetTop() int              // stack.top
 	AbsIndex(idx int) int     // abs(idx)
-	UpvalueIndex(idx int) int // 
+	UpvalueIndex(idx int) int //
 	CheckStack(n int) bool    //
 	Pop(n int)                // pop(n)
 	Copy(fromIdx, toIdx int)  // r[toIdx] = r[fromidx]
@@ -33,7 +42,7 @@ type BasicAPI interface {
 	Remove(idx int)           // remove(r[idx])
 	Rotate(idx, n int)        // r[idx, -1] >> n
 	SetTop(idx int)           // stack.top = idx
-	XMove(to LuaState, n int) // to.push(pop(n))
+	XMove(to BasicAPI, n int) // to.push(pop(n))
 	/* access functions (stack -> C) */
 	TypeName(tp LuaType) string        // r[idx].type.name
 	Type(idx int) LuaType              // r[idx].type
@@ -57,7 +66,6 @@ type BasicAPI interface {
 	ToString(idx int) string           // r[idx] as string
 	ToStringX(idx int) (string, bool)  // r[idx] as string
 	ToGoFunction(idx int) GoFunction   // r[idx] as GoFunction
-	ToThread(idx int) LuaState         // r[idx] as LuaThread
 	ToUserData(idx int) UserData       // r[idx] as UserData
 	ToPointer(idx int) interface{}     // r[idx] as interface{}
 	RawLen(idx int) uint               // len(r[idx])
@@ -113,13 +121,6 @@ type BasicAPI interface {
 	Next(idx int) bool            // key=pop(); k,v=next(r[idx]); push(k,v);
 	StringToNumber(s string) bool // push(number(s))
 	Error() int                   // panic(r[-1])
-	/* coroutine functions */
-	NewThread() LuaState                          // todo
-	Resume(from LuaState, nArgs int) ThreadStatus // todo
-	Yield(nResults int) int                       // todo
-	YieldK()                                      // todo
-	Status() ThreadStatus                         // todo
-	IsYieldable() bool                            // todo
 	/* garbage-collection function and options */
 	GC(what, data int) int //
 }
