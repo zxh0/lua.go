@@ -5,7 +5,7 @@ A TOY Lua 5.3 implementation written in Go (WORK IN PROGRESS).
 
 # Build & Test
 
-(Go1.9 required)
+(Go1.12+ required)
 
 
 ```shell
@@ -13,10 +13,10 @@ cd .
 git clone https://github.com/zxh0/lua.go.git
 
 cd lua.go
-export GOPATH=`pwd`
-go install luago/cmd/lua
+export GO111MODULE=on
+go build github.com/zxh0/lua.go/cmd/lua
 
-bin/lua test/hello_world.lua
+./lua test/hello_world.lua
 ```
 
 # Links
