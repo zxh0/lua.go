@@ -14,7 +14,7 @@ git clone https://github.com/zxh0/lua.go.git
 
 cd lua.go
 export GOPATH=`pwd`
-go install luago/standalone/lua
+go install luago/cmd/lua
 
 bin/lua test/hello_world.lua
 ```
