@@ -2,7 +2,7 @@ package binchunk
 
 import "encoding/binary"
 import "math"
-import . "luago/api"
+import . "github.com/zxh0/lua.go/api"
 
 type reader struct {
 	data []byte

@@ -1,6 +1,6 @@
 package state
 
-import . "luago/api"
+import . "github.com/zxh0/lua.go/api"
 
 type luaStack struct {
 	/* virtual stack */

@@ -4,7 +4,7 @@ import "fmt"
 import "strings"
 import "testing"
 import "github.com/stretchr/testify/assert"
-import . "luago/vm"
+import . "github.com/zxh0/lua.go/vm"
 
 func TestLocVar(t *testing.T) {
 	testInsts(t, "local a=1; local a=1", "[2/2] loadk(0,-1); loadk(1,-1)")

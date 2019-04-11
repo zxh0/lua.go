@@ -1,8 +1,8 @@
 package state
 
 import "fmt"
-import . "luago/api"
-import "luago/number"
+import . "github.com/zxh0/lua.go/api"
+import "github.com/zxh0/lua.go/number"
 
 type luaValue interface{}
 

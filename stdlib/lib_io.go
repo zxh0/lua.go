@@ -1,6 +1,6 @@
 package stdlib
 
-import . "luago/api"
+import . "github.com/zxh0/lua.go/api"
 
 /* functions for 'io' library */
 var ioLib = map[string]GoFunction{

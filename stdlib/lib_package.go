@@ -2,7 +2,7 @@ package stdlib
 
 import "os"
 import "strings"
-import . "luago/api"
+import . "github.com/zxh0/lua.go/api"
 
 /* key, in the registry, for table of loaded modules */
 const LUA_LOADED_TABLE = "_LOADED"

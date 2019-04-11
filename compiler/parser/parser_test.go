@@ -2,7 +2,7 @@ package parser
 
 import "testing"
 import "github.com/stretchr/testify/assert"
-import "luago/compiler/lexer"
+import "github.com/zxh0/lua.go/compiler/lexer"
 
 func TestExpLiteral(t *testing.T) {
 	testExp(t, `nil`)

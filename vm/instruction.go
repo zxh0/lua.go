@@ -1,6 +1,6 @@
 package vm
 
-import "luago/api"
+import "github.com/zxh0/lua.go/api"
 
 const MAXARG_Bx = 1<<18 - 1       // 2^18 - 1 = 262143
 const MAXARG_sBx = MAXARG_Bx >> 1 // 262143 / 2 = 131071

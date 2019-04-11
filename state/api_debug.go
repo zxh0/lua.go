@@ -4,7 +4,7 @@ import "fmt"
 import "reflect"
 import "runtime"
 import "strings"
-import . "luago/api"
+import . "github.com/zxh0/lua.go/api"
 
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_gethook
@@ -98,8 +98,8 @@ func _getFuncName(c *closure) string {
 		pc := reflect.ValueOf(gof).Pointer()
 		if f := runtime.FuncForPC(pc); f != nil {
 			name := f.Name()
-			if strings.HasPrefix(name, "luago/stdlib.") {
-				name = name[13:]                                        // remove "luago/stdlib."
+			if strings.HasPrefix(name, "github.com/zxh0/lua.go/stdlib.") {
+				name = name[13:]                                        // remove "github.com/zxh0/lua.go/stdlib."
 				for len(name) > 0 && name[0] >= 'a' && name[0] <= 'z' { // remove prefix
 					name = name[1:]
 				}

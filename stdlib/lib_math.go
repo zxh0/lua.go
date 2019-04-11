@@ -2,8 +2,8 @@ package stdlib
 
 import "math"
 import "math/rand"
-import . "luago/api"
-import "luago/number"
+import . "github.com/zxh0/lua.go/api"
+import "github.com/zxh0/lua.go/number"
 
 var mathLib = map[string]GoFunction{
 	"random":     mathRandom,

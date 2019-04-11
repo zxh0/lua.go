@@ -1,6 +1,6 @@
 package vm
 
-import . "luago/api"
+import . "github.com/zxh0/lua.go/api"
 
 // R(A), R(A+1), ..., R(A+B) := nil
 func loadNil(i Instruction, vm LuaVM) {

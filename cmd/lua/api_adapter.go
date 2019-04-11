@@ -1,7 +1,7 @@
 package main
 
-import . "luago/api"
-import "luago/state"
+import . "github.com/zxh0/lua.go/api"
+import "github.com/zxh0/lua.go/state"
 
 type any = interface{}
 

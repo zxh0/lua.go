@@ -1,6 +1,6 @@
 package codegen
 
-import . "luago/compiler/ast"
+import . "github.com/zxh0/lua.go/compiler/ast"
 
 func cgBlock(fi *funcInfo, node *Block) {
 	for _, stat := range node.Stats {

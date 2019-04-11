@@ -1,7 +1,7 @@
 package stdlib
 
 import "strings"
-import . "luago/api"
+import . "github.com/zxh0/lua.go/api"
 
 var dbLib = map[string]GoFunction{
 	"debug":        dbDebug,

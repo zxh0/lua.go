@@ -1,6 +1,6 @@
 package vm
 
-import . "luago/api"
+import . "github.com/zxh0/lua.go/api"
 
 // R(A)-=R(A+2); pc+=sBx
 func forPrep(i Instruction, vm LuaVM) {

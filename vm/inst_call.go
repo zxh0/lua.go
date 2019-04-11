@@ -1,6 +1,6 @@
 package vm
 
-import . "luago/api"
+import . "github.com/zxh0/lua.go/api"
 
 // R(A) := closure(KPROTO[Bx])
 func closure(i Instruction, vm LuaVM) {

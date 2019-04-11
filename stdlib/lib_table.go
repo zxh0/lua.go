@@ -2,7 +2,7 @@ package stdlib
 
 import "sort"
 import "strings"
-import . "luago/api"
+import . "github.com/zxh0/lua.go/api"
 
 const MAX_LEN = 1000000 // TODO
 

@@ -1,9 +1,9 @@
 package codegen
 
 import "fmt"
-import . "luago/compiler/ast"
-import . "luago/compiler/lexer"
-import . "luago/vm"
+import . "github.com/zxh0/lua.go/compiler/ast"
+import . "github.com/zxh0/lua.go/compiler/lexer"
+import . "github.com/zxh0/lua.go/vm"
 
 var arithAndBitwiseBinops = map[int]int{
 	TOKEN_OP_ADD:  OP_ADD,

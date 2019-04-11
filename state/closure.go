@@ -1,7 +1,7 @@
 package state
 
-import . "luago/api"
-import "luago/binchunk"
+import . "github.com/zxh0/lua.go/api"
+import "github.com/zxh0/lua.go/binchunk"
 
 type upvalue struct {
 	val *luaValue

@@ -1,6 +1,6 @@
 package codegen
 
-import . "luago/binchunk"
+import . "github.com/zxh0/lua.go/binchunk"
 
 func toProto(fi *funcInfo) *Prototype {
 	proto := &Prototype{

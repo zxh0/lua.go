@@ -1,6 +1,6 @@
 package codegen
 
-import . "luago/compiler/ast"
+import . "github.com/zxh0/lua.go/compiler/ast"
 
 func cgStat(fi *funcInfo, node Stat) {
 	switch stat := node.(type) {

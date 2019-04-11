@@ -1,6 +1,6 @@
 package vm
 
-import "luago/api"
+import "github.com/zxh0/lua.go/api"
 
 /* OpMode */
 /* basic instruction format */

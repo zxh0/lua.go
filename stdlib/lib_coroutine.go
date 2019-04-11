@@ -1,6 +1,6 @@
 package stdlib
 
-import . "luago/api"
+import . "github.com/zxh0/lua.go/api"
 
 var coFuncs = map[string]GoFunction{
 	"create":      coCreate,

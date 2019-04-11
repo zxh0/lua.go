@@ -3,7 +3,7 @@ package stdlib
 import "fmt"
 import "strconv"
 import "strings"
-import . "luago/api"
+import . "github.com/zxh0/lua.go/api"
 
 var baseFuncs = map[string]GoFunction{
 	"print":          basePrint,

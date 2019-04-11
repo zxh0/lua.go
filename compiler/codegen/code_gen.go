@@ -1,7 +1,7 @@
 package codegen
 
-import . "luago/binchunk"
-import . "luago/compiler/ast"
+import . "github.com/zxh0/lua.go/binchunk"
+import . "github.com/zxh0/lua.go/compiler/ast"
 
 func GenProto(chunk *Block) *Prototype {
 	fd := &FuncDefExp{

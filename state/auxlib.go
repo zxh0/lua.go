@@ -3,8 +3,8 @@ package state
 import "fmt"
 import "io/ioutil"
 import "strings"
-import . "luago/api"
-import "luago/stdlib"
+import . "github.com/zxh0/lua.go/api"
+import "github.com/zxh0/lua.go/stdlib"
 
 /* key, in the registry, for table of loaded modules */
 const LUA_LOADED_TABLE = "_LOADED"

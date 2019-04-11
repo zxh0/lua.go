@@ -4,7 +4,7 @@ import "bufio"
 import "fmt"
 import "os"
 import "strings"
-import . "luago/api"
+import . "github.com/zxh0/lua.go/api"
 
 const LUA_INIT_VAR = "LUA_INIT"
 const LUA_INITVARVERSION = LUA_INIT_VAR + "_5_3"

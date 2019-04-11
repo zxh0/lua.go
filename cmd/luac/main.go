@@ -4,8 +4,8 @@ import "flag"
 import "fmt"
 import "io/ioutil"
 import "os"
-import "luago/binchunk"
-import "luago/compiler"
+import "github.com/zxh0/lua.go/binchunk"
+import "github.com/zxh0/lua.go/compiler"
 
 const version = `Lua 5.3.3 (lua.go)`
 const usage = `

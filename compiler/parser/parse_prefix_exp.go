@@ -1,7 +1,7 @@
 package parser
 
-import . "luago/compiler/ast"
-import . "luago/compiler/lexer"
+import . "github.com/zxh0/lua.go/compiler/ast"
+import . "github.com/zxh0/lua.go/compiler/lexer"
 
 // prefixexp ::= var | functioncall | ‘(’ exp ‘)’
 // var ::=  Name | prefixexp ‘[’ exp ‘]’ | prefixexp ‘.’ Name

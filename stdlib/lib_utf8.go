@@ -1,7 +1,7 @@
 package stdlib
 
 import "unicode/utf8"
-import . "luago/api"
+import . "github.com/zxh0/lua.go/api"
 
 /* pattern to match a single UTF-8 character */
 const UTF8PATT = "[\x00-\x7F\xC2-\xF4][\x80-\xBF]*"

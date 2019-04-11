@@ -1,6 +1,6 @@
 package vm
 
-import . "luago/api"
+import . "github.com/zxh0/lua.go/api"
 
 // R(A) := UpValue[B]
 func getUpval(i Instruction, vm LuaVM) {

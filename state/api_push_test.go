@@ -1,7 +1,7 @@
 package state
 
 import "testing"
-import . "luago/api"
+import . "github.com/zxh0/lua.go/api"
 
 func TestPushGoClosure(t *testing.T) {
 	ls := New()

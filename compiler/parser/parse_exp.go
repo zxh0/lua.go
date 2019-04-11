@@ -1,8 +1,8 @@
 package parser
 
-import . "luago/compiler/ast"
-import . "luago/compiler/lexer"
-import "luago/number"
+import . "github.com/zxh0/lua.go/compiler/ast"
+import . "github.com/zxh0/lua.go/compiler/lexer"
+import "github.com/zxh0/lua.go/number"
 
 // explist ::= exp {‘,’ exp}
 func parseExpList(lexer *Lexer) []Exp {

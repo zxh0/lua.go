@@ -5,7 +5,7 @@ import "C"
 
 import "os"
 import "time"
-import . "luago/api"
+import . "github.com/zxh0/lua.go/api"
 
 var sysLib = map[string]GoFunction{
 	"clock":     osClock,

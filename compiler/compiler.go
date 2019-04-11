@@ -1,8 +1,8 @@
 package compiler
 
-import "luago/binchunk"
-import "luago/compiler/codegen"
-import "luago/compiler/parser"
+import "github.com/zxh0/lua.go/binchunk"
+import "github.com/zxh0/lua.go/compiler/codegen"
+import "github.com/zxh0/lua.go/compiler/parser"
 
 func Compile(chunk, chunkName string) *binchunk.Prototype {
 	ast := parser.Parse(chunk, chunkName)

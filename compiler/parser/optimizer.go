@@ -1,9 +1,9 @@
 package parser
 
 import "math"
-import "luago/number"
-import . "luago/compiler/ast"
-import . "luago/compiler/lexer"
+import "github.com/zxh0/lua.go/number"
+import . "github.com/zxh0/lua.go/compiler/ast"
+import . "github.com/zxh0/lua.go/compiler/lexer"
 
 func optimizeLogicalOr(exp *BinopExp) Exp {
 	if isTrue(exp.Exp1) {

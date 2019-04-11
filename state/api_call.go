@@ -1,10 +1,10 @@
 package state
 
 // import "fmt"
-import . "luago/api"
-import "luago/binchunk"
-import "luago/compiler"
-import "luago/vm"
+import . "github.com/zxh0/lua.go/api"
+import "github.com/zxh0/lua.go/binchunk"
+import "github.com/zxh0/lua.go/compiler"
+import "github.com/zxh0/lua.go/vm"
 
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_dump

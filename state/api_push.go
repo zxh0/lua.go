@@ -1,7 +1,7 @@
 package state
 
 import "fmt"
-import . "luago/api"
+import . "github.com/zxh0/lua.go/api"
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_pushnil
