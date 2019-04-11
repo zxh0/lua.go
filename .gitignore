@@ -6,3 +6,5 @@ bin/
 *.ll.txt
 *.output
 github.com/
+lua
+luac
