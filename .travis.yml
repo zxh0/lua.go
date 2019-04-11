@@ -5,15 +5,14 @@ branches:
 language: go
 
 go:
-  - "1.9"
+  - "1.12"
 
 install: true
 
 script:
-  - export GOPATH=$PWD
-  - go get github.com/stretchr/testify
-  - go test luago/...
-  - go install luago/cmd/lua
+  - export GO111MODULE=on
+  - go test ./...
+  - go build github.com/zxh0/lua.go/cmd/lua
   - ./bin/lua ./test/lua-5.3.4-tests/attrib.lua     | grep -q OK
   - ./bin/lua ./test/lua-5.3.4-tests/bitwise.lua    | grep -q OK
   - ./bin/lua ./test/lua-5.3.4-tests/calls.lua      | grep -q OK
