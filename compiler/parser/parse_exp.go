@@ -19,7 +19,6 @@ func parseExpList(lexer *Lexer) []Exp {
 exp ::=  nil | false | true | Numeral | LiteralString | ‘...’ | functiondef |
 	 prefixexp | tableconstructor | exp binop exp | unop exp
 */
-
 /*
 exp   ::= exp12
 exp12 ::= exp11 {or exp11}
