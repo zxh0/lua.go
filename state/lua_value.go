@@ -30,7 +30,7 @@ func typeOf(val luaValue) LuaType {
 	case *userdata:
 		return LUA_TUSERDATA
 	default:
-		panic("unkonwn type!")
+		panic("unknown type!")
 	}
 }
 
