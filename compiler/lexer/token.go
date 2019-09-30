@@ -94,8 +94,8 @@ var keywords = map[string]int{
 
 /*
 type Token struct {
-	line  int
-	kind  int
-	token string
+	line int
+	kind int
+	text string
 }
 */
