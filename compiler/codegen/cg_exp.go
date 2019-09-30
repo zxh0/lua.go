@@ -6,12 +6,11 @@ import . "github.com/zxh0/lua.go/vm"
 
 // kind of operands
 const (
-	ARG_CONST = 1 // const index
-	ARG_REG   = 2 // register index
-	ARG_UPVAL = 4 // upvalue index
-	ARG_RK    = ARG_REG | ARG_CONST
-	ARG_RU    = ARG_REG | ARG_UPVAL
-	ARG_RUK   = ARG_REG | ARG_UPVAL | ARG_CONST
+	ArgConst = 1 // const index
+	ArgReg   = 2 // register index
+	ArgUpval = 4 // upvalue index
+	ArgRK    = ArgReg | ArgConst
+	ArgRU    = ArgReg | ArgUpval
 )
 
 // todo: rename to evalExp()?
@@ -24,11 +23,11 @@ func cgExp(fi *funcInfo, node Exp, a, n int) {
 	case *TrueExp:
 		fi.emitLoadBool(exp.Line, a, 1, 0)
 	case *IntegerExp:
-		fi.emitLoadK(exp.Line, a, exp.Val)
+		fi.emitLoadK(exp.Line, a, fi.indexOfConstant(exp.Val))
 	case *FloatExp:
-		fi.emitLoadK(exp.Line, a, exp.Val)
+		fi.emitLoadK(exp.Line, a, fi.indexOfConstant(exp.Val))
 	case *StringExp:
-		fi.emitLoadK(exp.Line, a, exp.Str)
+		fi.emitLoadK(exp.Line, a, fi.indexOfConstant(exp.Str))
 	case *ParensExp:
 		cgExp(fi, exp.Exp, a, 1)
 	case *VarargExp:
@@ -134,7 +133,7 @@ func cgTableConstructorExp(fi *funcInfo, node *TableConstructorExp, a int) {
 // r[a] := op exp
 func cgUnopExp(fi *funcInfo, node *UnopExp, a int) {
 	oldRegs := fi.usedRegs
-	b, _ := expToOpArg(fi, node.Exp, ARG_REG)
+	b, _ := expToOpArg(fi, node.Exp, ArgReg)
 	fi.emitUnaryOp(node.Line, node.Op, a, b)
 	fi.usedRegs = oldRegs
 }
@@ -145,7 +144,7 @@ func cgBinopExp(fi *funcInfo, node *BinopExp, a int) {
 	case TOKEN_OP_AND, TOKEN_OP_OR:
 		oldRegs := fi.usedRegs
 
-		b, _ := expToOpArg(fi, node.Exp1, ARG_REG)
+		b, _ := expToOpArg(fi, node.Exp1, ArgReg)
 		fi.usedRegs = oldRegs
 		if node.Op == TOKEN_OP_AND {
 			fi.emitTestSet(node.Line, a, b, 0)
@@ -154,14 +153,14 @@ func cgBinopExp(fi *funcInfo, node *BinopExp, a int) {
 		}
 		pcOfJmp := fi.emitJmp(node.Line, 0, 0)
 
-		b, _ = expToOpArg(fi, node.Exp2, ARG_REG)
+		b, _ = expToOpArg(fi, node.Exp2, ArgReg)
 		fi.usedRegs = oldRegs
 		fi.emitMove(node.Line, a, b)
 		fi.fixSbx(pcOfJmp, fi.pc()-pcOfJmp)
 	default:
 		oldRegs := fi.usedRegs
-		b, _ := expToOpArg(fi, node.Exp1, ARG_RK)
-		c, _ := expToOpArg(fi, node.Exp2, ARG_RK)
+		b, _ := expToOpArg(fi, node.Exp1, ArgRK)
+		c, _ := expToOpArg(fi, node.Exp2, ArgRK)
 		fi.emitBinaryOp(node.Line, node.Op, a, b, c)
 		fi.usedRegs = oldRegs
 	}
@@ -199,11 +198,11 @@ func cgNameExp(fi *funcInfo, node *NameExp, a int) {
 // r[a] := prefix[key]
 func cgTableAccessExp(fi *funcInfo, node *TableAccessExp, a int) {
 	oldRegs := fi.usedRegs
-	b, kindB := expToOpArg(fi, node.PrefixExp, ARG_RU)
-	c, _ := expToOpArg(fi, node.KeyExp, ARG_RK)
+	b, kindB := expToOpArg(fi, node.PrefixExp, ArgRU)
+	c, _ := expToOpArg(fi, node.KeyExp, ArgRK)
 	fi.usedRegs = oldRegs
 
-	if kindB == ARG_UPVAL {
+	if kindB == ArgUpval {
 		fi.emitGetTabUp(node.LastLine, a, b, c)
 	} else {
 		fi.emitGetTable(node.LastLine, a, b, c)
@@ -229,9 +228,9 @@ func prepFuncCall(fi *funcInfo, node *FuncCallExp, a int) int {
 	cgExp(fi, node.PrefixExp, a, 1)
 	if node.NameExp != nil {
 		fi.allocReg()
-		c, k := expToOpArg(fi, node.NameExp, ARG_RK)
+		c, k := expToOpArg(fi, node.NameExp, ArgRK)
 		fi.emitSelf(node.Line, a, a, c)
-		if k == ARG_REG {
+		if k == ArgReg {
 			fi.freeRegs(1)
 		}
 	}
@@ -258,7 +257,7 @@ func prepFuncCall(fi *funcInfo, node *FuncCallExp, a int) int {
 }
 
 func expToOpArg(fi *funcInfo, node Exp, argKinds int) (arg, argKind int) {
-	if argKinds&ARG_CONST > 0 {
+	if argKinds&ArgConst > 0 {
 		idx := -1
 		switch x := node.(type) {
 		case *NilExp:
@@ -275,24 +274,24 @@ func expToOpArg(fi *funcInfo, node Exp, argKinds int) (arg, argKind int) {
 			idx = fi.indexOfConstant(x.Str)
 		}
 		if idx >= 0 && idx <= 0xFF {
-			return 0x100 + idx, ARG_CONST
+			return 0x100 + idx, ArgConst
 		}
 	}
 
 	if nameExp, ok := node.(*NameExp); ok {
-		if argKinds&ARG_REG > 0 {
+		if argKinds&ArgReg > 0 {
 			if r := fi.slotOfLocVar(nameExp.Name); r >= 0 {
-				return r, ARG_REG
+				return r, ArgReg
 			}
 		}
-		if argKinds&ARG_UPVAL > 0 {
+		if argKinds&ArgUpval > 0 {
 			if idx := fi.indexOfUpval(nameExp.Name); idx >= 0 {
-				return idx, ARG_UPVAL
+				return idx, ArgUpval
 			}
 		}
 	}
 
 	a := fi.allocReg()
 	cgExp(fi, node, a, 1)
-	return a, ARG_REG
+	return a, ArgReg
 }

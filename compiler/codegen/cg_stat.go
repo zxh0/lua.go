@@ -78,7 +78,7 @@ func cgWhileStat(fi *funcInfo, node *WhileStat) {
 	pcBeforeExp := fi.pc()
 
 	oldRegs := fi.usedRegs
-	a, _ := expToOpArg(fi, node.Exp, ARG_REG)
+	a, _ := expToOpArg(fi, node.Exp, ArgReg)
 	fi.usedRegs = oldRegs
 
 	line := lastLineOf(node.Exp)
@@ -107,7 +107,7 @@ func cgRepeatStat(fi *funcInfo, node *RepeatStat) {
 	cgBlock(fi, node.Block)
 
 	oldRegs := fi.usedRegs
-	a, _ := expToOpArg(fi, node.Exp, ARG_REG)
+	a, _ := expToOpArg(fi, node.Exp, ArgReg)
 	fi.usedRegs = oldRegs
 
 	line := lastLineOf(node.Exp)
@@ -137,7 +137,7 @@ func cgIfStat(fi *funcInfo, node *IfStat) {
 		}
 
 		oldRegs := fi.usedRegs
-		a, _ := expToOpArg(fi, exp, ARG_REG)
+		a, _ := expToOpArg(fi, exp, ArgReg)
 		fi.usedRegs = oldRegs
 
 		line := lastLineOf(exp)
