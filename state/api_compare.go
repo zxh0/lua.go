@@ -1,41 +1,43 @@
 package state
 
-import . "github.com/zxh0/lua.go/api"
+import (
+	. "github.com/zxh0/lua.go/api"
+)
 
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_rawequal
-func (self *luaState) RawEqual(idx1, idx2 int) bool {
-	if !self.stack.isValid(idx1) || !self.stack.isValid(idx2) {
+func (state *luaState) RawEqual(idx1, idx2 int) bool {
+	if !state.stack.isValid(idx1) || !state.stack.isValid(idx2) {
 		return false
 	}
 
-	a := self.stack.get(idx1)
-	b := self.stack.get(idx2)
-	return self.eq(a, b, true)
+	a := state.stack.get(idx1)
+	b := state.stack.get(idx2)
+	return state.eq(a, b, true)
 }
 
 // [-0, +0, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_compare
-func (self *luaState) Compare(idx1, idx2 int, op CompareOp) bool {
-	if !self.stack.isValid(idx1) || !self.stack.isValid(idx2) {
+func (state *luaState) Compare(idx1, idx2 int, op CompareOp) bool {
+	if !state.stack.isValid(idx1) || !state.stack.isValid(idx2) {
 		return false
 	}
 
-	a := self.stack.get(idx1)
-	b := self.stack.get(idx2)
+	a := state.stack.get(idx1)
+	b := state.stack.get(idx2)
 	switch op {
 	case LUA_OPEQ:
-		return self.eq(a, b, false)
+		return state.eq(a, b, false)
 	case LUA_OPLT:
-		return self.lt(a, b)
+		return state.lt(a, b)
 	case LUA_OPLE:
-		return self.le(a, b)
+		return state.le(a, b)
 	default:
 		panic("invalid compare op!")
 	}
 }
 
-func (self *luaState) eq(a, b luaValue, raw bool) bool {
+func (state *luaState) eq(a, b luaValue, raw bool) bool {
 	switch x := a.(type) {
 	case nil:
 		return b == nil
@@ -65,7 +67,7 @@ func (self *luaState) eq(a, b luaValue, raw bool) bool {
 		}
 	case *luaTable:
 		if y, ok := b.(*luaTable); ok && x != y && !raw {
-			if result, ok := callMetamethod(x, y, "__eq", self); ok {
+			if result, ok := callMetamethod(x, y, "__eq", state); ok {
 				return convertToBoolean(result)
 			}
 		}
@@ -80,7 +82,7 @@ func (self *luaState) eq(a, b luaValue, raw bool) bool {
 	}
 }
 
-func (self *luaState) lt(a, b luaValue) bool {
+func (state *luaState) lt(a, b luaValue) bool {
 	switch x := a.(type) {
 	case string:
 		if y, ok := b.(string); ok {
@@ -102,15 +104,15 @@ func (self *luaState) lt(a, b luaValue) bool {
 		}
 	}
 
-	if result, ok := callMetamethod(a, b, "__lt", self); ok {
+	if result, ok := callMetamethod(a, b, "__lt", state); ok {
 		return convertToBoolean(result)
 	}
-	typeName1 := self.TypeName(typeOf(a))
-	typeName2 := self.TypeName(typeOf(b))
+	typeName1 := state.TypeName(typeOf(a))
+	typeName2 := state.TypeName(typeOf(b))
 	panic("attempt to compare " + typeName1 + " with " + typeName2)
 }
 
-func (self *luaState) le(a, b luaValue) bool {
+func (state *luaState) le(a, b luaValue) bool {
 	switch x := a.(type) {
 	case string:
 		if y, ok := b.(string); ok {
@@ -132,13 +134,13 @@ func (self *luaState) le(a, b luaValue) bool {
 		}
 	}
 
-	if result, ok := callMetamethod(a, b, "__le", self); ok {
+	if result, ok := callMetamethod(a, b, "__le", state); ok {
 		return convertToBoolean(result)
 	}
-	if result, ok := callMetamethod(b, a, "__lt", self); ok {
+	if result, ok := callMetamethod(b, a, "__lt", state); ok {
 		return !convertToBoolean(result)
 	}
-	typeName1 := self.TypeName(typeOf(a))
-	typeName2 := self.TypeName(typeOf(b))
+	typeName1 := state.TypeName(typeOf(a))
+	typeName2 := state.TypeName(typeOf(b))
 	panic("attempt to compare " + typeName1 + " with " + typeName2)
 }

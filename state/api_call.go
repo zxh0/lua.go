@@ -1,15 +1,16 @@
 package state
 
-// import "fmt"
-import . "github.com/zxh0/lua.go/api"
-import "github.com/zxh0/lua.go/binchunk"
-import "github.com/zxh0/lua.go/compiler"
-import "github.com/zxh0/lua.go/vm"
+import (
+	. "github.com/zxh0/lua.go/api"
+	"github.com/zxh0/lua.go/binchunk"
+	"github.com/zxh0/lua.go/compiler"
+	"github.com/zxh0/lua.go/vm"
+)
 
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_dump
-func (self *luaState) Dump(strip bool) []byte {
-	v := self.stack.get(-1)
+func (state *luaState) Dump(strip bool) []byte {
+	v := state.stack.get(-1)
 	if c, ok := v.(*closure); ok {
 		return binchunk.Dump(c.proto)
 	}
@@ -18,13 +19,13 @@ func (self *luaState) Dump(strip bool) []byte {
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_load
-func (self *luaState) Load(chunk []byte, chunkName, mode string) (status ThreadStatus) {
+func (state *luaState) Load(chunk []byte, chunkName, mode string) (status ThreadStatus) {
 	status = LUA_ERRSYNTAX
 
 	// catch error
 	defer func() {
 		if r := recover(); r != nil {
-			self.stack.push(_getErrObj(r))
+			state.stack.push(_getErrObj(r))
 		}
 	}()
 
@@ -43,25 +44,25 @@ func (self *luaState) Load(chunk []byte, chunkName, mode string) (status ThreadS
 
 	c := newLuaClosure(proto)
 	if len(proto.Upvalues) > 0 {
-		env := self.registry.get(LUA_RIDX_GLOBALS)
+		env := state.registry.get(LUA_RIDX_GLOBALS)
 		c.upvals[0] = &upvalue{&env}
 	}
-	self.stack.push(c)
+	state.stack.push(c)
 	status = LUA_OK
 	return
 }
 
 // [-(nargs+1), +nresults, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_call
-func (self *luaState) Call(nArgs, nResults int) {
-	val := self.stack.get(-(nArgs + 1))
+func (state *luaState) Call(nArgs, nResults int) {
+	val := state.stack.get(-(nArgs + 1))
 
 	c, ok := val.(*closure)
 	if !ok {
-		if mf := getMetafield(val, "__call", self); mf != nil {
+		if mf := getMetafield(val, "__call", state); mf != nil {
 			if c, ok = mf.(*closure); ok {
-				self.stack.push(val)
-				self.Insert(-(nArgs + 2))
+				state.stack.push(val)
+				state.Insert(-(nArgs + 2))
 				nArgs += 1
 			}
 		}
@@ -69,52 +70,52 @@ func (self *luaState) Call(nArgs, nResults int) {
 
 	if ok {
 		if c.proto != nil {
-			self.callLuaClosure(nArgs, nResults, c)
+			state.callLuaClosure(nArgs, nResults, c)
 		} else {
-			self.callGoClosure(nArgs, nResults, c)
+			state.callGoClosure(nArgs, nResults, c)
 		}
 	} else {
-		typeName := self.TypeName(typeOf(val))
+		typeName := state.TypeName(typeOf(val))
 		panic("attempt to call a " + typeName + " value")
 	}
 }
 
-func (self *luaState) callGoClosure(nArgs, nResults int, c *closure) {
+func (state *luaState) callGoClosure(nArgs, nResults int, c *closure) {
 	// create new lua stack
-	newStack := newLuaStack(nArgs+LUA_MINSTACK, self)
+	newStack := newLuaStack(nArgs+LUA_MINSTACK, state)
 	newStack.closure = c
 
 	// pass args, pop func
 	if nArgs > 0 {
-		args := self.stack.popN(nArgs)
+		args := state.stack.popN(nArgs)
 		newStack.pushN(args, nArgs)
 	}
-	self.stack.pop()
+	state.stack.pop()
 
 	// run closure
-	self.pushLuaStack(newStack)
-	r := c.goFunc(self)
-	self.popLuaStack()
+	state.pushLuaStack(newStack)
+	r := c.goFunc(state)
+	state.popLuaStack()
 
 	// return results
 	if nResults != 0 {
 		results := newStack.popN(r)
-		self.stack.check(len(results))
-		self.stack.pushN(results, nResults)
+		state.stack.check(len(results))
+		state.stack.pushN(results, nResults)
 	}
 }
 
-func (self *luaState) callLuaClosure(nArgs, nResults int, c *closure) {
+func (state *luaState) callLuaClosure(nArgs, nResults int, c *closure) {
 	nRegs := int(c.proto.MaxStackSize)
 	nParams := int(c.proto.NumParams)
 	isVararg := c.proto.IsVararg == 1
 
 	// create new lua stack
-	newStack := newLuaStack(nRegs+LUA_MINSTACK, self)
+	newStack := newLuaStack(nRegs+LUA_MINSTACK, state)
 	newStack.closure = c
 
 	// pass args, pop func
-	funcAndArgs := self.stack.popN(nArgs + 1)
+	funcAndArgs := state.stack.popN(nArgs + 1)
 	newStack.pushN(funcAndArgs[1:], nParams)
 	newStack.top = nRegs
 	if nArgs > nParams && isVararg {
@@ -122,26 +123,26 @@ func (self *luaState) callLuaClosure(nArgs, nResults int, c *closure) {
 	}
 
 	// run closure
-	self.pushLuaStack(newStack)
-	self.runLuaClosure()
-	self.popLuaStack()
+	state.pushLuaStack(newStack)
+	state.runLuaClosure()
+	state.popLuaStack()
 
 	// return results
 	if nResults != 0 {
 		results := newStack.popN(newStack.top - nRegs)
-		self.stack.check(len(results))
-		self.stack.pushN(results, nResults)
+		state.stack.check(len(results))
+		state.stack.pushN(results, nResults)
 	}
 }
 
-func (self *luaState) runLuaClosure() {
+func (state *luaState) runLuaClosure() {
 	for {
-		inst := vm.Instruction(self.Fetch())
-		inst.Execute(self)
+		inst := vm.Instruction(state.Fetch())
+		inst.Execute(state)
 
-		// indent := fmt.Sprintf("%%%ds", self.callDepth*2)
+		// indent := fmt.Sprintf("%%%ds", state.callDepth*2)
 		// fmt.Printf(indent+"[%02d: %s] => %s\n",
-		// 	"", pc+1, inst.OpName(), self)
+		// 	"", pc+1, inst.OpName(), state)
 
 		if inst.Opcode() == vm.OP_RETURN {
 			break
@@ -151,10 +152,10 @@ func (self *luaState) runLuaClosure() {
 
 // Calls a function in protected mode.
 // http://www.lua.org/manual/5.3/manual.html#lua_pcall
-func (self *luaState) PCall(nArgs, nResults, msgh int) (status ThreadStatus) {
+func (state *luaState) PCall(nArgs, nResults, msgh int) (status ThreadStatus) {
 	status = LUA_ERRRUN
-	caller := self.stack
-	handler := self.stack.get(msgh)
+	caller := state.stack
+	handler := state.stack.get(msgh)
 
 	// catch error
 	defer func() {
@@ -165,19 +166,19 @@ func (self *luaState) PCall(nArgs, nResults, msgh int) (status ThreadStatus) {
 					panic(err) // todo
 				}
 
-				self.stack.push(handler)
-				self.stack.push(err)
-				self.PCall(1, 1, 0)
-				err = self.stack.pop()
+				state.stack.push(handler)
+				state.stack.push(err)
+				state.PCall(1, 1, 0)
+				err = state.stack.pop()
 			}
-			for self.stack != caller {
-				self.popLuaStack()
+			for state.stack != caller {
+				state.popLuaStack()
 			}
-			self.stack.push(err)
+			state.stack.push(err)
 		}
 	}()
 
-	self.Call(nArgs, nResults)
+	state.Call(nArgs, nResults)
 	status = LUA_OK
 	return
 }
@@ -200,12 +201,12 @@ func _getErrObj(err interface{}) luaValue {
 
 // [-(nargs + 1), +nresults, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_callk
-func (self *luaState) CallK() {
+func (state *luaState) CallK() {
 	panic("todo: CallK!")
 }
 
 // [-(nargs + 1), +(nresults|1), –]
 // http://www.lua.org/manual/5.3/manual.html#lua_pcallk
-func (self *luaState) PCallK() {
+func (state *luaState) PCallK() {
 	panic("todo: PCallK!")
 }

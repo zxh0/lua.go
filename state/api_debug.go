@@ -1,41 +1,44 @@
 package state
 
-import "fmt"
-import "reflect"
-import "runtime"
-import "strings"
-import . "github.com/zxh0/lua.go/api"
+import (
+	"fmt"
+	"reflect"
+	"runtime"
+	"strings"
+
+	. "github.com/zxh0/lua.go/api"
+)
 
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_gethook
-func (self *luaState) GetHook() LuaHook {
-	return self.hook
+func (state *luaState) GetHook() LuaHook {
+	return state.hook
 }
 
-func (self *luaState) SetHook(f LuaHook, mask, count int) {
+func (state *luaState) SetHook(f LuaHook, mask, count int) {
 	panic("todo: SetHook!")
 }
 
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_gethookcount
-func (self *luaState) GetHookCount() int {
+func (state *luaState) GetHookCount() int {
 	return 0 // todo
 }
 
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_gethookmask
-func (self *luaState) GetHookMask() int {
-	return self.hookMask
+func (state *luaState) GetHookMask() int {
+	return state.hookMask
 }
 
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_getstack
-func (self *luaState) GetStack(level int, ar *LuaDebug) bool {
-	if level < 0 || level >= self.callDepth-1 {
+func (state *luaState) GetStack(level int, ar *LuaDebug) bool {
+	if level < 0 || level >= state.callDepth-1 {
 		return false
 	}
-	if self.callDepth > 1 {
-		if s := self.getLuaStack(level); s != nil {
+	if state.callDepth > 1 {
+		if s := state.getLuaStack(level); s != nil {
 			ar.CallInfo = s
 			return true
 		}
@@ -45,26 +48,26 @@ func (self *luaState) GetStack(level int, ar *LuaDebug) bool {
 
 // [-(0|1), +(0|1|2), e]
 // http://www.lua.org/manual/5.3/manual.html#lua_getinfo
-func (self *luaState) GetInfo(what string, ar *LuaDebug) bool {
+func (state *luaState) GetInfo(what string, ar *LuaDebug) bool {
 	if len(what) > 0 && what[0] == '>' {
 		what = what[1:]
-		val := self.stack.pop()
+		val := state.stack.pop()
 		if c, ok := val.(*closure); ok {
-			return self.loadInfo(ar, c, what)
+			return state.loadInfo(ar, c, what)
 		}
 		panic("function expected")
 	}
 
 	if ci := ar.CallInfo; ci != nil {
 		if c := ci.(*luaStack).closure; c != nil {
-			return self.loadInfo(ar, c, what)
+			return state.loadInfo(ar, c, what)
 		}
 	}
 
 	return false
 }
 
-func (self *luaState) loadInfo(ar *LuaDebug, c *closure, what string) bool {
+func (state *luaState) loadInfo(ar *LuaDebug, c *closure, what string) bool {
 	for len(what) > 0 {
 		switch what[0] {
 		case 'n': // fills in the field name and namewhat;
@@ -81,10 +84,10 @@ func (self *luaState) loadInfo(ar *LuaDebug, c *closure, what string) bool {
 			ar.NParams = 0      // todo
 			ar.IsVararg = false // todo
 		case 'f': // pushes onto the stack the function that is running at the given level;
-			self.stack.push(c)
+			state.stack.push(c)
 		case 'L': // pushes onto the stack a table whose indices are the numbers of the lines that are valid on the function.
 			//panic("todo: what->L")
-			self.PushNil()
+			state.PushNil()
 		default:
 			return false
 		}
@@ -174,21 +177,21 @@ func _setCurrentLine(ar *LuaDebug, c *closure) {
 	}
 }
 
-func (self *luaState) GetLocal(ar *LuaDebug, n int) string {
+func (state *luaState) GetLocal(ar *LuaDebug, n int) string {
 	panic("todo: GetLocal!")
 }
 
-func (self *luaState) SetLocal(ar *LuaDebug, n int) string {
+func (state *luaState) SetLocal(ar *LuaDebug, n int) string {
 	panic("todo: SetLocal!")
 }
 
 // [-0, +(0|1), –]
 // http://www.lua.org/manual/5.3/manual.html#lua_getupvalue
-func (self *luaState) GetUpvalue(funcIdx, n int) string {
-	val := self.stack.get(funcIdx)
+func (state *luaState) GetUpvalue(funcIdx, n int) string {
+	val := state.stack.get(funcIdx)
 	if c, ok := val.(*closure); ok {
 		if len(c.upvals) >= n {
-			self.stack.push(c.getUpvalue(n - 1))
+			state.stack.push(c.getUpvalue(n - 1))
 			return c.getUpvalueName(n - 1)
 		}
 	}
@@ -197,11 +200,11 @@ func (self *luaState) GetUpvalue(funcIdx, n int) string {
 
 // [-(0|1), +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_setupvalue
-func (self *luaState) SetUpvalue(funcIdx, n int) string {
-	val := self.stack.get(funcIdx)
+func (state *luaState) SetUpvalue(funcIdx, n int) string {
+	val := state.stack.get(funcIdx)
 	if c, ok := val.(*closure); ok {
 		if len(c.upvals) >= n {
-			c.setUpvalue(n-1, self.stack.pop())
+			c.setUpvalue(n-1, state.stack.pop())
 			return c.getUpvalueName(n - 1)
 		}
 	}
@@ -210,8 +213,8 @@ func (self *luaState) SetUpvalue(funcIdx, n int) string {
 
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_upvalueid
-func (self *luaState) UpvalueId(funcIdx, n int) interface{} {
-	val := self.stack.get(funcIdx)
+func (state *luaState) UpvalueId(funcIdx, n int) interface{} {
+	val := state.stack.get(funcIdx)
 	if c, ok := val.(*closure); ok {
 		if len(c.upvals) >= n {
 			return c.upvals[n-1]
@@ -222,9 +225,9 @@ func (self *luaState) UpvalueId(funcIdx, n int) interface{} {
 
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_upvaluejoin
-func (self *luaState) UpvalueJoin(funcIdx1, n1, funcIdx2, n2 int) {
-	v1 := self.stack.get(funcIdx1)
-	v2 := self.stack.get(funcIdx2)
+func (state *luaState) UpvalueJoin(funcIdx1, n1, funcIdx2, n2 int) {
+	v1 := state.stack.get(funcIdx1)
+	v2 := state.stack.get(funcIdx2)
 	if c1, ok := v1.(*closure); ok && len(c1.upvals) >= n1 {
 		if c2, ok := v2.(*closure); ok && len(c2.upvals) >= n2 {
 			c1.upvals[n1-1] = c2.upvals[n2-1]

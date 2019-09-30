@@ -1,8 +1,11 @@
 package state
 
-import "math"
-import . "github.com/zxh0/lua.go/api"
-import "github.com/zxh0/lua.go/number"
+import (
+	"math"
+
+	. "github.com/zxh0/lua.go/api"
+	"github.com/zxh0/lua.go/number"
+)
 
 type operator struct {
 	metamethod  string
@@ -45,24 +48,24 @@ var operators = []operator{
 
 // [-(2|1), +1, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_arith
-func (self *luaState) Arith(op ArithOp) {
+func (state *luaState) Arith(op ArithOp) {
 	var a, b luaValue // operands
-	b = self.stack.pop()
+	b = state.stack.pop()
 	if op != LUA_OPUNM && op != LUA_OPBNOT {
-		a = self.stack.pop()
+		a = state.stack.pop()
 	} else {
 		a = b
 	}
 
 	operator := operators[op]
 	if result := _arith(a, b, operator); result != nil {
-		self.stack.push(result)
+		state.stack.push(result)
 		return
 	}
 
 	mm := operator.metamethod
-	if result, ok := callMetamethod(a, b, mm, self); ok {
-		self.stack.push(result)
+	if result, ok := callMetamethod(a, b, mm, state); ok {
+		state.stack.push(result)
 		return
 	}
 
@@ -72,9 +75,9 @@ func (self *luaState) Arith(op ArithOp) {
 
 	var typeName string
 	if _, ok := convertToFloat(a); !ok {
-		typeName = self.TypeName(typeOf(a))
+		typeName = state.TypeName(typeOf(a))
 	} else {
-		typeName = self.TypeName(typeOf(b))
+		typeName = state.TypeName(typeOf(b))
 	}
 	panic("attempt to perform arithmetic on a " + typeName + " value")
 }

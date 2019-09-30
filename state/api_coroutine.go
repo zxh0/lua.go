@@ -1,77 +1,79 @@
 package state
 
-import . "github.com/zxh0/lua.go/api"
+import (
+	. "github.com/zxh0/lua.go/api"
+)
 
 // [-0, +1, m]
 // http://www.lua.org/manual/5.3/manual.html#lua_newthread
 // lua-5.3.4/src/lstate.c#lua_newthread()
-func (self *luaState) NewThread() LuaState {
-	t := &luaState{registry: self.registry}
+func (state *luaState) NewThread() LuaState {
+	t := &luaState{registry: state.registry}
 	t.pushLuaStack(newLuaStack(LUA_MINSTACK, t))
-	self.stack.push(t)
+	state.stack.push(t)
 	return t
 }
 
 // [-?, +?, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_resume
-func (self *luaState) Resume(from LuaState, nArgs int) ThreadStatus {
+func (state *luaState) Resume(from LuaState, nArgs int) ThreadStatus {
 	lsFrom := from.(*luaState)
 	if lsFrom.coChan == nil {
 		lsFrom.coChan = make(chan int)
 	}
 
-	if self.coChan == nil {
+	if state.coChan == nil {
 		// start coroutine
-		self.coChan = make(chan int)
-		self.coCaller = lsFrom
+		state.coChan = make(chan int)
+		state.coCaller = lsFrom
 		go func() {
-			self.coStatus = self.PCall(nArgs, -1, 0)
+			state.coStatus = state.PCall(nArgs, -1, 0)
 			lsFrom.coChan <- 1
 		}()
 	} else {
 		// resume coroutine
-		if self.coStatus != LUA_YIELD { // todo
-			self.stack.push("cannot resume non-suspended coroutine")
+		if state.coStatus != LUA_YIELD { // todo
+			state.stack.push("cannot resume non-suspended coroutine")
 			return LUA_ERRRUN
 		}
-		self.coStatus = LUA_OK
-		self.coChan <- 1
+		state.coStatus = LUA_OK
+		state.coChan <- 1
 	}
 
 	<-lsFrom.coChan // wait coroutine to finish or yield
-	return self.coStatus
+	return state.coStatus
 }
 
 // [-?, +?, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_yield
-func (self *luaState) Yield(nResults int) int {
-	if self.coCaller == nil { // todo
+func (state *luaState) Yield(nResults int) int {
+	if state.coCaller == nil { // todo
 		panic("attempt to yield from outside a coroutine")
 	}
-	self.coStatus = LUA_YIELD
-	self.coCaller.coChan <- 1
-	<-self.coChan
-	return self.GetTop()
+	state.coStatus = LUA_YIELD
+	state.coCaller.coChan <- 1
+	<-state.coChan
+	return state.GetTop()
 }
 
 // [-?, +?, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_yieldk
-func (self *luaState) YieldK() {
+func (state *luaState) YieldK() {
 	panic("todo!")
 }
 
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_isyieldable
-func (self *luaState) IsYieldable() bool {
-	if self.isMainThread() {
+func (state *luaState) IsYieldable() bool {
+	if state.isMainThread() {
 		return false
 	}
-	return self.coStatus != LUA_YIELD // todo
+	return state.coStatus != LUA_YIELD // todo
 }
 
 // [-0, +0, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_status
 // lua-5.3.4/src/lapi.c#lua_status()
-func (self *luaState) Status() ThreadStatus {
-	return self.coStatus
+func (state *luaState) Status() ThreadStatus {
+	return state.coStatus
 }

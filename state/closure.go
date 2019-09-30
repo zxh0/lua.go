@@ -1,7 +1,9 @@
 package state
 
-import . "github.com/zxh0/lua.go/api"
-import "github.com/zxh0/lua.go/binchunk"
+import (
+	. "github.com/zxh0/lua.go/api"
+	"github.com/zxh0/lua.go/binchunk"
+)
 
 type upvalue struct {
 	val *luaValue
@@ -29,29 +31,29 @@ func newGoClosure(f GoFunction, nUpvals int) *closure {
 	return c
 }
 
-func (self *closure) getUpvalueName(n int) string {
-	if self.proto != nil {
-		if len(self.proto.UpvalueNames) > n {
-			return self.proto.UpvalueNames[n]
+func (c *closure) getUpvalueName(n int) string {
+	if c.proto != nil {
+		if len(c.proto.UpvalueNames) > n {
+			return c.proto.UpvalueNames[n]
 		}
 	}
 	return ""
 }
 
-func (self *closure) getUpvalue(n int) luaValue {
-	if self.upvals[n] == nil || self.upvals[n].val == nil {
+func (c *closure) getUpvalue(n int) luaValue {
+	if c.upvals[n] == nil || c.upvals[n].val == nil {
 		return nil
 	}
-	return *(self.upvals[n].val)
+	return *(c.upvals[n].val)
 }
 
-func (self *closure) setUpvalue(n int, uv luaValue) {
-	if self.upvals[n] == nil {
-		self.upvals[n] = &upvalue{}
+func (c *closure) setUpvalue(n int, uv luaValue) {
+	if c.upvals[n] == nil {
+		c.upvals[n] = &upvalue{}
 	}
-	if self.upvals[n].val == nil {
-		self.upvals[n].val = &uv
+	if c.upvals[n].val == nil {
+		c.upvals[n].val = &uv
 	} else {
-		*(self.upvals[n].val) = uv
+		*(c.upvals[n].val) = uv
 	}
 }

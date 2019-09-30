@@ -1,8 +1,11 @@
 package binchunk
 
-import "encoding/binary"
-import "math"
-import . "github.com/zxh0/lua.go/api"
+import (
+	"encoding/binary"
+	"math"
+
+	. "github.com/zxh0/lua.go/api"
+)
 
 type writer struct {
 	buf []byte
@@ -10,176 +13,176 @@ type writer struct {
 	cap int
 }
 
-func (self *writer) data() []byte {
-	return self.buf[:self.idx]
+func (w *writer) data() []byte {
+	return w.buf[:w.idx]
 }
 
-func (self *writer) grow(n int) {
-	if self.cap-self.idx < n {
-		self.cap += self.cap/2 + n
-		newBuf := make([]byte, self.cap)
-		copy(newBuf, self.buf)
-		self.buf = newBuf
+func (w *writer) grow(n int) {
+	if w.cap-w.idx < n {
+		w.cap += w.cap/2 + n
+		newBuf := make([]byte, w.cap)
+		copy(newBuf, w.buf)
+		w.buf = newBuf
 	}
 }
 
-func (self *writer) writeByte(b byte) {
-	self.grow(1)
-	self.buf[self.idx] = b
-	self.idx += 1
+func (w *writer) writeByte(b byte) {
+	w.grow(1)
+	w.buf[w.idx] = b
+	w.idx += 1
 }
 
-func (self *writer) writeBytes(s []byte) {
-	self.grow(len(s))
-	copy(self.buf[self.idx:], s)
-	self.idx += len(s)
+func (w *writer) writeBytes(s []byte) {
+	w.grow(len(s))
+	copy(w.buf[w.idx:], s)
+	w.idx += len(s)
 }
 
-func (self *writer) writeUint32(i uint32) {
-	self.grow(4)
-	binary.LittleEndian.PutUint32(self.buf[self.idx:], i)
-	self.idx += 4
+func (w *writer) writeUint32(i uint32) {
+	w.grow(4)
+	binary.LittleEndian.PutUint32(w.buf[w.idx:], i)
+	w.idx += 4
 }
 
-func (self *writer) writeUint64(i uint64) {
-	self.grow(8)
-	binary.LittleEndian.PutUint64(self.buf[self.idx:], i)
-	self.idx += 8
+func (w *writer) writeUint64(i uint64) {
+	w.grow(8)
+	binary.LittleEndian.PutUint64(w.buf[w.idx:], i)
+	w.idx += 8
 }
 
-func (self *writer) writeLuaInteger(i int64) {
-	self.writeUint64(uint64(i))
+func (w *writer) writeLuaInteger(i int64) {
+	w.writeUint64(uint64(i))
 }
 
-func (self *writer) writeLuaNumber(f float64) {
-	self.writeUint64(math.Float64bits(f))
+func (w *writer) writeLuaNumber(f float64) {
+	w.writeUint64(math.Float64bits(f))
 }
 
-func (self *writer) writeString(s string) {
+func (w *writer) writeString(s string) {
 	size := len(s)
 	if size == 0 {
-		self.writeByte(0)
+		w.writeByte(0)
 		return
 	}
 
 	size += 1
 	if size < 0xFF {
-		self.writeByte(byte(size))
+		w.writeByte(byte(size))
 	} else {
-		self.writeByte(0xFF)
-		self.writeUint64(uint64(size)) // size_t
+		w.writeByte(0xFF)
+		w.writeUint64(uint64(size)) // size_t
 	}
 
-	self.writeBytes([]byte(s))
+	w.writeBytes([]byte(s))
 }
 
-func (self *writer) writeHeader() {
-	self.writeBytes([]byte(LUA_SIGNATURE))
-	self.writeByte(LUAC_VERSION)
-	self.writeByte(LUAC_FORMAT)
-	self.writeBytes([]byte(LUAC_DATA))
-	self.writeByte(CINT_SIZE)
-	self.writeByte(CSIZET_SIZE)
-	self.writeByte(INSTRUCTION_SIZE)
-	self.writeByte(LUA_INTEGER_SIZE)
-	self.writeByte(LUA_NUMBER_SIZE)
-	self.writeLuaInteger(LUAC_INT)
-	self.writeLuaNumber(LUAC_NUM)
+func (w *writer) writeHeader() {
+	w.writeBytes([]byte(LUA_SIGNATURE))
+	w.writeByte(LUAC_VERSION)
+	w.writeByte(LUAC_FORMAT)
+	w.writeBytes([]byte(LUAC_DATA))
+	w.writeByte(CINT_SIZE)
+	w.writeByte(CSIZET_SIZE)
+	w.writeByte(INSTRUCTION_SIZE)
+	w.writeByte(LUA_INTEGER_SIZE)
+	w.writeByte(LUA_NUMBER_SIZE)
+	w.writeLuaInteger(LUAC_INT)
+	w.writeLuaNumber(LUAC_NUM)
 }
 
-func (self *writer) writeProto(proto *Prototype, parentSource string) {
+func (w *writer) writeProto(proto *Prototype, parentSource string) {
 	if proto.Source == parentSource {
-		self.writeString("")
+		w.writeString("")
 	} else {
-		self.writeString(proto.Source)
+		w.writeString(proto.Source)
 	}
-	self.writeUint32(proto.LineDefined)
-	self.writeUint32(proto.LastLineDefined)
-	self.writeByte(proto.NumParams)
-	self.writeByte(proto.IsVararg)
-	self.writeByte(proto.MaxStackSize)
-	self.writeCode(proto.Code)
-	self.writeConstants(proto.Constants)
-	self.writeUpvalues(proto.Upvalues)
-	self.writeProtos(proto.Protos, proto.Source)
-	self.writeLineInfo(proto.LineInfo)
-	self.writeLocVars(proto.LocVars)
-	self.writeUpvalueNames(proto.UpvalueNames)
+	w.writeUint32(proto.LineDefined)
+	w.writeUint32(proto.LastLineDefined)
+	w.writeByte(proto.NumParams)
+	w.writeByte(proto.IsVararg)
+	w.writeByte(proto.MaxStackSize)
+	w.writeCode(proto.Code)
+	w.writeConstants(proto.Constants)
+	w.writeUpvalues(proto.Upvalues)
+	w.writeProtos(proto.Protos, proto.Source)
+	w.writeLineInfo(proto.LineInfo)
+	w.writeLocVars(proto.LocVars)
+	w.writeUpvalueNames(proto.UpvalueNames)
 }
 
-func (self *writer) writeCode(code []uint32) {
-	self.writeUint32(uint32(len(code)))
+func (w *writer) writeCode(code []uint32) {
+	w.writeUint32(uint32(len(code)))
 	for _, inst := range code {
-		self.writeUint32(inst)
+		w.writeUint32(inst)
 	}
 }
 
-func (self *writer) writeConstants(constants []interface{}) {
-	self.writeUint32(uint32(len(constants)))
+func (w *writer) writeConstants(constants []interface{}) {
+	w.writeUint32(uint32(len(constants)))
 	for _, constant := range constants {
-		self.writeConstant(constant)
+		w.writeConstant(constant)
 	}
 }
 
-func (self *writer) writeConstant(constant interface{}) {
+func (w *writer) writeConstant(constant interface{}) {
 	switch x := constant.(type) {
 	case nil:
-		self.writeByte(byte(LUA_TNIL))
+		w.writeByte(byte(LUA_TNIL))
 	case bool:
-		self.writeByte(byte(LUA_TBOOLEAN))
+		w.writeByte(byte(LUA_TBOOLEAN))
 		if x {
-			self.writeByte(1)
+			w.writeByte(1)
 		} else {
-			self.writeByte(0)
+			w.writeByte(0)
 		}
 	case int64:
-		self.writeByte(byte(LUA_TNUMINT))
-		self.writeLuaInteger(x)
+		w.writeByte(byte(LUA_TNUMINT))
+		w.writeLuaInteger(x)
 	case float64:
-		self.writeByte(byte(LUA_TNUMFLT))
-		self.writeLuaNumber(x)
+		w.writeByte(byte(LUA_TNUMFLT))
+		w.writeLuaNumber(x)
 	case string: // todo
-		self.writeByte(byte(LUA_TSHRSTR))
-		self.writeString(x)
+		w.writeByte(byte(LUA_TSHRSTR))
+		w.writeString(x)
 	default:
 		panic("unreachable!")
 	}
 }
 
-func (self *writer) writeUpvalues(upvalues []Upvalue) {
-	self.writeUint32(uint32(len(upvalues)))
+func (w *writer) writeUpvalues(upvalues []Upvalue) {
+	w.writeUint32(uint32(len(upvalues)))
 	for _, upvalue := range upvalues {
-		self.writeByte(upvalue.Instack)
-		self.writeByte(upvalue.Idx)
+		w.writeByte(upvalue.Instack)
+		w.writeByte(upvalue.Idx)
 	}
 }
 
-func (self *writer) writeProtos(protos []*Prototype, parentSource string) {
-	self.writeUint32(uint32(len(protos)))
+func (w *writer) writeProtos(protos []*Prototype, parentSource string) {
+	w.writeUint32(uint32(len(protos)))
 	for _, proto := range protos {
-		self.writeProto(proto, parentSource)
+		w.writeProto(proto, parentSource)
 	}
 }
 
-func (self *writer) writeLineInfo(lineInfo []uint32) {
-	self.writeUint32(uint32(len(lineInfo)))
+func (w *writer) writeLineInfo(lineInfo []uint32) {
+	w.writeUint32(uint32(len(lineInfo)))
 	for _, line := range lineInfo {
-		self.writeUint32(line) // todo
+		w.writeUint32(line) // todo
 	}
 }
 
-func (self *writer) writeLocVars(locVars []LocVar) {
-	self.writeUint32(uint32(len(locVars)))
+func (w *writer) writeLocVars(locVars []LocVar) {
+	w.writeUint32(uint32(len(locVars)))
 	for _, locVar := range locVars {
-		self.writeString(locVar.VarName)
-		self.writeUint32(locVar.StartPC)
-		self.writeUint32(locVar.EndPC)
+		w.writeString(locVar.VarName)
+		w.writeUint32(locVar.StartPC)
+		w.writeUint32(locVar.EndPC)
 	}
 }
 
-func (self *writer) writeUpvalueNames(names []string) {
-	self.writeUint32(uint32(len(names)))
+func (w *writer) writeUpvalueNames(names []string) {
+	w.writeUint32(uint32(len(names)))
 	for _, name := range names {
-		self.writeString(name)
+		w.writeString(name)
 	}
 }

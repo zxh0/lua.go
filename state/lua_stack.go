@@ -1,6 +1,8 @@
 package state
 
-import . "github.com/zxh0/lua.go/api"
+import (
+	. "github.com/zxh0/lua.go/api"
+)
 
 type luaStack struct {
 	/* virtual stack */
@@ -23,32 +25,32 @@ func newLuaStack(size int, state *luaState) *luaStack {
 	}
 }
 
-func (self *luaStack) check(n int) {
-	free := len(self.slots) - self.top
+func (stack *luaStack) check(n int) {
+	free := len(stack.slots) - stack.top
 	for i := free; i < n; i++ {
-		self.slots = append(self.slots, nil)
+		stack.slots = append(stack.slots, nil)
 	}
 }
 
-func (self *luaStack) push(val luaValue) {
-	if self.top == len(self.slots) {
+func (stack *luaStack) push(val luaValue) {
+	if stack.top == len(stack.slots) {
 		panic("stack overflow!")
 	}
-	self.slots[self.top] = val
-	self.top++
+	stack.slots[stack.top] = val
+	stack.top++
 }
 
-func (self *luaStack) pop() luaValue {
-	if self.top < 1 {
+func (stack *luaStack) pop() luaValue {
+	if stack.top < 1 {
 		panic("stack underflow!")
 	}
-	self.top--
-	val := self.slots[self.top]
-	self.slots[self.top] = nil
+	stack.top--
+	val := stack.slots[stack.top]
+	stack.slots[stack.top] = nil
 	return val
 }
 
-func (self *luaStack) pushN(vals []luaValue, n int) {
+func (stack *luaStack) pushN(vals []luaValue, n int) {
 	nVals := len(vals)
 	if n < 0 {
 		n = nVals
@@ -56,47 +58,47 @@ func (self *luaStack) pushN(vals []luaValue, n int) {
 
 	for i := 0; i < n; i++ {
 		if i < nVals {
-			self.push(vals[i])
+			stack.push(vals[i])
 		} else {
-			self.push(nil)
+			stack.push(nil)
 		}
 	}
 }
 
-func (self *luaStack) popN(n int) []luaValue {
+func (stack *luaStack) popN(n int) []luaValue {
 	vals := make([]luaValue, n)
 	for i := n - 1; i >= 0; i-- {
-		vals[i] = self.pop()
+		vals[i] = stack.pop()
 	}
 	return vals
 }
 
-func (self *luaStack) absIndex(idx int) int {
+func (stack *luaStack) absIndex(idx int) int {
 	// zero or positive or pseudo
 	if idx >= 0 || idx <= LUA_REGISTRYINDEX {
 		return idx
 	}
 	// negative
-	return idx + self.top + 1
+	return idx + stack.top + 1
 }
 
-func (self *luaStack) isValid(idx int) bool {
+func (stack *luaStack) isValid(idx int) bool {
 	if idx < LUA_REGISTRYINDEX { /* upvalues */
 		uvIdx := LUA_REGISTRYINDEX - idx - 1
-		c := self.closure
+		c := stack.closure
 		return c != nil && uvIdx < len(c.upvals)
 	}
 	if idx == LUA_REGISTRYINDEX {
 		return true
 	}
-	absIdx := self.absIndex(idx)
-	return absIdx > 0 && absIdx <= self.top
+	absIdx := stack.absIndex(idx)
+	return absIdx > 0 && absIdx <= stack.top
 }
 
-func (self *luaStack) get(idx int) luaValue {
+func (stack *luaStack) get(idx int) luaValue {
 	if idx < LUA_REGISTRYINDEX { /* upvalues */
 		uvIdx := LUA_REGISTRYINDEX - idx - 1
-		c := self.closure
+		c := stack.closure
 		if c == nil || uvIdx >= len(c.upvals) {
 			return nil
 		}
@@ -104,20 +106,20 @@ func (self *luaStack) get(idx int) luaValue {
 	}
 
 	if idx == LUA_REGISTRYINDEX {
-		return self.state.registry
+		return stack.state.registry
 	}
 
-	absIdx := self.absIndex(idx)
-	if absIdx > 0 && absIdx <= self.top {
-		return self.slots[absIdx-1]
+	absIdx := stack.absIndex(idx)
+	if absIdx > 0 && absIdx <= stack.top {
+		return stack.slots[absIdx-1]
 	}
 	return nil
 }
 
-func (self *luaStack) set(idx int, val luaValue) {
+func (stack *luaStack) set(idx int, val luaValue) {
 	if idx < LUA_REGISTRYINDEX { /* upvalues */
 		uvIdx := LUA_REGISTRYINDEX - idx - 1
-		c := self.closure
+		c := stack.closure
 		if c != nil && uvIdx < len(c.upvals) {
 			*(c.upvals[uvIdx].val) = val
 		}
@@ -125,20 +127,20 @@ func (self *luaStack) set(idx int, val luaValue) {
 	}
 
 	if idx == LUA_REGISTRYINDEX {
-		self.state.registry = val.(*luaTable)
+		stack.state.registry = val.(*luaTable)
 		return
 	}
 
-	absIdx := self.absIndex(idx)
-	if absIdx > 0 && absIdx <= self.top {
-		self.slots[absIdx-1] = val
+	absIdx := stack.absIndex(idx)
+	if absIdx > 0 && absIdx <= stack.top {
+		stack.slots[absIdx-1] = val
 		return
 	}
 	panic("invalid index!")
 }
 
-func (self *luaStack) reverse(from, to int) {
-	slots := self.slots
+func (stack *luaStack) reverse(from, to int) {
+	slots := stack.slots
 	for from < to {
 		slots[from], slots[to] = slots[to], slots[from]
 		from++

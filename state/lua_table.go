@@ -1,7 +1,10 @@
 package state
 
-import "math"
-import "github.com/zxh0/lua.go/number"
+import (
+	"math"
+
+	"github.com/zxh0/lua.go/number"
+)
 
 type luaTable struct {
 	metatable *luaTable
@@ -23,23 +26,23 @@ func newLuaTable(nArr, nRec int) *luaTable {
 	return t
 }
 
-func (self *luaTable) hasMetafield(fieldName string) bool {
-	return self.metatable != nil &&
-		self.metatable.get(fieldName) != nil
+func (table *luaTable) hasMetafield(fieldName string) bool {
+	return table.metatable != nil &&
+		table.metatable.get(fieldName) != nil
 }
 
-func (self *luaTable) len() int {
-	return len(self.arr)
+func (table *luaTable) len() int {
+	return len(table.arr)
 }
 
-func (self *luaTable) get(key luaValue) luaValue {
+func (table *luaTable) get(key luaValue) luaValue {
 	key = _floatToInteger(key)
 	if idx, ok := key.(int64); ok {
-		if idx >= 1 && idx <= int64(len(self.arr)) {
-			return self.arr[idx-1]
+		if idx >= 1 && idx <= int64(len(table.arr)) {
+			return table.arr[idx-1]
 		}
 	}
-	return self._map[key]
+	return table._map[key]
 }
 
 func _floatToInteger(key luaValue) luaValue {
@@ -51,7 +54,7 @@ func _floatToInteger(key luaValue) luaValue {
 	return key
 }
 
-func (self *luaTable) put(key, val luaValue) {
+func (table *luaTable) put(key, val luaValue) {
 	if key == nil {
 		panic("table index is nil!")
 	}
@@ -59,83 +62,83 @@ func (self *luaTable) put(key, val luaValue) {
 		panic("table index is NaN!")
 	}
 
-	self.changed = true
+	table.changed = true
 	key = _floatToInteger(key)
 	if idx, ok := key.(int64); ok && idx >= 1 {
-		arrLen := int64(len(self.arr))
+		arrLen := int64(len(table.arr))
 		if idx <= arrLen {
-			self.arr[idx-1] = val
+			table.arr[idx-1] = val
 			if idx == arrLen && val == nil {
-				self._shrinkArray()
+				table._shrinkArray()
 			}
 			return
 		}
 		if idx == arrLen+1 {
-			delete(self._map, key)
+			delete(table._map, key)
 			if val != nil {
-				self.arr = append(self.arr, val)
-				self._expandArray()
+				table.arr = append(table.arr, val)
+				table._expandArray()
 			}
 			return
 		}
 	}
 	if val != nil {
-		if self._map == nil {
-			self._map = make(map[luaValue]luaValue, 8)
+		if table._map == nil {
+			table._map = make(map[luaValue]luaValue, 8)
 		}
-		self._map[key] = val
+		table._map[key] = val
 	} else {
-		delete(self._map, key)
+		delete(table._map, key)
 	}
 }
 
-func (self *luaTable) _shrinkArray() {
-	for i := len(self.arr) - 1; i >= 0; i-- {
-		if self.arr[i] == nil {
-			self.arr = self.arr[0:i]
+func (table *luaTable) _shrinkArray() {
+	for i := len(table.arr) - 1; i >= 0; i-- {
+		if table.arr[i] == nil {
+			table.arr = table.arr[0:i]
 		}
 	}
 }
 
-func (self *luaTable) _expandArray() {
-	for idx := int64(len(self.arr)) + 1; true; idx++ {
-		if val, found := self._map[idx]; found {
-			delete(self._map, idx)
-			self.arr = append(self.arr, val)
+func (table *luaTable) _expandArray() {
+	for idx := int64(len(table.arr)) + 1; true; idx++ {
+		if val, found := table._map[idx]; found {
+			delete(table._map, idx)
+			table.arr = append(table.arr, val)
 		} else {
 			break
 		}
 	}
 }
 
-func (self *luaTable) nextKey(key luaValue) luaValue {
-	if self.keys == nil || (key == nil && self.changed) {
-		self.initKeys()
-		self.changed = false
+func (table *luaTable) nextKey(key luaValue) luaValue {
+	if table.keys == nil || (key == nil && table.changed) {
+		table.initKeys()
+		table.changed = false
 	}
 
-	nextKey := self.keys[key]
-	if nextKey == nil && key != nil && key != self.lastKey {
+	nextKey := table.keys[key]
+	if nextKey == nil && key != nil && key != table.lastKey {
 		panic("invalid key to 'next'")
 	}
 
 	return nextKey
 }
 
-func (self *luaTable) initKeys() {
-	self.keys = make(map[luaValue]luaValue)
+func (table *luaTable) initKeys() {
+	table.keys = make(map[luaValue]luaValue)
 	var key luaValue = nil
-	for i, v := range self.arr {
+	for i, v := range table.arr {
 		if v != nil {
-			self.keys[key] = int64(i + 1)
+			table.keys[key] = int64(i + 1)
 			key = int64(i + 1)
 		}
 	}
-	for k, v := range self._map {
+	for k, v := range table._map {
 		if v != nil {
-			self.keys[key] = k
+			table.keys[key] = k
 			key = k
 		}
 	}
-	self.lastKey = key
+	table.lastKey = key
 }

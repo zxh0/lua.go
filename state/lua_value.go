@@ -1,8 +1,11 @@
 package state
 
-import "fmt"
-import . "github.com/zxh0/lua.go/api"
-import "github.com/zxh0/lua.go/number"
+import (
+	"fmt"
+
+	. "github.com/zxh0/lua.go/api"
+	"github.com/zxh0/lua.go/number"
+)
 
 type luaValue interface{}
 

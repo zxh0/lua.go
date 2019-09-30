@@ -1,9 +1,12 @@
 package binchunk
 
-import "encoding/hex"
-import "strings"
-import "testing"
-import "github.com/stretchr/testify/assert"
+import (
+	"encoding/hex"
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 var fibonacciSrc = `
 function fibonacci(n)

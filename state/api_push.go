@@ -1,80 +1,83 @@
 package state
 
-import "fmt"
-import . "github.com/zxh0/lua.go/api"
+import (
+	"fmt"
+
+	. "github.com/zxh0/lua.go/api"
+)
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_pushnil
-func (self *luaState) PushNil() {
-	self.stack.push(nil)
+func (state *luaState) PushNil() {
+	state.stack.push(nil)
 }
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_pushboolean
-func (self *luaState) PushBoolean(b bool) {
-	self.stack.push(b)
+func (state *luaState) PushBoolean(b bool) {
+	state.stack.push(b)
 }
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_pushinteger
-func (self *luaState) PushInteger(n int64) {
-	self.stack.push(n)
+func (state *luaState) PushInteger(n int64) {
+	state.stack.push(n)
 }
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_pushnumber
-func (self *luaState) PushNumber(n float64) {
-	self.stack.push(n)
+func (state *luaState) PushNumber(n float64) {
+	state.stack.push(n)
 }
 
 // [-0, +1, m]
 // http://www.lua.org/manual/5.3/manual.html#lua_pushstring
-func (self *luaState) PushString(s string) {
-	self.stack.push(s)
+func (state *luaState) PushString(s string) {
+	state.stack.push(s)
 }
 
 // [-0, +1, e]
 // http://www.lua.org/manual/5.3/manual.html#lua_pushfstring
-func (self *luaState) PushFString(fmtStr string, a ...interface{}) string {
+func (state *luaState) PushFString(fmtStr string, a ...interface{}) string {
 	str := fmt.Sprintf(fmtStr, a...)
-	self.stack.push(str)
+	state.stack.push(str)
 	return str
 }
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_pushcfunction
-func (self *luaState) PushGoFunction(f GoFunction) {
-	self.stack.push(newGoClosure(f, 0))
+func (state *luaState) PushGoFunction(f GoFunction) {
+	state.stack.push(newGoClosure(f, 0))
 }
 
 // [-n, +1, m]
 // http://www.lua.org/manual/5.3/manual.html#lua_pushcclosure
-func (self *luaState) PushGoClosure(f GoFunction, n int) {
+func (state *luaState) PushGoClosure(f GoFunction, n int) {
 	closure := newGoClosure(f, n)
 	for i := n; i > 0; i-- {
-		val := self.stack.pop()
+		val := state.stack.pop()
 		closure.upvals[i-1] = &upvalue{&val}
 	}
-	self.stack.push(closure)
+	state.stack.push(closure)
 }
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_pushlightuserdata
-func (self *luaState) PushLightUserData(d UserData) {
+func (state *luaState) PushLightUserData(d UserData) {
 	ud := &userdata{data: d}
-	self.stack.push(ud)
+	state.stack.push(ud)
 }
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_pushthread
-func (self *luaState) PushThread() bool {
-	self.stack.push(self)
-	return self.isMainThread()
+func (state *luaState) PushThread() bool {
+	state.stack.push(state)
+	return state.isMainThread()
 }
 
 // [-0, +1, –]
 // http://www.lua.org/manual/5.3/manual.html#lua_pushglobaltable
-func (self *luaState) PushGlobalTable() {
-	global := self.registry.get(LUA_RIDX_GLOBALS)
-	self.stack.push(global)
+func (state *luaState) PushGlobalTable() {
+	global := state.registry.get(LUA_RIDX_GLOBALS)
+	state.stack.push(global)
 }

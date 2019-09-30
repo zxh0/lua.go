@@ -1,10 +1,12 @@
 package lexer
 
-import "bytes"
-import "fmt"
-import "regexp"
-import "strconv"
-import "strings"
+import (
+	"bytes"
+	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
+)
 
 //var reSpaces = regexp.MustCompile(`^\s+`)
 var reNewLine = regexp.MustCompile("\r\n|\n\r|\n|\r")
@@ -30,273 +32,273 @@ func NewLexer(chunk, chunkName string) *Lexer {
 	return &Lexer{chunk, chunkName, 1, "", 0, 0}
 }
 
-func (self *Lexer) Line() int {
-	return self.line
+func (lexer *Lexer) Line() int {
+	return lexer.line
 }
 
-func (self *Lexer) LookAhead() int {
-	if self.nextTokenLine > 0 {
-		return self.nextTokenKind
+func (lexer *Lexer) LookAhead() int {
+	if lexer.nextTokenLine > 0 {
+		return lexer.nextTokenKind
 	}
-	currentLine := self.line
-	line, kind, token := self.NextToken()
-	self.line = currentLine
-	self.nextTokenLine = line
-	self.nextTokenKind = kind
-	self.nextToken = token
+	currentLine := lexer.line
+	line, kind, token := lexer.NextToken()
+	lexer.line = currentLine
+	lexer.nextTokenLine = line
+	lexer.nextTokenKind = kind
+	lexer.nextToken = token
 	return kind
 }
 
-func (self *Lexer) NextIdentifier() (line int, token string) {
-	return self.NextTokenOfKind(TOKEN_IDENTIFIER)
+func (lexer *Lexer) NextIdentifier() (line int, token string) {
+	return lexer.NextTokenOfKind(TOKEN_IDENTIFIER)
 }
 
-func (self *Lexer) NextTokenOfKind(kind int) (line int, token string) {
-	line, _kind, token := self.NextToken()
+func (lexer *Lexer) NextTokenOfKind(kind int) (line int, token string) {
+	line, _kind, token := lexer.NextToken()
 	if kind != _kind {
-		self.error("syntax error near '%s'", token)
+		lexer.error("syntax error near '%s'", token)
 	}
 	return line, token
 }
 
-func (self *Lexer) NextToken() (line, kind int, token string) {
-	if self.nextTokenLine > 0 {
-		line = self.nextTokenLine
-		kind = self.nextTokenKind
-		token = self.nextToken
-		self.line = self.nextTokenLine
-		self.nextTokenLine = 0
+func (lexer *Lexer) NextToken() (line, kind int, token string) {
+	if lexer.nextTokenLine > 0 {
+		line = lexer.nextTokenLine
+		kind = lexer.nextTokenKind
+		token = lexer.nextToken
+		lexer.line = lexer.nextTokenLine
+		lexer.nextTokenLine = 0
 		return
 	}
 
-	self.skipWhiteSpaces()
-	if len(self.chunk) == 0 {
-		return self.line, TOKEN_EOF, "EOF"
+	lexer.skipWhiteSpaces()
+	if len(lexer.chunk) == 0 {
+		return lexer.line, TOKEN_EOF, "EOF"
 	}
 
-	switch self.chunk[0] {
+	switch lexer.chunk[0] {
 	case ';':
-		self.next(1)
-		return self.line, TOKEN_SEP_SEMI, ";"
+		lexer.next(1)
+		return lexer.line, TOKEN_SEP_SEMI, ";"
 	case ',':
-		self.next(1)
-		return self.line, TOKEN_SEP_COMMA, ","
+		lexer.next(1)
+		return lexer.line, TOKEN_SEP_COMMA, ","
 	case '(':
-		self.next(1)
-		return self.line, TOKEN_SEP_LPAREN, "("
+		lexer.next(1)
+		return lexer.line, TOKEN_SEP_LPAREN, "("
 	case ')':
-		self.next(1)
-		return self.line, TOKEN_SEP_RPAREN, ")"
+		lexer.next(1)
+		return lexer.line, TOKEN_SEP_RPAREN, ")"
 	case ']':
-		self.next(1)
-		return self.line, TOKEN_SEP_RBRACK, "]"
+		lexer.next(1)
+		return lexer.line, TOKEN_SEP_RBRACK, "]"
 	case '{':
-		self.next(1)
-		return self.line, TOKEN_SEP_LCURLY, "{"
+		lexer.next(1)
+		return lexer.line, TOKEN_SEP_LCURLY, "{"
 	case '}':
-		self.next(1)
-		return self.line, TOKEN_SEP_RCURLY, "}"
+		lexer.next(1)
+		return lexer.line, TOKEN_SEP_RCURLY, "}"
 	case '+':
-		self.next(1)
-		return self.line, TOKEN_OP_ADD, "+"
+		lexer.next(1)
+		return lexer.line, TOKEN_OP_ADD, "+"
 	case '-':
-		self.next(1)
-		return self.line, TOKEN_OP_MINUS, "-"
+		lexer.next(1)
+		return lexer.line, TOKEN_OP_MINUS, "-"
 	case '*':
-		self.next(1)
-		return self.line, TOKEN_OP_MUL, "*"
+		lexer.next(1)
+		return lexer.line, TOKEN_OP_MUL, "*"
 	case '^':
-		self.next(1)
-		return self.line, TOKEN_OP_POW, "^"
+		lexer.next(1)
+		return lexer.line, TOKEN_OP_POW, "^"
 	case '%':
-		self.next(1)
-		return self.line, TOKEN_OP_MOD, "%"
+		lexer.next(1)
+		return lexer.line, TOKEN_OP_MOD, "%"
 	case '&':
-		self.next(1)
-		return self.line, TOKEN_OP_BAND, "&"
+		lexer.next(1)
+		return lexer.line, TOKEN_OP_BAND, "&"
 	case '|':
-		self.next(1)
-		return self.line, TOKEN_OP_BOR, "|"
+		lexer.next(1)
+		return lexer.line, TOKEN_OP_BOR, "|"
 	case '#':
-		self.next(1)
-		return self.line, TOKEN_OP_LEN, "#"
+		lexer.next(1)
+		return lexer.line, TOKEN_OP_LEN, "#"
 	case ':':
-		if self.test("::") {
-			self.next(2)
-			return self.line, TOKEN_SEP_LABEL, "::"
+		if lexer.test("::") {
+			lexer.next(2)
+			return lexer.line, TOKEN_SEP_LABEL, "::"
 		} else {
-			self.next(1)
-			return self.line, TOKEN_SEP_COLON, ":"
+			lexer.next(1)
+			return lexer.line, TOKEN_SEP_COLON, ":"
 		}
 	case '/':
-		if self.test("//") {
-			self.next(2)
-			return self.line, TOKEN_OP_IDIV, "//"
+		if lexer.test("//") {
+			lexer.next(2)
+			return lexer.line, TOKEN_OP_IDIV, "//"
 		} else {
-			self.next(1)
-			return self.line, TOKEN_OP_DIV, "/"
+			lexer.next(1)
+			return lexer.line, TOKEN_OP_DIV, "/"
 		}
 	case '~':
-		if self.test("~=") {
-			self.next(2)
-			return self.line, TOKEN_OP_NE, "~="
+		if lexer.test("~=") {
+			lexer.next(2)
+			return lexer.line, TOKEN_OP_NE, "~="
 		} else {
-			self.next(1)
-			return self.line, TOKEN_OP_WAVE, "~"
+			lexer.next(1)
+			return lexer.line, TOKEN_OP_WAVE, "~"
 		}
 	case '=':
-		if self.test("==") {
-			self.next(2)
-			return self.line, TOKEN_OP_EQ, "=="
+		if lexer.test("==") {
+			lexer.next(2)
+			return lexer.line, TOKEN_OP_EQ, "=="
 		} else {
-			self.next(1)
-			return self.line, TOKEN_OP_ASSIGN, "="
+			lexer.next(1)
+			return lexer.line, TOKEN_OP_ASSIGN, "="
 		}
 	case '<':
-		if self.test("<<") {
-			self.next(2)
-			return self.line, TOKEN_OP_SHL, "<<"
-		} else if self.test("<=") {
-			self.next(2)
-			return self.line, TOKEN_OP_LE, "<="
+		if lexer.test("<<") {
+			lexer.next(2)
+			return lexer.line, TOKEN_OP_SHL, "<<"
+		} else if lexer.test("<=") {
+			lexer.next(2)
+			return lexer.line, TOKEN_OP_LE, "<="
 		} else {
-			self.next(1)
-			return self.line, TOKEN_OP_LT, "<"
+			lexer.next(1)
+			return lexer.line, TOKEN_OP_LT, "<"
 		}
 	case '>':
-		if self.test(">>") {
-			self.next(2)
-			return self.line, TOKEN_OP_SHR, ">>"
-		} else if self.test(">=") {
-			self.next(2)
-			return self.line, TOKEN_OP_GE, ">="
+		if lexer.test(">>") {
+			lexer.next(2)
+			return lexer.line, TOKEN_OP_SHR, ">>"
+		} else if lexer.test(">=") {
+			lexer.next(2)
+			return lexer.line, TOKEN_OP_GE, ">="
 		} else {
-			self.next(1)
-			return self.line, TOKEN_OP_GT, ">"
+			lexer.next(1)
+			return lexer.line, TOKEN_OP_GT, ">"
 		}
 	case '.':
-		if self.test("...") {
-			self.next(3)
-			return self.line, TOKEN_VARARG, "..."
-		} else if self.test("..") {
-			self.next(2)
-			return self.line, TOKEN_OP_CONCAT, ".."
-		} else if len(self.chunk) == 1 || !isDigit(self.chunk[1]) {
-			self.next(1)
-			return self.line, TOKEN_SEP_DOT, "."
+		if lexer.test("...") {
+			lexer.next(3)
+			return lexer.line, TOKEN_VARARG, "..."
+		} else if lexer.test("..") {
+			lexer.next(2)
+			return lexer.line, TOKEN_OP_CONCAT, ".."
+		} else if len(lexer.chunk) == 1 || !isDigit(lexer.chunk[1]) {
+			lexer.next(1)
+			return lexer.line, TOKEN_SEP_DOT, "."
 		}
 	case '[':
-		if self.test("[[") || self.test("[=") {
-			return self.line, TOKEN_STRING, self.scanLongString()
+		if lexer.test("[[") || lexer.test("[=") {
+			return lexer.line, TOKEN_STRING, lexer.scanLongString()
 		} else {
-			self.next(1)
-			return self.line, TOKEN_SEP_LBRACK, "["
+			lexer.next(1)
+			return lexer.line, TOKEN_SEP_LBRACK, "["
 		}
 	case '\'', '"':
-		return self.line, TOKEN_STRING, self.scanShortString()
+		return lexer.line, TOKEN_STRING, lexer.scanShortString()
 	}
 
-	c := self.chunk[0]
+	c := lexer.chunk[0]
 	if c == '.' || isDigit(c) {
-		token := self.scanNumber()
-		return self.line, TOKEN_NUMBER, token
+		token := lexer.scanNumber()
+		return lexer.line, TOKEN_NUMBER, token
 	}
 	if c == '_' || isLetter(c) {
-		token := self.scanIdentifier()
+		token := lexer.scanIdentifier()
 		if kind, found := keywords[token]; found {
-			return self.line, kind, token // keyword
+			return lexer.line, kind, token // keyword
 		} else {
-			return self.line, TOKEN_IDENTIFIER, token
+			return lexer.line, TOKEN_IDENTIFIER, token
 		}
 	}
 
-	self.error("unexpected symbol near %q", c)
+	lexer.error("unexpected symbol near %q", c)
 	return
 }
 
-func (self *Lexer) next(n int) {
-	self.chunk = self.chunk[n:]
+func (lexer *Lexer) next(n int) {
+	lexer.chunk = lexer.chunk[n:]
 }
 
-func (self *Lexer) test(s string) bool {
-	return strings.HasPrefix(self.chunk, s)
+func (lexer *Lexer) test(s string) bool {
+	return strings.HasPrefix(lexer.chunk, s)
 }
 
-func (self *Lexer) error(f string, a ...interface{}) {
+func (lexer *Lexer) error(f string, a ...interface{}) {
 	err := fmt.Sprintf(f, a...)
-	err = fmt.Sprintf("%s:%d: %s", self.chunkName, self.line, err)
+	err = fmt.Sprintf("%s:%d: %s", lexer.chunkName, lexer.line, err)
 	panic(err)
 }
 
-func (self *Lexer) skipWhiteSpaces() {
-	for len(self.chunk) > 0 {
-		if self.test("--") {
-			self.skipComment()
-		} else if self.test("\r\n") || self.test("\n\r") {
-			self.next(2)
-			self.line += 1
-		} else if isNewLine(self.chunk[0]) {
-			self.next(1)
-			self.line += 1
-		} else if isWhiteSpace(self.chunk[0]) {
-			self.next(1)
+func (lexer *Lexer) skipWhiteSpaces() {
+	for len(lexer.chunk) > 0 {
+		if lexer.test("--") {
+			lexer.skipComment()
+		} else if lexer.test("\r\n") || lexer.test("\n\r") {
+			lexer.next(2)
+			lexer.line += 1
+		} else if isNewLine(lexer.chunk[0]) {
+			lexer.next(1)
+			lexer.line += 1
+		} else if isWhiteSpace(lexer.chunk[0]) {
+			lexer.next(1)
 		} else {
 			break
 		}
 	}
 }
 
-func (self *Lexer) skipComment() {
-	self.next(2) // skip --
+func (lexer *Lexer) skipComment() {
+	lexer.next(2) // skip --
 
 	// long comment ?
-	if self.test("[") {
-		if reOpeningLongBracket.FindString(self.chunk) != "" {
-			self.scanLongString()
+	if lexer.test("[") {
+		if reOpeningLongBracket.FindString(lexer.chunk) != "" {
+			lexer.scanLongString()
 			return
 		}
 	}
 
 	// short comment
-	for len(self.chunk) > 0 && !isNewLine(self.chunk[0]) {
-		self.next(1)
+	for len(lexer.chunk) > 0 && !isNewLine(lexer.chunk[0]) {
+		lexer.next(1)
 	}
 }
 
-func (self *Lexer) scanIdentifier() string {
-	return self.scan(reIdentifier)
+func (lexer *Lexer) scanIdentifier() string {
+	return lexer.scan(reIdentifier)
 }
 
-func (self *Lexer) scanNumber() string {
-	return self.scan(reNumber)
+func (lexer *Lexer) scanNumber() string {
+	return lexer.scan(reNumber)
 }
 
-func (self *Lexer) scan(re *regexp.Regexp) string {
-	if token := re.FindString(self.chunk); token != "" {
-		self.next(len(token))
+func (lexer *Lexer) scan(re *regexp.Regexp) string {
+	if token := re.FindString(lexer.chunk); token != "" {
+		lexer.next(len(token))
 		return token
 	}
 	panic("unreachable!")
 }
 
-func (self *Lexer) scanLongString() string {
-	openingLongBracket := reOpeningLongBracket.FindString(self.chunk)
+func (lexer *Lexer) scanLongString() string {
+	openingLongBracket := reOpeningLongBracket.FindString(lexer.chunk)
 	if openingLongBracket == "" {
-		self.error("invalid long string delimiter near '%s'",
-			self.chunk[0:2])
+		lexer.error("invalid long string delimiter near '%s'",
+			lexer.chunk[0:2])
 	}
 
 	closingLongBracket := strings.Replace(openingLongBracket, "[", "]", -1)
-	closingLongBracketIdx := strings.Index(self.chunk, closingLongBracket)
+	closingLongBracketIdx := strings.Index(lexer.chunk, closingLongBracket)
 	if closingLongBracketIdx < 0 {
-		self.error("unfinished long string or comment")
+		lexer.error("unfinished long string or comment")
 	}
 
-	str := self.chunk[len(openingLongBracket):closingLongBracketIdx]
-	self.next(closingLongBracketIdx + len(closingLongBracket))
+	str := lexer.chunk[len(openingLongBracket):closingLongBracketIdx]
+	lexer.next(closingLongBracketIdx + len(closingLongBracket))
 
 	str = reNewLine.ReplaceAllString(str, "\n")
-	self.line += strings.Count(str, "\n")
+	lexer.line += strings.Count(str, "\n")
 	if len(str) > 0 && str[0] == '\n' {
 		str = str[1:]
 	}
@@ -304,21 +306,21 @@ func (self *Lexer) scanLongString() string {
 	return str
 }
 
-func (self *Lexer) scanShortString() string {
-	if str := reShortStr.FindString(self.chunk); str != "" {
-		self.next(len(str))
+func (lexer *Lexer) scanShortString() string {
+	if str := reShortStr.FindString(lexer.chunk); str != "" {
+		lexer.next(len(str))
 		str = str[1 : len(str)-1]
 		if strings.Index(str, `\`) >= 0 {
-			self.line += len(reNewLine.FindAllString(str, -1))
-			str = self.escape(str)
+			lexer.line += len(reNewLine.FindAllString(str, -1))
+			str = lexer.escape(str)
 		}
 		return str
 	}
-	self.error("unfinished string")
+	lexer.error("unfinished string")
 	return ""
 }
 
-func (self *Lexer) escape(str string) string {
+func (lexer *Lexer) escape(str string) string {
 	var buf bytes.Buffer
 
 	for len(str) > 0 {
@@ -329,7 +331,7 @@ func (self *Lexer) escape(str string) string {
 		}
 
 		if len(str) == 1 {
-			self.error("unfinished string")
+			lexer.error("unfinished string")
 		}
 
 		switch str[1] {
@@ -381,7 +383,7 @@ func (self *Lexer) escape(str string) string {
 					str = str[len(found):]
 					continue
 				}
-				self.error("decimal escape too large near '%s'", found)
+				lexer.error("decimal escape too large near '%s'", found)
 			}
 		case 'x': // \xXX
 			if found := reHexEscapeSeq.FindString(str); found != "" {
@@ -398,7 +400,7 @@ func (self *Lexer) escape(str string) string {
 					str = str[len(found):]
 					continue
 				}
-				self.error("UTF-8 value too large near '%s'", found)
+				lexer.error("UTF-8 value too large near '%s'", found)
 			}
 		case 'z':
 			str = str[2:]
@@ -407,7 +409,7 @@ func (self *Lexer) escape(str string) string {
 			}
 			continue
 		}
-		self.error("invalid escape sequence near '\\%c'", str[1])
+		lexer.error("invalid escape sequence near '\\%c'", str[1])
 	}
 
 	return buf.String()

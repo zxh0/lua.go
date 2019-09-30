@@ -1,6 +1,8 @@
 package state
 
-import . "github.com/zxh0/lua.go/api"
+import (
+	. "github.com/zxh0/lua.go/api"
+)
 
 type luaState struct {
 	/* global state */
@@ -29,25 +31,25 @@ func New() LuaState {
 	return ls
 }
 
-func (self *luaState) isMainThread() bool {
-	return self.registry.get(LUA_RIDX_MAINTHREAD) == self
+func (state *luaState) isMainThread() bool {
+	return state.registry.get(LUA_RIDX_MAINTHREAD) == state
 }
 
-func (self *luaState) pushLuaStack(stack *luaStack) {
-	stack.prev = self.stack
-	self.stack = stack
-	self.callDepth++
+func (state *luaState) pushLuaStack(stack *luaStack) {
+	stack.prev = state.stack
+	state.stack = stack
+	state.callDepth++
 }
 
-func (self *luaState) popLuaStack() {
-	stack := self.stack
-	self.stack = stack.prev
+func (state *luaState) popLuaStack() {
+	stack := state.stack
+	state.stack = stack.prev
 	stack.prev = nil
-	self.callDepth--
+	state.callDepth--
 }
 
-func (self *luaState) getLuaStack(level int) *luaStack {
-	stack := self.stack
+func (state *luaState) getLuaStack(level int) *luaStack {
+	stack := state.stack
 	for i := 0; i < level && stack != nil; i++ {
 		stack = stack.prev
 	}
@@ -55,6 +57,6 @@ func (self *luaState) getLuaStack(level int) *luaStack {
 }
 
 // debug
-func (self *luaState) String() string {
-	return stackToString(self.stack)
+func (state *luaState) String() string {
+	return stackToString(state.stack)
 }

@@ -8,3 +8,5 @@ bin/
 github.com/
 lua
 luac
+
+.idea

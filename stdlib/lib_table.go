@@ -222,12 +222,12 @@ type wrapper struct {
 	ls LuaState
 }
 
-func (self wrapper) Len() int {
-	return int(self.ls.Len2(1))
+func (w wrapper) Len() int {
+	return int(w.ls.Len2(1))
 }
 
-func (self wrapper) Less(i, j int) bool {
-	ls := self.ls
+func (w wrapper) Less(i, j int) bool {
+	ls := w.ls
 	if ls.IsFunction(2) { // cmp is given
 		ls.PushValue(2)
 		ls.GetI(1, int64(i+1))
@@ -245,8 +245,8 @@ func (self wrapper) Less(i, j int) bool {
 	}
 }
 
-func (self wrapper) Swap(i, j int) {
-	ls := self.ls
+func (w wrapper) Swap(i, j int) {
+	ls := w.ls
 	ls.GetI(1, int64(i+1))
 	ls.GetI(1, int64(j+1))
 	ls.SetI(1, int64(i+1))
