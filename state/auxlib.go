@@ -153,16 +153,18 @@ func (state *luaState) OptString(arg int, def string) string {
 // http://www.lua.org/manual/5.3/manual.html#luaL_dofile
 // lua-5.3.4/src/lauxlib.h#luaL_dofile()
 func (state *luaState) DoFile(filename string) bool {
-	return state.LoadFile(filename) == LUA_OK &&
-		state.PCall(0, LUA_MULTRET, 0) == LUA_OK
+	// (luaL_loadfile(L, filename) || lua_pcall(L, 0, LUA_MULTRET, 0))
+	return state.LoadFile(filename) != LUA_OK ||
+		state.PCall(0, LUA_MULTRET, 0) != LUA_OK
 }
 
 // [-0, +?, –]
 // http://www.lua.org/manual/5.3/manual.html#luaL_dostring
 // lua-5.3.4/src/lauxlib.h#luaL_dostring()
 func (state *luaState) DoString(str string) bool {
-	return state.LoadString(str) == LUA_OK &&
-		state.PCall(0, LUA_MULTRET, 0) == LUA_OK
+	// (luaL_loadstring(L, str) || lua_pcall(L, 0, LUA_MULTRET, 0))
+	return state.LoadString(str) != LUA_OK ||
+		state.PCall(0, LUA_MULTRET, 0) != LUA_OK
 }
 
 // [-0, +1, m]
