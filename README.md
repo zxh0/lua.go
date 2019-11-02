@@ -5,7 +5,7 @@ A TOY Lua 5.3 implementation written in Go (WORK IN PROGRESS).
 
 # Build & Test
 
-(Go1.12+ required)
+(Go1.13+ required)
 
 
 ```shell

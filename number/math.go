@@ -39,7 +39,7 @@ func FFloorDiv(a, b float64) float64 {
 
 func ShiftLeft(a, n int64) int64 {
 	if n >= 0 {
-		return a << uint64(n)
+		return a << n
 	} else {
 		return ShiftRight(a, -n)
 	}
@@ -47,7 +47,7 @@ func ShiftLeft(a, n int64) int64 {
 
 func ShiftRight(a, n int64) int64 {
 	if n >= 0 {
-		return int64(uint64(a) >> uint64(n))
+		return int64(uint64(a) >> n)
 	} else {
 		return ShiftLeft(a, -n)
 	}
