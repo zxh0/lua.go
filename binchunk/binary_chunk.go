@@ -2,11 +2,9 @@ package binchunk
 
 const (
 	LUA_SIGNATURE    = "\x1bLua"
-	LUAC_VERSION     = 0x53
+	LUAC_VERSION     = 0x54
 	LUAC_FORMAT      = 0
 	LUAC_DATA        = "\x19\x93\r\n\x1a\n"
-	CINT_SIZE        = 4
-	CSIZET_SIZE      = 8
 	INSTRUCTION_SIZE = 4
 	LUA_INTEGER_SIZE = 8
 	LUA_NUMBER_SIZE  = 8
@@ -14,19 +12,27 @@ const (
 	LUAC_NUM         = 370.5
 )
 
-type binaryChunk struct {
-	header
+const (
+	LUA_VNIL    = 0x00 // nil
+	LUA_VFALSE  = 0x01 // false
+	LUA_VTRUE   = 0x11 // true
+	LUA_VNUMINT = 0x03 // integer numbers
+	LUA_VNUMFLT = 0x13 // float numbers
+	LUA_TSHRSTR = 0x04 // short strings
+	LUA_TLNGSTR = 0x14 // long strings
+)
+
+type BinaryChunk struct {
+	Header
 	sizeUpvalues byte // ?
 	mainFunc     *Prototype
 }
 
-type header struct {
+type Header struct {
 	signature       [4]byte
 	version         byte
 	format          byte
 	luacData        [6]byte
-	cintSize        byte
-	sizetSize       byte
 	instructionSize byte
 	luaIntegerSize  byte
 	luaNumberSize   byte
@@ -46,14 +52,21 @@ type Prototype struct {
 	Constants       []interface{}
 	Upvalues        []Upvalue
 	Protos          []*Prototype
-	LineInfo        []uint32 // debug
-	LocVars         []LocVar // debug
-	UpvalueNames    []string // debug
+	LineInfo        []byte        // debug
+	AbsLineInfo     []AbsLineInfo // debug
+	LocVars         []LocVar      // debug
+	UpvalueNames    []string      // debug
 }
 
 type Upvalue struct {
 	Instack byte
 	Idx     byte
+	Kind    byte
+}
+
+type AbsLineInfo struct {
+	PC   uint32
+	Line uint32
 }
 
 type LocVar struct {

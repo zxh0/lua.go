@@ -1,0 +1,76 @@
+BinaryChunk {
+  byte      lua_signature[4];
+  byte      luac_version;
+  byte      luac_format;
+  byte      luac_data[6];
+  byte      int_size;
+  byte      sizet_size;
+  byte      instruction_size;
+  byte      lua_Integer_size;
+  byte      lua_Number_size;
+  byte      luac_int[8];
+  byte      luac_num[8];
+  byte      size_upvalues;
+  Prototype main_func;
+}
+
+Prototype {
+  String      source;
+  int         line_defined;
+  int         last_line_defined;
+  byte        num_params;
+  byte        is_vararg;
+  byte        max_stack_size;
+  int         size_code;
+  Instruction code[size_code];
+  int         size_constants;
+  Constant    constants[size_constants];
+  int         size_upvalues;
+  Upvalue     upvalues[size_upvalues];
+  int         size_protos;
+  Prototype   protos[size_protos];
+  int         size_line_info;
+  int         line_info[size_line_info];
+  int         size_loc_vars;
+  LocVar      loc_vars[size_loc_vars];
+  int         size_upvalue_names;
+  String      upvalue_names[size_upvalue_names];
+}
+
+lua_Number
+lua_Integer
+Instruction
+
+String {
+  byte size;
+  union {
+    _    null;
+    byte short_str[size - 1];
+    {
+      size_t size2;
+      byte long_str[size2];
+    } long_str;
+  } str;
+}
+
+Constant {
+  byte tag;
+  union {
+    _           nil_value;
+    byte        bool_value;
+    lua_Number  float_value;
+    lua_Integer int_value;
+    String      str_value;
+  } value;
+}
+
+Upvalue {
+  byte instack;
+  byte idx;
+}
+
+LocVar {
+  String name;
+  int    start_pc;
+  int    end_pc;
+}

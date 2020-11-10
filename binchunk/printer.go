@@ -17,10 +17,10 @@ func (p *printer) printf(format string, a ...interface{}) {
 
 func (p *printer) printFunc(f *Prototype, full bool) string {
 	p.printHeader(f)
-	p.printCode(f)
-	if full {
-		p.printDebug(f)
-	}
+	//p.printCode(f)
+	//if full {
+	//	p.printDebug(f)
+	//}
 	for _, proto := range f.Protos {
 		p.printFunc(proto, full)
 	}
@@ -30,7 +30,7 @@ func (p *printer) printFunc(f *Prototype, full bool) string {
 func (p *printer) printHeader(f *Prototype) {
 	p.printf("\n%s <%s:%d,%d> (%d instruction%s)\n",
 		_t(f.LineDefined == 0, "main", "function"),
-		_t(f.Source == "", "=?", f.Source)[1:], // todo
+		_t(f.Source == "", "=?", f.Source)[1:], // TODO
 		f.LineDefined, f.LastLineDefined,
 		len(f.Code), _s(len(f.Code)),
 	)
@@ -42,7 +42,7 @@ func (p *printer) printHeader(f *Prototype) {
 	)
 
 	p.printf("%d local%s, %d constant%s, %d function%s\n",
-		len(f.LocVars), _s(len(f.LocVars)), // todo
+		len(f.LocVars), _s(len(f.LocVars)), // TODO
 		len(f.Constants), _s(len(f.Constants)),
 		len(f.Protos), _s(len(f.Protos)),
 	)
@@ -62,36 +62,36 @@ func (p *printer) printCode(f *Prototype) {
 		}
 		p.printf("\t%d\t[%s]\t%s \t", pc+1, line, i.OpName()) // todo
 
-		switch i.OpMode() {
-		case IABC:
-			p.printf("%d", a)
-			if i.BMode() != OpArgN {
-				if isK(b) {
-					p.printf(" %d", myk(indexK(b)))
-				} else {
-					p.printf(" %d", b)
-				}
-			}
-			if i.CMode() != OpArgN {
-				if isK(c) {
-					p.printf(" %d", myk(indexK(c)))
-				} else {
-					p.printf(" %d", c)
-				}
-			}
-		case IABx:
-			p.printf("%d", a)
-			if i.BMode() == OpArgK {
-				p.printf(" %d", myk(bx))
-			}
-			if i.BMode() == OpArgU {
-				p.printf(" %d", bx)
-			}
-		case IAsBx:
-			p.printf("%d %d", a, sbx)
-		case IAx:
-			p.printf("%d", myk(ax))
-		}
+		//switch i.OpMode() {
+		//case IABC:
+		//	p.printf("%d", a)
+		//	if i.BMode() != OpArgN {
+		//		if isK(b) {
+		//			p.printf(" %d", myk(indexK(b)))
+		//		} else {
+		//			p.printf(" %d", b)
+		//		}
+		//	}
+		//	if i.CMode() != OpArgN {
+		//		if isK(c) {
+		//			p.printf(" %d", myk(indexK(c)))
+		//		} else {
+		//			p.printf(" %d", c)
+		//		}
+		//	}
+		//case IABx:
+		//	p.printf("%d", a)
+		//	if i.BMode() == OpArgK {
+		//		p.printf(" %d", myk(bx))
+		//	}
+		//	if i.BMode() == OpArgU {
+		//		p.printf(" %d", bx)
+		//	}
+		//case IAsBx:
+		//	p.printf("%d %d", a, sbx)
+		//case IAx:
+		//	p.printf("%d", myk(ax))
+		//}
 
 		switch i.Opcode() {
 		case OP_LOADK:

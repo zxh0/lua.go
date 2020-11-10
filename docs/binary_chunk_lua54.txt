@@ -1,0 +1,79 @@
+BinaryChunk {
+  byte      lua_signature[4];
+  byte      luac_version;
+  byte      luac_format;
+  byte      luac_data[6];
+  byte      instruction_size;
+  byte      lua_Integer_size;
+  byte      lua_Number_size;
+  byte      luac_int[8];
+  byte      luac_num[8];
+  byte      size_upvalues;
+  Prototype main_func;
+}
+
+Prototype {
+  String      source;
+  varint      line_defined;
+  varint      last_line_defined;
+  byte        num_params;
+  byte        is_vararg;
+  byte        max_stack_size;
+  varint      size_code;
+  Instruction code[size_code];
+  varint      size_constants;
+  Constant    constants[size_constants];
+  varint      size_upvalues;
+  Upvalue     upvalues[size_upvalues];
+  varint      size_protos;
+  Prototype   protos[size_protos];
+  varint      size_line_info;
+  byte        line_info[size_line_info];
+  varint      size_abs_line_info;
+  AbsLineInfo abs_line_info[size_abs_line_info];
+  varint      size_loc_vars;
+  LocVar      loc_vars[size_loc_vars];
+  varint      size_upvalue_names;
+  String      upvalue_names[size_upvalue_names];
+}
+
+lua_Number
+lua_Integer
+Instruction
+
+String {
+  varint size;
+  union {
+    _    null;
+    byte str[size - 1];
+  } str;
+}
+
+Constant {
+  byte tag;
+  union {
+    _           nil_value;
+    _           false_value;
+    _           true_value;
+    lua_Number  float_value;
+    lua_Integer int_value;
+    String      str_value;
+  } value;
+}
+
+Upvalue {
+  byte instack;
+  byte idx;
+  byte kind;
+}
+
+AbsLineInfo {
+  varint pc;
+  varint line;  
+}
+
+LocVar {
+  String name;
+  varint start_pc;
+  varint end_pc;
+}

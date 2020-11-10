@@ -3,8 +3,6 @@ package binchunk
 import (
 	"encoding/binary"
 	"math"
-
-	. "github.com/zxh0/lua.go/api"
 )
 
 type reader struct {
@@ -17,42 +15,57 @@ func (r *reader) readByte() byte {
 	return b
 }
 
-func (r *reader) readBytes(n uint) []byte {
+func (r *reader) readBytes(n uint32) []byte {
 	bytes := r.data[:n]
 	r.data = r.data[n:]
 	return bytes
 }
 
-func (r *reader) readUint32() uint32 {
-	i := binary.LittleEndian.Uint32(r.data)
-	r.data = r.data[4:]
-	return i
+func (r *reader) readVarUint32() uint32 {
+	return uint32(r.readVarUint(math.MaxUint32))
+}
+func (r *reader) readVarUint(limit uint64) uint64 {
+	var x uint64 = 0
+	limit >>= 7
+	for {
+		b := r.readByte()
+		if x >= limit {
+			panic("integer overflow")
+		}
+		x = (x << 7) | uint64(b&0x7f)
+
+		if (b & 0x80) != 0 {
+			break
+		}
+	}
+	return x
 }
 
+func (r *reader) readLuaInteger() int64 {
+	return int64(r.readUint64())
+}
+func (r *reader) readLuaNumber() float64 {
+	return math.Float64frombits(r.readUint64())
+}
 func (r *reader) readUint64() uint64 {
 	i := binary.LittleEndian.Uint64(r.data)
 	r.data = r.data[8:]
 	return i
 }
 
-func (r *reader) readLuaInteger() int64 {
-	return int64(r.readUint64())
-}
-
-func (r *reader) readLuaNumber() float64 {
-	return math.Float64frombits(r.readUint64())
+func (r *reader) readInstruction() uint32 {
+	i := binary.LittleEndian.Uint32(r.data)
+	r.data = r.data[4:]
+	return i
 }
 
 func (r *reader) readString() string {
-	size := uint(r.readByte())
+	size := r.readVarUint32()
 	if size == 0 {
 		return ""
 	}
-	if size == 0xFF {
-		size = uint(r.readUint64()) // size_t
-	}
 	bytes := r.readBytes(size - 1)
-	return string(bytes) // todo
+	return string(bytes) // TODO
 }
 
 func (r *reader) checkHeader() {
@@ -67,12 +80,6 @@ func (r *reader) checkHeader() {
 	}
 	if string(r.readBytes(6)) != LUAC_DATA {
 		panic("corrupted!")
-	}
-	if r.readByte() != CINT_SIZE {
-		panic("int size mismatch!")
-	}
-	if r.readByte() != CSIZET_SIZE {
-		panic("size_t size mismatch!")
 	}
 	if r.readByte() != INSTRUCTION_SIZE {
 		panic("instruction size mismatch!")
@@ -98,8 +105,8 @@ func (r *reader) readProto(parentSource string) *Prototype {
 	}
 	return &Prototype{
 		Source:          source,
-		LineDefined:     r.readUint32(),
-		LastLineDefined: r.readUint32(),
+		LineDefined:     r.readVarUint32(),
+		LastLineDefined: r.readVarUint32(),
 		NumParams:       r.readByte(),
 		IsVararg:        r.readByte(),
 		MaxStackSize:    r.readByte(),
@@ -108,21 +115,22 @@ func (r *reader) readProto(parentSource string) *Prototype {
 		Upvalues:        r.readUpvalues(),
 		Protos:          r.readProtos(source),
 		LineInfo:        r.readLineInfo(),
+		AbsLineInfo:     r.readAbsLineInfo(),
 		LocVars:         r.readLocVars(),
 		UpvalueNames:    r.readUpvalueNames(),
 	}
 }
 
 func (r *reader) readCode() []uint32 {
-	code := make([]uint32, r.readUint32())
+	code := make([]uint32, r.readVarUint32())
 	for i := range code {
-		code[i] = r.readUint32()
+		code[i] = r.readInstruction()
 	}
 	return code
 }
 
 func (r *reader) readConstants() []interface{} {
-	constants := make([]interface{}, r.readUint32())
+	constants := make([]interface{}, r.readVarUint32())
 	for i := range constants {
 		constants[i] = r.readConstant()
 	}
@@ -131,62 +139,73 @@ func (r *reader) readConstants() []interface{} {
 
 func (r *reader) readConstant() interface{} {
 	switch r.readByte() {
-	case LUA_TNIL:
+	case LUA_VNIL:
 		return nil
-	case LUA_TBOOLEAN:
-		return r.readByte() != 0
-	case LUA_TNUMINT:
+	case LUA_VFALSE:
+		return false
+	case LUA_VTRUE:
+		return true
+	case LUA_VNUMINT:
 		return r.readLuaInteger()
-	case LUA_TNUMFLT:
+	case LUA_VNUMFLT:
 		return r.readLuaNumber()
 	case LUA_TSHRSTR, LUA_TLNGSTR:
 		return r.readString()
 	default:
-		panic("corrupted!") // todo
+		panic("corrupted!") // TODO
 	}
 }
 
 func (r *reader) readUpvalues() []Upvalue {
-	upvalues := make([]Upvalue, r.readUint32())
+	upvalues := make([]Upvalue, r.readVarUint32())
 	for i := range upvalues {
 		upvalues[i] = Upvalue{
 			Instack: r.readByte(),
 			Idx:     r.readByte(),
+			Kind:    r.readByte(),
 		}
 	}
 	return upvalues
 }
 
 func (r *reader) readProtos(parentSource string) []*Prototype {
-	protos := make([]*Prototype, r.readUint32())
+	protos := make([]*Prototype, r.readVarUint32())
 	for i := range protos {
 		protos[i] = r.readProto(parentSource)
 	}
 	return protos
 }
 
-func (r *reader) readLineInfo() []uint32 {
-	lineInfo := make([]uint32, r.readUint32())
-	for i := range lineInfo {
-		lineInfo[i] = r.readUint32()
+func (r *reader) readLineInfo() []byte {
+	size := r.readVarUint32()
+	return r.readBytes(size)
+}
+
+func (r *reader) readAbsLineInfo() []AbsLineInfo {
+	absLineInfo := make([]AbsLineInfo, r.readVarUint32())
+	for i := range absLineInfo {
+		absLineInfo[i] = AbsLineInfo{
+			PC:   r.readVarUint32(),
+			Line: r.readVarUint32(),
+		}
 	}
-	return lineInfo
+	return absLineInfo
 }
 
 func (r *reader) readLocVars() []LocVar {
-	locVars := make([]LocVar, r.readUint32())
+	locVars := make([]LocVar, r.readVarUint32())
 	for i := range locVars {
 		locVars[i] = LocVar{
 			VarName: r.readString(),
-			StartPC: r.readUint32(),
-			EndPC:   r.readUint32(),
+			StartPC: r.readVarUint32(),
+			EndPC:   r.readVarUint32(),
 		}
 	}
 	return locVars
 }
 
 func (r *reader) readUpvalueNames() []string {
-	names := make([]string, r.readUint32())
+	names := make([]string, r.readVarUint32())
 	for i := range names {
 		names[i] = r.readString()
 	}

@@ -3,8 +3,6 @@ package binchunk
 import (
 	"encoding/binary"
 	"math"
-
-	. "github.com/zxh0/lua.go/api"
 )
 
 type writer struct {
@@ -81,8 +79,6 @@ func (w *writer) writeHeader() {
 	w.writeByte(LUAC_VERSION)
 	w.writeByte(LUAC_FORMAT)
 	w.writeBytes([]byte(LUAC_DATA))
-	w.writeByte(CINT_SIZE)
-	w.writeByte(CSIZET_SIZE)
 	w.writeByte(INSTRUCTION_SIZE)
 	w.writeByte(LUA_INTEGER_SIZE)
 	w.writeByte(LUA_NUMBER_SIZE)
@@ -105,7 +101,7 @@ func (w *writer) writeProto(proto *Prototype, parentSource string) {
 	w.writeConstants(proto.Constants)
 	w.writeUpvalues(proto.Upvalues)
 	w.writeProtos(proto.Protos, proto.Source)
-	w.writeLineInfo(proto.LineInfo)
+	//w.writeLineInfo(proto.LineInfo)
 	w.writeLocVars(proto.LocVars)
 	w.writeUpvalueNames(proto.UpvalueNames)
 }
@@ -127,21 +123,20 @@ func (w *writer) writeConstants(constants []interface{}) {
 func (w *writer) writeConstant(constant interface{}) {
 	switch x := constant.(type) {
 	case nil:
-		w.writeByte(byte(LUA_TNIL))
+		w.writeByte(byte(LUA_VNIL))
 	case bool:
-		w.writeByte(byte(LUA_TBOOLEAN))
 		if x {
-			w.writeByte(1)
+			w.writeByte(byte(LUA_VTRUE))
 		} else {
-			w.writeByte(0)
+			w.writeByte(byte(LUA_VFALSE))
 		}
 	case int64:
-		w.writeByte(byte(LUA_TNUMINT))
+		w.writeByte(byte(LUA_VNUMINT))
 		w.writeLuaInteger(x)
 	case float64:
-		w.writeByte(byte(LUA_TNUMFLT))
+		w.writeByte(byte(LUA_VNUMFLT))
 		w.writeLuaNumber(x)
-	case string: // todo
+	case string: // TODO
 		w.writeByte(byte(LUA_TSHRSTR))
 		w.writeString(x)
 	default:
