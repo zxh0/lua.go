@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 set -ex
 
 go build github.com/zxh0/lua.go/cmd/lua
