@@ -2,7 +2,7 @@ package vm
 
 import . "github.com/zxh0/lua.go/api"
 
-// R(A), R(A+1), ..., R(A+B) := nil
+// R[A], R[A+1], ..., R[A+B] := nil
 func loadNil(i Instruction, vm LuaVM) {
 	a, b, _ := i.ABC()
 	a += 1
@@ -15,21 +15,53 @@ func loadNil(i Instruction, vm LuaVM) {
 	vm.Pop(1) // ~
 }
 
-// R(A) := (bool)B; if (C) pc++
-func loadBool(i Instruction, vm LuaVM) {
-	a, b, c := i.ABC()
+// R[A] := false; pc++
+func lFalseSkip(i Instruction, vm LuaVM) {
+	a, _, _ := i.ABC()
 	a += 1
 
-	//vm.CheckStack(1)
-	vm.PushBoolean(b != 0) // ~/b
-	vm.Replace(a)          // ~
-
-	if c != 0 {
-		vm.AddPC(1)
-	}
+	vm.PushBoolean(false)
+	vm.Replace(a)
+	vm.AddPC(1)
 }
 
-// R(A) := Kst(Bx)
+// R[A] := false
+func loadFalse(i Instruction, vm LuaVM) {
+	a, _, _ := i.ABC()
+	a += 1
+
+	vm.PushBoolean(false)
+	vm.Replace(a)
+}
+
+// R[A] := true
+func loadTrue(i Instruction, vm LuaVM) {
+	a, _, _ := i.ABC()
+	a += 1
+
+	vm.PushBoolean(true)
+	vm.Replace(a)
+}
+
+// R[A] := sBx
+func loadI(i Instruction, vm LuaVM) {
+	a, sBx := i.AsBx()
+	a += 1
+
+	vm.PushInteger(int64(sBx))
+	vm.Replace(a)
+}
+
+// R[A] := (lua_Number)sBx
+func loadF(i Instruction, vm LuaVM) {
+	a, sBx := i.AsBx()
+	a += 1
+
+	vm.PushNumber(float64(sBx))
+	vm.Replace(a)
+}
+
+// R[A] := K[Bx]
 func loadK(i Instruction, vm LuaVM) {
 	a, bx := i.ABx()
 	a += 1
@@ -39,7 +71,7 @@ func loadK(i Instruction, vm LuaVM) {
 	vm.Replace(a)   // ~
 }
 
-// R(A) := Kst(extra arg)
+// R[A] := K[extra arg]
 func loadKx(i Instruction, vm LuaVM) {
 	a, _ := i.ABx()
 	a += 1

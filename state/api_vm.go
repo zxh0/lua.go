@@ -18,6 +18,12 @@ func (state *luaState) GetConst(idx int) {
 	c := state.stack.closure.proto.Constants[idx]
 	state.stack.push(c)
 }
+func (state *luaState) GetConstStr(idx int) string {
+	return state.stack.closure.proto.Constants[idx].(string)
+}
+func (state *luaState) GetConstInt(idx int) int64 {
+	return state.stack.closure.proto.Constants[idx].(int64)
+}
 
 func (state *luaState) GetRK(rk int) {
 	if rk > 0xFF { // constant
@@ -25,6 +31,16 @@ func (state *luaState) GetRK(rk int) {
 	} else { // register
 		state.PushValue(rk + 1)
 	}
+}
+func (state *luaState) GetRK2(x, k int) {
+	if k == 1 {
+		state.GetConst(x)
+	} else {
+		state.PushValue(x + 1)
+	}
+}
+func (state *luaState) GetReg(r int) {
+	state.PushValue(r + 1)
 }
 
 func (state *luaState) LoadProto(idx int) {

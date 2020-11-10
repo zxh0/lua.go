@@ -12,6 +12,10 @@ func closure(i Instruction, vm LuaVM) {
 	vm.Replace(a)    // ~
 }
 
+func varargPrep(i Instruction, vm LuaVM) {
+	// TODO
+}
+
 // R(A), R(A+1), ..., R(A+B-2) = vararg
 func vararg(i Instruction, vm LuaVM) {
 	a, b, _ := i.ABC()
@@ -24,13 +28,19 @@ func vararg(i Instruction, vm LuaVM) {
 }
 
 // R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2));
+// R[A+4], ... ,R[A+3+C] := R[A](R[A+1], R[A+2]);
+/* 'ra' has the iterator function, 'ra + 1' has the state,
+   'ra + 2' has the control variable, and 'ra + 3' has the
+   to-be-closed variable. The call will use the stack after
+   these values (starting at 'ra + 4')
+*/
 func tForCall(i Instruction, vm LuaVM) {
 	a, _, c := i.ABC()
 	a += 1
 
 	_pushFuncAndArgs(a, 3, vm)
 	vm.Call(2, c)
-	_popResults(a+3, c+1, vm)
+	_popResults(a+4, c+1, vm)
 }
 
 // return R(A)(R(A+1), ... ,R(A+B-1))
@@ -45,7 +55,7 @@ func tailCall(i Instruction, vm LuaVM) {
 	_popResults(a, c, vm)
 }
 
-// R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1))
+// R[A], ... ,R[A+C-2] := R[A](R[A+1], ... ,R[A+B-1])
 func call(i Instruction, vm LuaVM) {
 	a, b, c := i.ABC()
 	a += 1

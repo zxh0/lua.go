@@ -12,7 +12,7 @@ func toProto(fi *funcInfo) *Prototype {
 		Constants:       getConstants(fi),
 		Upvalues:        getUpvalues(fi),
 		Protos:          toProtos(fi.subFuncs),
-		LineInfo:        fi.lineNums,
+		//LineInfo:        fi.lineNums,
 		LocVars:         getLocVars(fi),
 		UpvalueNames:    getUpvalueNames(fi),
 	}
@@ -62,9 +62,9 @@ func getUpvalues(fi *funcInfo) []Upvalue {
 	upvals := make([]Upvalue, len(fi.upvalues))
 	for _, uv := range fi.upvalues {
 		if uv.locVarSlot >= 0 { // instack
-			upvals[uv.index] = Upvalue{1, byte(uv.locVarSlot)}
+			upvals[uv.index] = Upvalue{1, byte(uv.locVarSlot), 0}
 		} else {
-			upvals[uv.index] = Upvalue{0, byte(uv.upvalIndex)}
+			upvals[uv.index] = Upvalue{0, byte(uv.upvalIndex), 0}
 		}
 	}
 	return upvals

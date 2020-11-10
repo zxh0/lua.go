@@ -143,6 +143,7 @@ func (state *luaState) runLuaClosure() {
 		// indent := fmt.Sprintf("%%%ds", state.callDepth*2)
 		// fmt.Printf(indent+"[%02d: %s] => %s\n",
 		// 	"", pc+1, inst.OpName(), state)
+		//println(inst.OpName())
 
 		if inst.Opcode() == vm.OP_RETURN {
 			break

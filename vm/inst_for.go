@@ -3,8 +3,10 @@ package vm
 import . "github.com/zxh0/lua.go/api"
 
 // R(A)-=R(A+2); pc+=sBx
+// <check values and prepare counters>;
+// if not to run then pc+=Bx+1;
 func forPrep(i Instruction, vm LuaVM) {
-	a, sBx := i.AsBx()
+	a, bx := i.ABx()
 	a += 1
 
 	//vm.CheckStack(2)
@@ -25,15 +27,16 @@ func forPrep(i Instruction, vm LuaVM) {
 	vm.PushValue(a + 2) // ~/r[a]/r[a+2]
 	vm.Arith(LUA_OPSUB) // ~/r[a]-r[a+2]
 	vm.Replace(a)       // ~
-	vm.AddPC(sBx)
+	vm.AddPC(bx)
 }
 
 // R(A)+=R(A+2);
 // if R(A) <?= R(A+1) then {
 //   pc+=sBx; R(A+3)=R(A)
 // }
+// update counters; if loop continues then pc-=Bx;
 func forLoop(i Instruction, vm LuaVM) {
-	a, sBx := i.AsBx()
+	a, bx := i.ABx()
 	a += 1
 
 	//vm.CheckStack(2)
@@ -48,20 +51,27 @@ func forLoop(i Instruction, vm LuaVM) {
 		!isPositiveStep && vm.Compare(a+1, a, LUA_OPLE) {
 
 		// pc+=sBx; R(A+3)=R(A)
-		vm.AddPC(sBx)
+		vm.AddPC(-bx)
 		vm.Copy(a, a+3)
 	}
+}
+
+// create upvalue for R[A + 3]; pc+=Bx
+func tForPrep(i Instruction, vm LuaVM) {
+	_, bx := i.ABx()
+	// TODO
+	vm.AddPC(bx)
 }
 
 // if R(A+1) ~= nil then {
 //   R(A)=R(A+1); pc += sBx
 // }
+// if R[A+2] ~= nil then { R[A]=R[A+2]; pc -= Bx } ???
 func tForLoop(i Instruction, vm LuaVM) {
-	a, sBx := i.AsBx()
+	a, bx := i.ABx()
 	a += 1
-
-	if !vm.IsNil(a + 1) {
-		vm.Copy(a+1, a)
-		vm.AddPC(sBx)
+	if !vm.IsNil(a + 4) {
+		vm.Copy(a+4, a+2)
+		vm.AddPC(-bx)
 	}
 }

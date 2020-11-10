@@ -7,7 +7,7 @@ import "os"
 import "github.com/zxh0/lua.go/binchunk"
 import "github.com/zxh0/lua.go/compiler"
 
-const version = `Lua 5.3.3 (lua.go)`
+const version = `Lua 5.4.1 (lua.go)`
 const usage = `
 usage: %s [options] [filename]
 Available options are:

@@ -2,7 +2,7 @@ package vm
 
 import . "github.com/zxh0/lua.go/api"
 
-// R(A) := R(B)
+// R[A] := R[B]
 func move(i Instruction, vm LuaVM) {
 	a, b, _ := i.ABC()
 	a += 1
@@ -11,14 +11,10 @@ func move(i Instruction, vm LuaVM) {
 	vm.Copy(b, a)
 }
 
-// pc+=sBx; if (A) close all upvalues >= R(A - 1)
+// pc += sJ
 func jmp(i Instruction, vm LuaVM) {
-	a, sBx := i.AsBx()
-
-	vm.AddPC(sBx)
-	if a != 0 {
-		vm.CloseUpvalues(a)
-	}
+	sJ := i.sJ()
+	vm.AddPC(sJ)
 }
 
 // R(A+1) := R(B); R(A) := R(B)[RK(C)]

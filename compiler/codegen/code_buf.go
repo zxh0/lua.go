@@ -61,7 +61,8 @@ func (cb *codeBuf) emitLoadNil(line, a, n int) {
 
 // r[a] = (bool)b; if (c) pc++
 func (cb *codeBuf) emitLoadBool(line, a, b, c int) {
-	cb.emitABC(line, OP_LOADBOOL, a, b, c)
+	//cb.emitABC(line, OP_LOADBOOL, a, b, c)
+	panic("TODO")
 }
 
 // r[a] = kst[bx]
