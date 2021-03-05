@@ -17,4 +17,5 @@ go build github.com/zxh0/lua.go/cmd/lua
 ./lua ./test/lua-5.3.4-tests/utf8.lua       | grep -q ok
 ./lua ./test/lua-5.3.4-tests/vararg.lua     | grep -q OK
 ./lua ./test/lua-5.3.4-tests/verybig.lua    | grep -q OK
+./lua ./test/table_bug.lua | grep -q d
 echo "OK"
