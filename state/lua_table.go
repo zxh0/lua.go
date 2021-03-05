@@ -97,7 +97,7 @@ func (table *luaTable) _shrinkArray() {
 		if table.arr[i] == nil {
 			table.arr = table.arr[0:i]
 		} else {
-			return
+			break
 		}
 	}
 }
